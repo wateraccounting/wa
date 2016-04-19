@@ -9,8 +9,9 @@ Module: wa
 
 Description:
 This module contains a compilation of scripts and functions used to download
-hydrologic data from different sourcers. The hydrologic data downloaded can be
-used for water accounting (http://www.wateraccounting.org/)
+hydrologic, atmospheric, and remote sensing data from different sources.
+This data is used within a water accounting framework.
+(http://www.wateraccounting.org/)
 """
 
 from wa import Level1

@@ -6,7 +6,7 @@ from DataAccess import DownloadData
 def main(Var, Startdate, Enddate, latlim, lonlim, Dir, cores=False,
          SumMean=1, Min=0, Max=0):
     """
-    This function downloads GLDAS monthly data for a given variable, time
+    This function downloads GLDAS daily data for a given variable, time
     interval, and spatial extent.
 
     Keyword arguments:
