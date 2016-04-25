@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Authors: Tim Hessels and Gonzalo Espinoza
          UNESCO-IHE 2016

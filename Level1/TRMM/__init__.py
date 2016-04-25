@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Authors: Tim Hessels and Gonzalo Espinoza
          UNESCO-IHE 2016
@@ -9,7 +10,7 @@ Module: Level1/TRMM
 
 Description:
 This module downloads TRMM3B42 V7 (daily) and TRMM3B43 V7 (monthly) data from
-ftp://disc2.nascom.nasa.gov. Use the TRMM_daily or TRMM_monthly definitions to
+ftp://disc2.nascom.nasa.gov. Use the TRMM.daily or TRMM.monthly functions to
 download and create daily or monthly TRMM images in Gtiff format.
 The TRMM data is available since 1998-01-01 till 2015-04-30
 

@@ -6,7 +6,7 @@ from DataAccess import DownloadData
 def main(Dir, Startdate='', Enddate='',
          latlim=[-50, 50], lonlim=[-180, 180], cores=False):
                 """
-                This function downloads TRMM3B42 V7 (daily) data
+                This function downloads monthly CHIRPS data
 
                 Keyword arguments:
                 Dir -- 'C:/file/to/path/'
@@ -20,7 +20,7 @@ def main(Dir, Startdate='', Enddate='',
                 """
                 # Download data
                 DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores,
-                             TimeCase='daily')
+                             TimeCase='monthly')
 
 if __name__ == '__main__':
     main(sys.argv)

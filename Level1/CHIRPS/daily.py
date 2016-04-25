@@ -6,7 +6,7 @@ from DataAccess import DownloadData
 def main(Dir, Startdate='', Enddate='',
          latlim=[-50, 50], lonlim=[-180, 180], cores=False):
                 """
-                This function downloads TRMM3B42 V7 (daily) data
+                This function downloads daily CHIRPS data
 
                 Keyword arguments:
                 Dir -- 'C:/file/to/path/'

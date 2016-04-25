@@ -13,11 +13,13 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
     This function downloads TRMM daily or monthly data
 
     Keyword arguments:
+    Dir -- 'C:/file/to/path/'
     Startdate -- 'yyyy-mm-dd'
     Enddate -- 'yyyy-mm-dd'
     latlim -- [ymin, ymax] (values must be between -50 and 50)
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
-    Dir -- 'C:/file/to/path/'
+    cores -- The number of cores used to run the routine. It can be 'False'
+             to avoid using parallel computing routines.
     TimeCase -- String equal to 'daily' or 'monthly'
     """
     # String Parameters
