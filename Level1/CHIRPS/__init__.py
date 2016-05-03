@@ -10,13 +10,9 @@ Module: Level1/CHIRPS
 
 Description:
 This module downloads daily and monthly CHIRPS 2.0 data from
-ftp://chg-ftpout.geog.ucsb.edu server.
-
-
-download and create daily or monthly TRMM images in Gtiff format.
-The CHIRP data is available since 1981-01-01 till the present. Use the
-CHIRPS.daily or CHIRPS.monthly functions to download and create daily or
-monthly CHIRPS images in Gtiff format
+ftp://chg-ftpout.geog.ucsb.edu server. Use the CHIRPS.daily or CHIRPS.monthly
+functions to download and create daily or monthly CHIRPS images in Gtiff
+format. The CHIRP data is available since 1981-01-01 till the present.
 
 Examples:
 from wa.Level1 import CHIRPS
