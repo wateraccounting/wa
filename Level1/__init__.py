@@ -17,8 +17,8 @@ help(Level1)
 dir(Level1)
 """
 
-from wa.Level1 import TRMM, GLDAS, ALEXI
+from wa.Level1 import TRMM, GLDAS, ALEXI, CHIRPS, DEM
 
-__all__ = ['TRMM', 'GLDAS', 'ALEXI']
+__all__ = ['TRMM', 'GLDAS', 'ALEXI', 'CHIRPS', 'DEM']
 
 __version__ = '0.1'
