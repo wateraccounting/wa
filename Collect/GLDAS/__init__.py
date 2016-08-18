@@ -5,7 +5,7 @@ Authors: Gert Mulder, Tim Hessels, and Gonzalo Espinoza
 Contact: t.hessels@unesco-ihe.org
          g.espinoza@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
-Module: GLDAS
+Module: Collect/GLDAS
 
 
 Description:
@@ -21,15 +21,14 @@ Futher information of the variable can be printed with the following commands:
     GLDAS.VarInfo('daily').factors['evap']
 
 Examples:
-from Level1 import GLDAS
-GLDAS.three_hourly(Var='tair', Startdate='2004-12-20', Enddate='2005-01-010',
-                   latlim=[38, 41], lonlim=[-76, -73], Dir='C:/Temp/', cores=2,
+from wa.Collect import GLDAS
+GLDAS.three_hourly(Dir='C:/Temp/', Vars=['qair','tair'], Startdate='2004-12-20', Enddate='2005-01-10',
+                   latlim=[38, 41], lonlim=[-76, -73], cores=2,
                    Periods=[4, 5])
-GLDAS.daily(Var='qair', Startdate='2004-12-20', Enddate='2005-01-01',
-            latlim=[38, 41], lonlim=[-76, -73], Dir='C:/Temp/', cores=2,
+GLDAS.daily(Dir='C:/Temp/', Vars=['qair'], Startdate='2004-12-20', Enddate='2005-01-01',
+            latlim=[38, 41], lonlim=[-76, -73],  cores=2,
             SumMean=1, Min=1, Max=1)
-GLDAS.monthly(Var='swnet', Startdate='2004-12-20', Enddate='2005-03-010',
-              latlim=[38, 41], lonlim=[-76, -73], Dir='C:/Temp/', cores=2)
+GLDAS.monthly(Dir='C:/TempGLDAS', Var='swnet', Startdate='2004-12-20', Enddate='2005-03-10',latlim=[38, 41], lonlim=[-76, -73])
 """
 
 from .three_hourly import main as three_hourly

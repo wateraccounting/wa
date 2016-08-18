@@ -35,7 +35,8 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
         Const = [4, '%m', 3]
     else:
         raise KeyError("The input time interval is not supported")
-    # Check variables
+   
+	# Check variables
     if not Startdate:
         Startdate = pd.Timestamp('1998-01-01')
     if not Enddate:
@@ -51,7 +52,8 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
                ' Now value is set to maximum')
         lonlim[0] = np.max(latlim[0], -180)
         lonlim[1] = np.min(lonlim[1], 180)
-    # Make directory
+    
+	# Make directory
     output_folder = os.path.join(Dir, 'Precipitation', 'TRMM/')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)

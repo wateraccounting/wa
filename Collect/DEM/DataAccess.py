@@ -8,27 +8,32 @@ import shutil
 import tempfile
 
 
-def DownloadData(latlim, lonlim, Resample, output_folder):
+def DownloadData(output_folder, latlim, lonlim, Resample):
     """
     This function downloads TRMM daily or monthly data
 
     Keyword arguments:
-    latlim -- [ymin, ymax] (values must be between -50 and 50)
+    output_folder -- directory of the result
+	latlim -- [ymin, ymax] (values must be between -50 and 50)
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
     Resample -- 1 = The data will be resampled to 0.001 degree spatial
                     resolution
              -- 0 = The data will have the same pixel size as the data obtained
                     from the internet
-    output_folder -- directory of the result
     """
     # converts the latlim and lonlim into names of the tiles which must be
     # downloaded
     name, rangeLon, rangeLat = Find_Document_Names(latlim, lonlim)
     nameResults = []
+				
+	# Memory for the map x and y shape (starts with zero)			
     size_X_tot = 0
     size_Y_tot = 0
+				
+    # Create a temporary folder for processing				
     output_folder_trash = tempfile.mkdtemp()
 
+    # Download, extract, and converts all the files to tiff files
     for nameFile in name:
         try:
             # Download the data from
@@ -44,23 +49,27 @@ def DownloadData(latlim, lonlim, Resample, output_folder):
                                               output_folder_trash)
 
         except:
-            # If tile not excist create a replacing NaN tile
+            # If tile not excist create a replacing zero tile (sea tiles)
             output = nameFile.split('.')[0] + "_trans_temporary.tif"
             output_tiff = os.path.join(output_folder_trash, output)
             file_name = nameFile
             data = np.zeros((6000, 6000))
             data = data.astype(np.float32)
-
+            
+            # Create the latitude bound             												
             Vfile = str(file_name)[1:3]
             SignV = str(file_name)[0]
             SignVer = 1
+            # If the sign before the filename is a south sign than latitude is negative 												
             if SignV is "s":
                 SignVer = -1
             Bound2 = int(SignVer)*int(Vfile)
-
+            
+            # Create the longitude bound 
             Hfile = str(file_name)[4:7]
             SignH = str(file_name)[3]
             SignHor = 1
+            # If the sign before the filename is a west sign than longitude is negative 																								
             if SignH is "w":
                 SignHor = -1
             Bound1 = int(SignHor) * int(Hfile)
@@ -86,11 +95,12 @@ def DownloadData(latlim, lonlim, Resample, output_folder):
                                                    file_name)
 
         if Resample == 1:
-            # Resample the data from 0.0008333 to a 0.001 degree grid
+            # Resample the data from 0.0008333 to a 0.001 degree grid if required
             Data, size_Y_out, size_X_out, geo_out, proj_out = Resample_DEM(
                 outputfile_name_chunk, Bound1, Bound2, Bound3, Bound4)
 
         else:
+            # if no resample is required than usethe geoinformation of the original map									
             f = gdal.Open(outputfile_name_chunk)
             geo_out = f.GetGeoTransform()
             Data = np.array(f.GetRasterBand(1).ReadAsArray())
@@ -112,6 +122,7 @@ def DownloadData(latlim, lonlim, Resample, output_folder):
         Save_as_tiff(name=nameForEnd, data=Data, geo=geo_out,
                      projection=proj_out)
 
+
     size_X_tot = int(size_X_tot/len(rangeLat))
     size_Y_tot = int(size_Y_tot/len(rangeLon))
 
@@ -122,11 +133,16 @@ def DownloadData(latlim, lonlim, Resample, output_folder):
     # name of the end result
     output_DEM_name = "DEM_HydroShed_m.tif"
     Save_name = os.path.join(output_folder, output_DEM_name)
-
+    
+				
+    # Define the georeference of the end matrix			
+    geo_out = [lonlim[0], geo_out[1], 0, latlim[1], 0, geo_out[5]]
+    proj_out='4326'			
+	
     # Make geotiff file
-    Save_as_tiff_end(name=Save_name, data=datasetTot, lonext=lonlim[0],
-                     latext=latlim[1], geo=geo_out)
-
+    Save_as_tiff(name=Save_name, data=datasetTot, geo=geo_out, projection=proj_out)
+    
+	# Delete the temporary folder
     shutil.rmtree(output_folder_trash)
 
 
@@ -142,8 +158,10 @@ def Merge_DEM(latlim, lonlim, nameResults, size_Y_tot, size_X_tot):
     size_Y_tot -- integer, the width of the merged array
     size_X_tot -- integer, the length of the merged array
     """
-
+    # Define total size of end dataset and create zero array
     datasetTot = np.zeros([size_Y_tot, size_X_tot])
+				
+    # Put all the files in the datasetTot (1 by 1)			
     for nameTot in nameResults:
         f = gdal.Open(nameTot)
         dataset = np.array(f.GetRasterBand(1).ReadAsArray())
@@ -226,33 +244,6 @@ def Save_as_tiff(name='', data='', geo='', projection=''):
     dst_ds.GetRasterBand(1).WriteArray(data)
     dst_ds = None
 
-
-def Save_as_tiff_end(name='', data='', lonext='', latext='', geo=''):
-    """
-    This function save the array as a geotiff for the merged end array
-    The projection is in WGS84
-
-    Keyword arguments:
-    name -- string, directory name
-    data -- [array], dataset of the geotiff
-    lonext -- minimum longitude
-    latext -- maximum latitude
-    geo -- [lonlim[0], pixelsize, rotation, latlim[0], rotation, pixelsize]
-           , (geospatial dataset)
-    """
-    # save as a geotiff file with a resolution of 0.001 degree
-    driver = gdal.GetDriverByName("GTiff")
-    dst_ds = driver.Create(name, int(data.shape[1]), int(data.shape[0]), 1,
-                           gdal.GDT_Float32, ['COMPRESS=LZW'])
-    srse = osr.SpatialReference()
-    srse.SetWellKnownGeogCS("WGS84")
-    dst_ds.SetProjection(srse.ExportToWkt())
-    dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
-    dst_ds.SetGeoTransform([lonext, geo[1], 0, latext, 0, geo[5]])
-    dst_ds.GetRasterBand(1).WriteArray(data)
-    dst_ds = None
-
-
 def Find_Document_Names(latlim, lonlim):
     """
     This function will translate the latitude and longitude limits into
@@ -305,24 +296,43 @@ def Download_Data(nameFile, output_folder_trash):
     DoContinent = "AF"
     TotalSize = 0
     for continent in allcontinents:
-        try:
-            url = ("http://earlywarning.usgs.gov/hydrodata/sa_con_3s_grid/"
-                   "%s/%s") % (continent, nameFile)
+        
+        # Reset the begin parameters for downloading												
+        downloaded = 0   
+        N=0  	
+																	
+        # if not downloaded try to download file																	
+        while downloaded == 0:								
+            try:
+                url = ("http://earlywarning.usgs.gov/hydrodata/sa_con_3s_grid/"
+                       "%s/%s") % (continent, nameFile)
 
-            site = urllib.urlopen(url)
-            meta = site.info()
-            if meta.getheaders("Content-Length")[0] > TotalSize:
-                DoContinent = continent
-                TotalSize = meta.getheaders("Content-Length")[0]
-        except:
-            continue
+                site = urllib.urlopen(url)
+                meta = site.info()
+                if meta.getheaders("Content-Length")[0] > TotalSize:
+                    DoContinent = continent
+                    TotalSize = meta.getheaders("Content-Length")[0]
 
-    url = ("http://earlywarning.usgs.gov/hydrodata/sa_con_3s_grid/"
-           "%s/%s") % (DoContinent, nameFile)
+																
+                url = ("http://earlywarning.usgs.gov/hydrodata/sa_con_3s_grid/"
+                         "%s/%s") % (DoContinent, nameFile)
 
-    file_name = url.split('/')[-1]
-    output_file = os.path.join(output_folder_trash, file_name)
-    urllib.urlretrieve(url, output_file)
+                file_name = url.split('/')[-1]
+                output_file = os.path.join(output_folder_trash, file_name)
+                urllib.urlretrieve(url, output_file)													
+                downloaded = 1												
+																
+            # If download was not succesfull								
+            except:	
+																			
+                # Try another time                     																				
+                N = N + 1
+																				
+                # Stop trying after 10 times																				
+                if N == 10:
+                    print 'Data from HydroSHED %s is not available' %continent
+                    downloaded = 1
+	    			
     return(output_file, file_name)
 
 

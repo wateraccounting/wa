@@ -5,7 +5,7 @@ Authors: Tim Hessels and Gonzalo Espinoza
 Contact: t.hessels@unesco-ihe.org
          g.espinoza@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
-Module: Level1/TRMM
+Module: Collect/TRMM
 
 
 Description:
@@ -15,7 +15,7 @@ download and create daily or monthly TRMM images in Gtiff format.
 The TRMM data is available since 1998-01-01 till 2015-04-30
 
 Examples:
-from wa.Level1 import TRMM
+from wa.Collect import TRMM
 TRMM.daily(Dir='C:/Temp/', Startdate='1999-02-01', Enddate='1999-02-28',
            latlim=[-10, 30], lonlim=[-20, 120], cores=2)
 TRMM.monthly(Dir='C:/Temp/', Startdate='1999-02-01', Enddate='1999-02-28',

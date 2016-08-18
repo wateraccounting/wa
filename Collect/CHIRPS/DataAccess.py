@@ -22,20 +22,24 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
              to avoid using parallel computing routines.
     TimeCase -- String equal to 'daily' or 'monthly'
     """
-    # String Parameters
+    # Define timestep for the timedates
     if TimeCase == 'daily':
         TimeFreq = 'D'
     elif TimeCase == 'monthly':
         TimeFreq = 'MS'
     else:
         raise KeyError("The input time interval is not supported")
-    # check variables
+    
+	# check time variables
     if not Startdate:
         Startdate = pd.Timestamp('1981-01-01')
     if not Enddate:
         Enddate = pd.Timestamp('Now')
+								
+    # Create days
     Dates = pd.date_range(Startdate, Enddate, freq=TimeFreq)
 
+    # Check space variables
     if latlim[0] < -50 or latlim[1] > 50:
         print ('Latitude above 50N or below 50S is not possible.'
                ' Value set to maximum')
@@ -47,7 +51,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
         lonlim[0] = np.max(latlim[0], -180)
         lonlim[1] = np.min(lonlim[1], 180)
 
-    # make directory
+    # make directory if it not exists
     output_folder = os.path.join(Dir, 'Precipitation', 'CHIRPS/')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -81,9 +85,12 @@ def RetrieveData(Date, args):
     """
     # Argument
     [output_folder, TimeCase, xID, yID, lonlim, latlim] = args
+				
     # open ftp server
     ftp = FTP("chg-ftpout.geog.ucsb.edu", "", "")
     ftp.login()
+				
+	# Define FTP path to directory 			
     if TimeCase == 'daily':
         pathFTP = 'pub/org/chg/products/CHIRPS-2.0/global_daily/tifs/p05/' + \
                   Date.strftime('%Y') + '/'
@@ -91,9 +98,15 @@ def RetrieveData(Date, args):
         pathFTP = 'pub/org/chg/products/CHIRPS-2.0/global_monthly/tifs/'
     else:
         raise KeyError("The input time interval is not supported")
+								
+    # find the document name in this directory								
     ftp.cwd(pathFTP)
     listing = []
+				
+	# read all the file names in the directory			
     ftp.retrlines("LIST", listing.append)
+				
+	# create all the input name (filename) and output (outfilename, filetif, DiFileEnd) names			
     if TimeCase == 'daily':
         filename = 'chirps-v2.0.' + Date.strftime('%Y') + '.' + \
                    Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif.gz'
@@ -118,7 +131,7 @@ def RetrieveData(Date, args):
     else:
         raise KeyError("The input time interval is not supported")
 
-    # download the file
+    # download the global rainfall file
     try:
         local_filename = os.path.join(output_folder, filename)
         lf = open(local_filename, "wb")

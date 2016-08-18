@@ -3,19 +3,19 @@ import sys
 from DataAccess import DownloadData
 
 
-def main(Var, Startdate, Enddate, latlim, lonlim, Dir, cores=False,
+def main(Dir, Var, Startdate, Enddate, latlim, lonlim, cores=False,
          Periods=[1, 2, 3, 4, 5, 6, 7, 8]):
     """
     This function downloads GLDAS three-hourly data for a given variable, time
     interval, spatial extent, and day period.
 
     Keyword arguments:
+    Dir -- 'C:/file/to/path/'
     Var -- Variable code. Run: VariablesInfo('day').descriptions.keys()
     Startdate -- 'yyyy-mm-dd'
-    Enddate -- 'yyyy-mm-dd'
+	Enddate -- 'yyyy-mm-dd'
     latlim -- [ymin, ymax]
     lonlim -- [xmin, xmax]
-    Dir -- 'C:/file/to/path/'
     Periods -- List of numbers from 1 to 8 (e.g. [1,4,5,8]). Stands for the
                period of hour of a day as follows:
                     Period       Hours
@@ -29,7 +29,7 @@ def main(Var, Startdate, Enddate, latlim, lonlim, Dir, cores=False,
                       8      21:00 - 24:00
     """
     # Download data
-    DownloadData(Var, Startdate, Enddate, latlim, lonlim, Dir, cores,
+    DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
                  TimeCase='three_hourly', CaseParameters=Periods)
 
 if __name__ == '__main__':

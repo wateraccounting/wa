@@ -24,8 +24,7 @@ for the period of 1 January - 7 January.
 Example:
 from wa.Level1 import ALEXI
 ALEXI.fromFTP_weekly(Startdate='2003-02-24', Enddate='2003-03-09',
-                     latlim=[50,54], lonlim=[3,7], Dir='C:/Temp/',
-                     username='*******', password='*******')
+                     latlim=[50,54], lonlim=[3,7], Dir='C:/Temp/')
 
 """
 
@@ -37,9 +36,9 @@ from ftplib import FTP
 import datetime
 import math
 
+import WebAccounts
 
-def fromFTP_weekly(Startdate, Enddate, latlim, lonlim, Dir,
-                   username, password):
+def DownloadData(Startdate, Enddate, latlim, lonlim, Dir):
     """
     This scripts downloads ALEXI ET data from the UNESCO-IHE ftp server.
     The output files display the total ET in mm for a period of one week.
@@ -51,16 +50,16 @@ def fromFTP_weekly(Startdate, Enddate, latlim, lonlim, Dir,
     latlim -- [ymin, ymax]
     lonlim -- [xmin, xmax]
     Dir -- 'C:/file/to/path/'
-    username -- ftp site username
-    password -- ftp site password
     """
+    username, password = WebAccounts.Accounts(Type = 'FTP_WA')
+
     ftpserver = "ftp.wateraccounting.unesco-ihe.org"
 
     DOY = datetime.datetime.strptime(Startdate,
                                      '%Y-%m-%d').timetuple().tm_yday
     Year = datetime.datetime.strptime(Startdate,
                                       '%Y-%m-%d').timetuple().tm_year
-    DOYstart = int(math.ceil(DOY/7)*7+1)
+    DOYstart = int(math.ceil(DOY/7.0)*7+1)
     DOYstart = str(DOYstart)
     Day = datetime.datetime.strptime(DOYstart, '%j')
     Month = '%02d' % Day.month
@@ -77,85 +76,75 @@ def fromFTP_weekly(Startdate, Enddate, latlim, lonlim, Dir,
     if not Enddate:
         Enddate = pd.Timestamp('Now')
 
-    Startdate = pd.Timestamp(Startdate) + pd.DateOffset(days=7)
-    StartdateRange = Startdate-pd.DateOffset(days=364)
-    Enddate = pd.Timestamp(Enddate)
-    Startdate2 = pd.date_range(StartdateRange, Enddate, freq='AS') + \
-        pd.DateOffset(days=7)
-    Enddate2 = pd.date_range(Startdate, Enddate, freq='A')
-    Count = len(Enddate2)
+    Startdate=pd.Timestamp(Startdate) +pd.DateOffset(days=7)
+    StartdateRange=Startdate-pd.DateOffset(days=364)
+    Enddate=pd.Timestamp(Enddate)  
+    Startdate2=pd.date_range(StartdateRange,Enddate,freq = 'AS')+pd.DateOffset(days=7)
+    Enddate2=pd.date_range(Startdate,Enddate,freq = 'A')
+    Count=len(Enddate2)
     os.chdir(output_folder)
-    i = 0
+    i=0
     for StartdateTot in Startdate2:
         if Count is 0:
-            EnddateTotaal = Enddate
+            EnddateTotaal=Enddate
         else:
-            EnddateTotaal = Enddate2[i]
-        StartdateTotaal = pd.Timestamp(StartdateTot)
+            EnddateTotaal=Enddate2[i]
+        StartdateTotaal=pd.Timestamp(StartdateTot)
         if i is 0:
-            StartdateTotaal = Startdate
-        if i == Count-1:
-            EnddateTotaal = Enddate
-
-        Dates = pd.date_range(StartdateTotaal, EnddateTotaal, freq='7D')
-
-        i = i + 1
+            StartdateTotaal=Startdate
+        if i==Count-1:
+            EnddateTotaal=Enddate
+        
+        Dates = pd.date_range(StartdateTotaal,EnddateTotaal,freq = '7D')
+        
+        i=i+1   
         for Date in Dates:
-
-            Datesname = Date+pd.DateOffset(days=-7)
+            
+            Datesname=Date+pd.DateOffset(days=-7)
             # File name .Tiff (final result)
-            DirFile = output_folder + 'ETa_ALEXI_CSFR_mm-week-1_weekly_' + \
-                Datesname.strftime('%Y') + '.' + Datesname.strftime('%m') + \
-                '.' + Datesname.strftime('%d') + '.tif'
-
-            ftp = FTP(ftpserver)
-            ftp.login(username, password)
-            directory = ("/WaterAccounting/Data_Satellite/Evaporation_test"
-                         "/ALEXI_test/World/")
+            DirFile=output_folder + 'ETa_ALEXI_CSFR_mm-week-1_weekly_' + Datesname.strftime('%Y') + '.' + Datesname.strftime('%m') + '.' + Datesname.strftime('%d') + '.tif'
+             
+            ftp=FTP(ftpserver)
+            ftp.login(username,password)
+            directory="/WaterAccounting/Data_Satellite/Evaporation/ALEXI/World/"
             ftp.cwd(directory)
-
-            filename = "ALEXI_weekly_mm_" + Date.strftime('%j') + "_" + \
-                Date.strftime('%Y') + ".tif"
-
-            # Define IDs
-            yID = 3000 - np.int16(np.array([np.ceil((latlim[1] + 60)*20),
-                                            np.floor((latlim[0]+60)*20)]))
-            xID = np.int16(np.array([np.floor((lonlim[0])*20),
-                                     np.ceil((lonlim[1])*20)]) + 3600)
-
-            try:
+            
+            filename="ALEXI_weekly_mm_" + Date.strftime('%j') + "_"+  Date.strftime('%Y') +".tif"
+            
+              # Define IDs
+            yID = 3000 - np.int16(np.array([np.ceil((latlim[1]+60)*20),np.floor((latlim[0]+60)*20)]))
+            xID = np.int16(np.array([np.floor((lonlim[0])*20),np.ceil((lonlim[1])*20)])+3600) 
+                        
+            try:  
                 local_filename = os.path.join(output_folder, filename)
                 lf = open(local_filename, "wb")
                 ftp.retrbinary("RETR " + filename, lf.write)
                 lf.close()
-
-                f = gdal.Open(local_filename)
-                band = f.GetRasterBand(1)
-                dataset = band.ReadAsArray()
-
+                
+                f=gdal.Open(local_filename)
+                band=f.GetRasterBand(1)
+                dataset=band.ReadAsArray()
+                
                 # Clip extend out of world data
-                # dataset=np.transpose(dataset)
-                data = dataset[yID[0]:yID[1], xID[0]:xID[1]]
+                #dataset=np.transpose(dataset)
+                data = dataset[yID[0]:yID[1],xID[0]:xID[1]]                 
                 data[data < 0] = -9999
-
-                # make geotiff file
+                
+                # make geotiff file              
                 driver = gdal.GetDriverByName("GTiff")
-                dst_ds = driver.Create(DirFile, data.shape[1],
-                                       int(yID[1] - yID[0]), 1,
-                                       gdal.GDT_Float32, ['COMPRESS=LZW'])
+                dst_ds = driver.Create(DirFile, data.shape[1], int(yID[1]-yID[0]), 1, gdal.GDT_Float32, ['COMPRESS=LZW'])                    
                 srs = osr.SpatialReference()
                 srs.SetWellKnownGeogCS("WGS84")
                 dst_ds.SetProjection(srs.ExportToWkt())
                 dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
-                dst_ds.SetGeoTransform([lonlim[0], 0.05, 0,
-                                        latlim[1], 0, -0.05])
+                dst_ds.SetGeoTransform([lonlim[0],0.05,0,latlim[1],0,-0.05])
                 dst_ds.GetRasterBand(1).WriteArray(data)
                 dst_ds = None
-
+                
                 # delete old tif file
-                f = None
+                f=None
                 os.remove(local_filename)
-
+                
             except:
                 print "file not exists"
                 continue
