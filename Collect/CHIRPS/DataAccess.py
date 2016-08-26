@@ -1,4 +1,14 @@
 # -*- coding: utf-8 -*-
+"""
+Authors: Tim Hessels and Gonzalo Espinoza
+         UNESCO-IHE 2016
+Contact: t.hessels@unesco-ihe.org
+         g.espinoza@unesco-ihe.org
+Repository: https://github.com/wateraccounting/wa
+Module: Collect/ETref
+"""
+
+# import general python modules
 import os
 import numpy as np
 import pandas as pd

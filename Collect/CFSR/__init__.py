@@ -15,9 +15,9 @@ The CFSRv2 data is available since 2011-04-01 till now
 
 Examples:
 from wa.Collect import CFSR
-CFSR.daily(Dir='C:/Temp/', Vars=['dlwsfc'], Startdate='2010-02-01', Enddate='2014-02-28',
+CFSR.daily(Dir='C:/Temp/', ['dlwsfc'], Startdate='2010-02-01', Enddate='2014-02-28',
            latlim=[-10, 30], lonlim=[-20, 120], cores=2)
-!CFSR.monthly(Dir='C:/Temp/', Vars=['uswsfc','dswsfc'], Startdate='1999-02-01', Enddate='1999-02-28',
+!CFSR.monthly(Dir='C:/Temp/', ['uswsfc','dswsfc'], Startdate='1999-02-01', Enddate='1999-02-28',
 !             latlim=[-10, 30], lonlim=[-20, 120]) (Still in progress at the moment!!!)
 """
 

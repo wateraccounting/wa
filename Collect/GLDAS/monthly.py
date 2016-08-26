@@ -3,7 +3,7 @@ import sys
 from DataAccess import DownloadData
 
 
-def main(Dir, Var, Startdate, Enddate, latlim, lonlim, cores=False):
+def main(Dir, Vars, Startdate, Enddate, latlim, lonlim, cores=False):
     """
     This function downloads GLDAS monthly data for a given variable, time
     interval, and spatial extent.
@@ -16,10 +16,10 @@ def main(Dir, Var, Startdate, Enddate, latlim, lonlim, cores=False):
     latlim -- [ymin, ymax]
     lonlim -- [xmin, xmax]
     """
-    
-	# Download data
-    DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
-                 TimeCase='monthly', CaseParameters=False)
+    for Var in Vars:
+	    # Download data
+         DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
+                     TimeCase='monthly', CaseParameters=False)
 
 if __name__ == '__main__':
     main(sys.argv)

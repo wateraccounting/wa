@@ -26,9 +26,9 @@ GLDAS.three_hourly(Dir='C:/Temp/', Vars=['qair','tair'], Startdate='2004-12-20',
                    latlim=[38, 41], lonlim=[-76, -73], cores=2,
                    Periods=[4, 5])
 GLDAS.daily(Dir='C:/Temp/', Vars=['qair'], Startdate='2004-12-20', Enddate='2005-01-01',
-            latlim=[38, 41], lonlim=[-76, -73],  cores=2,
+            latlim=[38, 41], lonlim=[-76, -73],
             SumMean=1, Min=1, Max=1)
-GLDAS.monthly(Dir='C:/TempGLDAS', Var='swnet', Startdate='2004-12-20', Enddate='2005-03-10',latlim=[38, 41], lonlim=[-76, -73])
+GLDAS.monthly(Dir='C:/TempGLDAS', Vars=['swnet'], Startdate='2004-12-20', Enddate='2005-03-10',latlim=[38, 41], lonlim=[-76, -73])
 """
 
 from .three_hourly import main as three_hourly

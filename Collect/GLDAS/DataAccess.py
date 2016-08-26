@@ -303,7 +303,7 @@ def RetrieveData_daily(Date, args):
                         get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True, verify = False)
 					
                     # download data (first save as text file)
-                    pathtext = os.path.join(path['mean'],'temp%s.txt' %str(zID_start))
+                    pathtext = os.path.join(path[T],'temp%s.txt' %str(zID_start))
                     z = open(pathtext,'w')
                     z.write(get_dataset.content)
                     z.close()
