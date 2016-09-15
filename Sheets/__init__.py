@@ -11,11 +11,11 @@ This can be used to create the WA+ standard sheets (www.wateraccounting.org).
 
 Examples:
 from wa.Sheets import *
-create_sheet1(basin='Incomati', period='2005-2010',
+create_sheet1(basin='Incomati', period='2005-2010', units='km3/year',
               data=r'C:\Sheets\csv\Sample_sheet1.csv',
               output=r'C:\Sheets\sheet_1.jpg')
 from wa.Sheets import *
-create_sheet2(basin='Nile Basin', period='2010',
+create_sheet2(basin='Nile Basin', period='2010', units='km3/year',
               data=r'C:\Sheets\csv\Sample_sheet2.csv',
               output=r'C:\Sheets\sheet_2.jpg')
 """

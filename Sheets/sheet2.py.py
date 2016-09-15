@@ -13,7 +13,8 @@ from wand.image import Image
 import xml.etree.ElementTree as ET
 
 
-def create_sheet2(basin, period, data, output, template=False, tolerance=0.1):
+def create_sheet2(basin, period, units, data, output, template=False,
+                  tolerance=0.1):
     """
     This function downloads TRMM3B42 V7 (daily) data
 
@@ -717,6 +718,9 @@ def create_sheet2(basin, period, data, output, template=False, tolerance=0.1):
 
     xml_txt_box = tree.findall('''.//*[@id='period']''')[0]
     xml_txt_box.getchildren()[0].text = period
+
+    xml_txt_box = tree.findall('''.//*[@id='units']''')[0]
+    xml_txt_box.getchildren()[0].text = '(' + units + ')'
 
     # Total ET
     total_et_t1 = c5r1_t1_left + c5r2_t1_left + c5r3_t1_left + c5r4_t1_left + \
