@@ -704,7 +704,7 @@ def create_sheet2(basin, period, units, data, output, template=False,
 
     # Calculations & modify svg
     if not template:
-        path = os.path.dirname(os.path.abspath('__file__'))
+        path = os.path.dirname(os.path.abspath(__file__))
         svg_template_path = os.path.join(path, 'svg', 'sheet_2.svg')
     else:
         svg_template_path = os.path.abspath(template)
