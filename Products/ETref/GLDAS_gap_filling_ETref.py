@@ -44,7 +44,7 @@ def gap_filling(dataset,NoDataValue):
     NDV_data, xsize_data, ysize_data, GeoT_data, Projection_data, DataType_data = GetGeoInfo(dataset)
 				
     # Save the filled array as geotiff				
-    CreateGeoTiff(dataset_GF,data_end, NDV_data, xsize_data, ysize_data, GeoT_data, Projection_data, DataType_data)
+    CreateGeoTiff(dataset_GF,data_end, NDV_data, xsize_data, ysize_data, GeoT_data, Projection_data)
     EndProduct=dataset[:-4] + '_GF.tif'   
 				
     return (EndProduct)

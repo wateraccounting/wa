@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+Authors: Tim Hessels
+         UNESCO-IHE 2016
+Contact: t.hessels@unesco-ihe.org
+Repository: https://github.com/wateraccounting/wa
+Module: Collect/TRMM
+"""
+
 import numpy as np
 import os
 from osgeo import osr, gdal
@@ -111,6 +119,7 @@ def RetrieveData(Date, args):
         lf = open(local_filename, "wb")
         ftp.retrbinary("RETR " + filename, lf.write, 8192)  # 8*1024
         lf.close()
+
         # Open .bin file
         if TimeCase == 'daily':
             opendata = output_folder + '3B42_daily.' + \
@@ -142,6 +151,7 @@ def RetrieveData(Date, args):
 
             datasetrow = np.fromstring(Record, dtype=float, sep=' ')
             dataset[:, i] = datasetrow
+
         # Delete .bin file
         f.close()
         os.remove(opendata)
@@ -154,6 +164,7 @@ def RetrieveData(Date, args):
                 dataset = np.hstack([dataset3, dataset2])
         data = dataset[yID[0]:yID[1], xID[0]:xID[1]]
         data[data < 0] = -9999
+
         # Make geotiff file
         driver = gdal.GetDriverByName("GTiff")
         dst_ds = driver.Create(DirFile, data.shape[1], int(yID[1]-yID[0]),

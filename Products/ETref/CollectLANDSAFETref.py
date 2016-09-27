@@ -20,6 +20,7 @@ import netCDF4
 from SlopeInfluence_ETref import SlopeInfluence	
 from StandardDef_ETref import GetGeoInfo, OpenAsArray, ReprojectRaster
 from StandardDef_ETref import CreateGeoTiff
+from wa import WA_Paths
 
 def CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim):
     """
@@ -139,10 +140,19 @@ def ShortwaveBasin(SourceLANDSAF, Dir, latlim, lonlim, Dates = ['2000-01-01','20
             
             # Convert nc to tiff files
             Transform(SourceLANDSAF, OutPath, Type, Dates = [Date.strftime('%Y-%m-%d'),Date.strftime('%Y-%m-%d')])
-            
-            # clip data										
+
+            # find path to the executable
+            path = WA_Paths.Paths(Type = 'GDAL')
             nameOut= os.path.join(Dir,'Landsaf_Clipped',Type,'SAF_' + Type + '_daily_W-m2_' + Date.strftime('%Y-%m-%d') + '.tif')
-            fullCmd = ' '.join(['gdal_translate -projwin %s %s %s %s' % (lonlim[0]-0.1, latlim[1]+0.1, lonlim[1]+0.1, latlim[0]-0.1), '-of GTiff', OutPath, nameOut])  # -r {nearest}
+            
+			# clip data										
+            if path is '':
+                fullCmd = ' '.join(['gdal_translate -projwin %s %s %s %s' % (lonlim[0]-0.1, latlim[1]+0.1, lonlim[1]+0.1, latlim[0]-0.1), '-of GTiff', OutPath, nameOut])  # -r {nearest}
+            
+            else:
+                gdal_translate_path = os.path.join(path,'gdal_translate.exe')
+                fullCmd = ' '.join(['"%s" -projwin %s %s %s %s' % (gdal_translate_path, lonlim[0]-0.1, latlim[1]+0.1, lonlim[1]+0.1, latlim[0]-0.1), '-of GTiff', OutPath, nameOut])  # -r {nearest}
+           
             process = subprocess.Popen(fullCmd)
             process.wait() 
             print 'Landsaf ' + Type + ' file for ' + Date.strftime('%Y-%m-%d') + ' created.'
@@ -184,8 +194,14 @@ def Transform(SourceLANDSAF, OutPath, Type, Dates = ['2000-01-01','2013-12-31'])
         elif Type == 'SID':
             ZipFile = path + 'DNIdm' + Date.strftime('%Y%m%d') + '0000002231000101MA.nc.gz'
             File = path + 'DNIdm' + Date.strftime('%Y%m%d') + '0000002231000101MA.nc'
-            
-        os.system("7z x " + ZipFile + " -o" + path + ' -aoa')  
+
+        # find path to the executable
+        zip_path = WA_Paths.Paths(Type = '7z.exe')
+        
+        if zip_path is '':		
+            os.system("7z x " + ZipFile + " -o" + path + ' -aoa')  
+        else: 
+            os.system("%s x " %(zip_path) + ZipFile + " -o" + path + ' -aoa')  
         
         NC = netCDF4.Dataset(File,'r+',format='NETCDF4')
         Data = NC[Type][0,:,:]

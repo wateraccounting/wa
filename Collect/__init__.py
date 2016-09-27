@@ -17,8 +17,8 @@ help(Collect)
 dir(Collect)
 """
 
-from wa.Collect import TRMM, GLDAS, ALEXI, CHIRPS, DEM, CFSR
+from wa.Collect import TRMM, GLDAS, ALEXI, CHIRPS, DEM, CFSR, MOD13, MOD15, MOD16, MOD17
 
-__all__ = ['TRMM', 'GLDAS', 'ALEXI', 'CHIRPS', 'DEM', 'CFSR']
+__all__ = ['TRMM', 'GLDAS', 'ALEXI', 'CHIRPS', 'DEM', 'CFSR', 'MOD13', 'MOD15', 'MOD16', 'MOD17']
 
 __version__ = '0.1'

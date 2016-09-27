@@ -7,6 +7,7 @@ Module: Collect/CFSR
 """
 # General modules
 import os
+import pycurl
 
 def Download_data(Date, Version, output_folder, Var):        
     """
@@ -33,11 +34,19 @@ def Download_data(Date, Version, output_folder, Var):
 									
             # Create the command and run the command in cmd
             if Version == 1:
-                os.system("curl -o " + local_filename + " ftp://nomads.ncdc.noaa.gov/CFSR/HP_time_series/" 
-								+ Date.strftime('%Y') + Date.strftime('%m')+ "/" + filename)
+			    FTP_name = 'ftp://nomads.ncdc.noaa.gov/CFSR/HP_time_series/' + Date.strftime('%Y') + Date.strftime('%m')+ '/' + filename
+							
             if Version == 2:
-                os.system("curl -o " + local_filename + " http://nomads.ncdc.noaa.gov/modeldata/cfsv2_analysis_timeseries/"
-								+ Date.strftime('%Y') + "/" + Date.strftime('%Y') + Date.strftime('%m')+ "/" + filename)
+                FTP_name = 'http://nomads.ncdc.noaa.gov/modeldata/cfsv2_analysis_timeseries/' + Date.strftime('%Y') + '/' + Date.strftime('%Y') + Date.strftime('%m')+ '/' + filename
+
+            curl = pycurl.Curl()
+            curl.setopt(pycurl.URL, FTP_name)
+            fp = open(local_filename, "wb")
+            curl.setopt(pycurl.WRITEDATA, fp)
+            curl.perform()
+            curl.close()
+            fp.close()										
+								
     except:
         print 'Was not able to download the CFSR file from the FTP server'
     

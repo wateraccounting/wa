@@ -8,9 +8,9 @@ Created on Thu Mar 17 09:27:36 2016
 def Accounts(Type=None):
     
     User_Pass = {
-    'GLDAS'                 :   ['',''], 
-    'GLEAM'                 :   ['',''],
-    'FTP_WA'                :	['','']		
+    'NASA'                 :   ['',''], 
+    'GLEAM'                :   ['',''],
+    'FTP_WA'               :   ['','']		
     }
     
     Selected_Path = User_Pass[Type]    

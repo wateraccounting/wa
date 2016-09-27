@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+Authors: Tim Hessels
+         UNESCO-IHE 2016
+Contact: t.hessels@unesco-ihe.org
+Repository: https://github.com/wateraccounting/wa
+Module: Collect/DEM
+"""
+# General modules
 import numpy as np
 import os
 from osgeo import osr, gdal
@@ -7,6 +15,8 @@ import zipfile
 import shutil
 import tempfile
 
+# WA+ modules
+from wa import WA_Paths
 
 def DownloadData(output_folder, latlim, lonlim, Resample):
     """
@@ -369,9 +379,18 @@ def Convert_adf_to_tiff(file_name, output_folder_trash):
                              file_name_extract2, 'hdr.adf')
     output_tiff = os.path.join(output_folder_trash, file_name_tiff)
 
-    # convert data from ESRI GRID to GeoTIFF
-    command = ("gdal_translate -co COMPRESS=DEFLATE -co PREDICTOR=1 -co "
-               "ZLEVEL=1 -of GTiff %s %s") % (input_adf, output_tiff)
+    # find path to the executable
+    path = WA_Paths.Paths(Type = 'GDAL')
+    if path is '':
+        command = ("gdal_translate -co COMPRESS=DEFLATE -co PREDICTOR=1 -co "
+                   "ZLEVEL=1 -of GTiff %s %s") % (input_adf, output_tiff)
+	
+    else:
+        gdal_translate_path = os.path.join(path,'gdal_translate.exe')	
+	
+        # convert data from ESRI GRID to GeoTIFF
+        command = ('"%s" -co COMPRESS=DEFLATE -co PREDICTOR=1 -co '
+                   'ZLEVEL=1 -of GTiff %s %s') % (gdal_translate_path, input_adf, output_tiff)
     os.system(command)
     return(output_tiff)
 
@@ -391,8 +410,19 @@ def clip_data(latlim, lonlim, output_tiff, outputfile_name_chunk, rangeLat,
     rangeLon -- Longitude extend of the tile
     file_name -- name of the input file
     """
-    # clip data to the extend defined by the user
-    os.system('gdalbuildvrt DEM.vrt %s' % output_tiff)
+    # find path to the executable
+    path = WA_Paths.Paths(Type = 'GDAL')
+				
+    if path is '':
+        # clip data to the extend defined by the user
+        os.system("gdalbuildvrt DEM.vrt %s" % (output_tiff))
+	
+    else:
+        gdalbuildvrt_path = os.path.join(path,'gdalbuildvrt.exe')		
+        gdalwarp_path = os.path.join(path,'gdalwarp.exe')
+	
+        # clip data to the extend defined by the user
+        os.system('"%s" DEM.vrt %s' % (gdalbuildvrt_path, output_tiff))
 
     # set the clipping extend the same as the extend defined by the user
     Bound1 = lonlim[0]
@@ -432,6 +462,10 @@ def clip_data(latlim, lonlim, output_tiff, outputfile_name_chunk, rangeLat,
     Bounding = '%s %s %s %s' % (Bound1, Bound2, Bound3, Bound4)
 
     # clips the data
-    command = 'gdalwarp -te %s DEM.vrt %s' % (Bounding, outputfile_name_chunk)
+    if path is '':
+        command = 'gdalwarp -te %s DEM.vrt %s' % (Bounding, outputfile_name_chunk)
+  	
+    else:
+        command = '"%s" -te %s DEM.vrt %s' % (gdalwarp_path, Bounding, outputfile_name_chunk)
     os.system(command)
     return(Bound1, Bound2, Bound3, Bound4)

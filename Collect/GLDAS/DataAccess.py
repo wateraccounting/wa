@@ -30,7 +30,7 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
 	
     # Load factors / unit / type of variables / accounts
     VarInfo = VariablesInfo(TimeCase)
-    username, password = WebAccounts.Accounts(Type = 'GLDAS')
+    username, password = WebAccounts.Accounts(Type = 'NASA')
 				
     # Set required data for the three hourly option
     if TimeCase == 'three_hourly':
