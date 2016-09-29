@@ -15,10 +15,9 @@ import xml.etree.ElementTree as ET
 
 def create_sheet1(basin, period, units, data, output, template=False):
     """
-    This function downloads TRMM3B42 V7 (daily) data
 
     Keyword arguments:
-    basin -- The name of the basing
+    basin -- The name of the basin
     period -- The period of analysis
     data -- A csv file that contains the water data. The csv file has to
             follow an specific format. A sample csv is available in the link:
@@ -140,7 +139,7 @@ def create_sheet1(basin, period, units, data, output, template=False):
     xml_txt_box.getchildren()[0].text = period
     
     xml_txt_box = tree.findall('''.//*[@id='units']''')[0]
-    xml_txt_box.getchildren()[0].text = '(' + units + ')'
+    xml_txt_box.getchildren()[0].text = 'Sheet 1: Resource Base (' + units + ')'
 
     # Grey box
 
