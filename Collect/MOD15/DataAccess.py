@@ -26,7 +26,7 @@ from joblib import Parallel, delayed
 from wa import WebAccounts
 from wa import WA_Paths
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, nameDownload):
     """
     This function downloads MOD15 16-daily data
 
@@ -38,6 +38,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
     cores -- The number of cores used to run the routine. It can be 'False'
              to avoid using parallel computing routines.
+	nameDownload -- The name of the subset that must be download can be Fpar_500m or Lai_500m
     """
  
     # Check start and end date and otherwise set the date to max
@@ -46,6 +47,14 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     if not Enddate: 
         Enddate = pd.Timestamp('Now')
     
+    if nameDownload == 'Fpar_500m':
+        unit = '-'
+        dataset = 'FPAR'
+    if nameDownload == 'Lai_500m':
+        unit = 'm2-m2'
+        dataset = 'LAI'
+		
+	
     # Make an array of the days of which the FPAR is taken
     Dates = Make_TimeStamps(Startdate,Enddate)    
     
@@ -61,7 +70,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
         
     # Make directory for the MODIS FPAR data
     Dir = Dir.replace("/", os.sep)						
-    output_folder = os.path.join(Dir, 'FPAR', 'MODIS')
+    output_folder = os.path.join(Dir, dataset, 'MODIS')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
@@ -124,7 +133,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
             TilesVertical, TilesHorizontal = Tiles_to_download(tiletext2=tiletext2,lonlim1=lonlim1,latlim1=latlim1)
             
             # Pass variables to parallel function and run
-            args = [output_folder, TilesVertical, TilesHorizontal, IsVerTilesNeeded, IsHorTilesNeeded, lonlim1, latlim1, lonname, latname]
+            args = [output_folder, TilesVertical, TilesHorizontal, IsVerTilesNeeded, IsHorTilesNeeded, lonlim1, latlim1, lonname, latname, unit, dataset, nameDownload]
             if not cores:
                 for Date in Dates:
                      RetrieveData(Date, args)
@@ -162,7 +171,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
                     XtotDataEnd = XtotDataStart + (LonChunk[XnameChunk] - LonChunk[XnameChunk - 1]) * 400
                    
                     #  Define FPAR chunk file name, Open this file and open the array  								
-                    file_name=os.path.join(output_folder, 'FPAR_MOD15_-_16-daily_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.' + Date.strftime('%d')+'_chunk_h' + str(XnameChunk) + 'v'+ str(YnameChunk) + '.tif')
+                    file_name=os.path.join(output_folder, '%s_MOD15_%s_16-daily_' %(dataset,unit) + Date.strftime('%Y') + '.' + Date.strftime('%m')+'.' + Date.strftime('%d')+'_chunk_h' + str(XnameChunk) + 'v'+ str(YnameChunk) + '.tif')
                     fileopen = gdal.Open(file_name)
                     arrayChunk = np.array(fileopen.GetRasterBand(1).ReadAsArray())
 
@@ -174,7 +183,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
                     os.remove(file_name)
   
             # Save total array
-            FPARfileName = os.path.join(output_folder, 'FPAR_MOD15_-_16-daily_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.' + Date.strftime('%d')+'.tif')
+            FPARfileName = os.path.join(output_folder, '%s_MOD15_%s_16-daily_' %(dataset,unit) + Date.strftime('%Y')+'.' + Date.strftime('%m')+'.' + Date.strftime('%d')+'.tif')
             TotData = np.flipud(TotData)
             Save_as_Gtiff(TotData, FPARfileName, lonlim, latlim)         
         
@@ -190,11 +199,11 @@ def RetrieveData(Date, args):
     args -- A list of parameters defined in the DownloadData function.
     """
     # Argument
-    [output_folder, TilesVertical, TilesHorizontal, IsVerTilesNeeded, IsHorTilesNeeded, lonlim1, latlim1, lonname, latname] = args
+    [output_folder, TilesVertical, TilesHorizontal, IsVerTilesNeeded, IsHorTilesNeeded, lonlim1, latlim1, lonname, latname, unit, dataset, nameDownload] = args
 
     # Collect the data from the MODIS webpage and returns the data and lat and long in meters of those tiles
     try:
-        Collect_data(TilesHorizontal, TilesVertical, Date, output_folder)
+        Collect_data(TilesHorizontal, TilesVertical, Date, output_folder, nameDownload)
     except:
         print "Was not able to download the file"  
          
@@ -223,11 +232,11 @@ def RetrieveData(Date, args):
                 
     # Save results as Gtiff
     if IsHorTilesNeeded==0 and IsVerTilesNeeded==0:
-        FPARfileName = os.path.join(output_folder, 'FPAR_MOD15_-_16-daily_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
+        FPARfileName = os.path.join(output_folder, '%s_MOD15_%s_16-daily_' %(dataset,unit) + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
         Save_as_Gtiff(data,FPARfileName,lonlim1,latlim1)                     
                     
     else:
-        FPARfileName = os.path.join(output_folder, 'FPAR_MOD15_-_16-daily_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '_chunk_h' + str(lonname) + 'v' + str(latname) + '.tif')
+        FPARfileName = os.path.join(output_folder, '%s_MOD15_%s_16-daily_' %(dataset,unit) + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '_chunk_h' + str(lonname) + 'v' + str(latname) + '.tif')
         Save_as_Gtiff(data,FPARfileName,lonlim1,latlim1) 
     return True
 
@@ -265,19 +274,19 @@ def Make_TimeStamps(Startdate,Enddate):
 
     # If the startday is not in the same year as the enddate
     if AmountOfYear > 0:
-        for i in range(0, AmountOfYear):
+        for i in range(0, AmountOfYear+1):
             if i is 0:
                 Startdate1 = Startdate
                 Enddate1 = YearEndDate[0]
                 Dates = pd.date_range(Startdate1, Enddate1, freq = '16D')
-            if i is AmountOfYear-1:
+            if i is AmountOfYear:
                 Startdate1 = YearStartDate[i]
                 Enddate1 = Enddate
                 Dates1 = pd.date_range(Startdate1, Enddate1, freq = '16D')
                 Dates = Dates.union(Dates1)
             else:
                 Startdate1 = YearStartDate[i]              
-                Enddate1 = YearEndDate[i+1] 
+                Enddate1 = YearEndDate[i] 
                 Dates1 = pd.date_range(Startdate1, Enddate1, freq = '16D')
                 Dates = Dates.union(Dates1)
 																
@@ -426,7 +435,7 @@ def Reproject_data(output_folder):
     process.wait() 
     return(name1, name2)    
     
-def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
+def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, nameDownload):
     '''
     This function downloads all the needed MODIS tiles from http://e4ftl01.cr.usgs.gov/MOLT/MOD13Q1.006/ as a hdf file.
 
@@ -482,13 +491,13 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                     while downloaded == 0:		
 																					
                         try:# open http and download whole .hdf       
-                            nameDownload = full_url  
-                            file_name = os.path.join(output_folder,nameDownload.split('/')[-1])
+                            nameDownload_url = full_url  
+                            file_name = os.path.join(output_folder,nameDownload_url.split('/')[-1])
                             if os.path.isfile(file_name):
                                 print "file ", file_name, " already exists"
                                 downloaded = 1
                             else:
-                                x = requests.get(nameDownload, allow_redirects = False)
+                                x = requests.get(nameDownload_url, allow_redirects = False)
                                 try:																						
                                     y = requests.get(x.headers['location'], auth = (username, password))
                                 except:
@@ -513,14 +522,20 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                         downloaded = 1
                     try:
                         # Open .hdf only band with FPAR and collect all tiles to one array
+                        if nameDownload == 'Fpar_500m':
+                            dataset_nmbr = 1	
+                            scale_factor = 0.01																						 
+                        if nameDownload == 'Lai_500m':
+                            dataset_nmbr = 2		
+                            scale_factor = 0.1																													
                         dataset = gdal.Open(file_name)
                         sdsdict = dataset.GetMetadata('SUBDATASETS')
-                        sdslist = [sdsdict[k] for k in sdsdict.keys() if '_1_NAME' in k]
+                        sdslist = [sdsdict[k] for k in sdsdict.keys() if '_%s_NAME' %dataset_nmbr in k]
                         sds = []
                        
                         for n in sdslist:
                             sds.append(gdal.Open(n))
-                            full_layer = [i for i in sdslist if 'Fpar_500m' in i]
+                            full_layer = [i for i in sdslist if nameDownload in i]
                             idx = sdslist.index(full_layer[0])
                             if Horizontal == TilesHorizontal[0] and Vertical == TilesVertical[0]:
                                 geo_t = sds[idx].GetGeoTransform()  
@@ -530,7 +545,7 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
 
                             data = sds[idx].ReadAsArray() 
                             countYdata = (TilesVertical[1] - TilesVertical[0] + 2) - countY
-                            DataTot[int((countYdata - 1) * 2400):int(countYdata * 2400), int((countX - 1) * 2400):int(countX * 2400)]=data * 0.01
+                            DataTot[int((countYdata - 1) * 2400):int(countYdata * 2400), int((countX - 1) * 2400):int(countX * 2400)]=data * scale_factor
                         del data
                         
                     # if the tile not exists or cannot be opened, create a nan array with the right projection                          

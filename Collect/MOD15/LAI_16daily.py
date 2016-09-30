@@ -15,7 +15,7 @@ def main(Dir, Startdate, Enddate, latlim, lonlim, cores=False):
     lonlim -- [xmin, xmax]
     cores -- amount of cores used
     """
-    nameDownload = 'Fpar_500m'
+    nameDownload = 'Lai_500m'
     DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, nameDownload)
 
 if __name__ == '__main__':

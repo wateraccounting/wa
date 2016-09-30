@@ -266,19 +266,19 @@ def Make_TimeStamps(Startdate,Enddate):
 
     # If the startday is not in the same year as the enddate
     if AmountOfYear > 0:
-        for i in range(0, AmountOfYear):
+        for i in range(0, AmountOfYear+1):
             if i is 0:
                 Startdate1 = Startdate
                 Enddate1 = YearEndDate[0]
                 Dates = pd.date_range(Startdate1, Enddate1, freq = '16D')
-            if i is AmountOfYear-1:
+            if i is AmountOfYear:
                 Startdate1 = YearStartDate[i]
                 Enddate1 = Enddate
                 Dates1 = pd.date_range(Startdate1, Enddate1, freq = '16D')
                 Dates = Dates.union(Dates1)
             else:
                 Startdate1 = YearStartDate[i]              
-                Enddate1 = YearEndDate[i+1] 
+                Enddate1 = YearEndDate[i] 
                 Dates1 = pd.date_range(Startdate1, Enddate1, freq = '16D')
                 Dates = Dates.union(Dates1)
 																
