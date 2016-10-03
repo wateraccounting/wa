@@ -18,7 +18,8 @@ dir(Products)
 """
 
 from wa.Products import ETref
+from wa.Products import ETens
 
-__all__ = ['ETref']
+__all__ = ['ETref', 'ETens']
 
 __version__ = '0.1'

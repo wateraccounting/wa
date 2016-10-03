@@ -10,9 +10,9 @@ Module: -
 def Paths(Type=None):
     
     User_Path = {
-    'GDAL'                 :   'C:\Program Files (x86)\GDAL',            #folder
-    '7z.exe'               :   'C:\Program Files (x86)\GDAL\7z.exe',     #complete path to executable
-    'curl.exe'             :   'C:\Program Files (x86)\GDAL\curl.exe'   #complete path to executable
+    'GDAL'                 :   r'C:\Program Files (x86)\GDAL',           #folder
+    '7z.exe'               :   r'C:\Program Files (x86)\GDAL\7z.exe',    #complete path to executable
+    'curl.exe'             :   r'C:\Program Files (x86)\GDAL\curl.exe'   #complete path to executable
     }
     
     Selected_Path = User_Path[Type]    
