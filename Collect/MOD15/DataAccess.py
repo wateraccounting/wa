@@ -28,7 +28,7 @@ from wa import WA_Paths
 
 def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, nameDownload):
     """
-    This function downloads MOD15 16-daily data
+    This function downloads MOD15 8-daily data
 
     Keyword arguments:
     Dir -- 'C:/file/to/path/'
@@ -161,17 +161,17 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, nameDownload):
     
             for YnameChunk in range(int(VerticalTiles), 0, -1):
                 YtotDataStart = int(YtotDataEnd)
-                YtotDataEnd = int(YtotDataStart+(LatChunk[YnameChunk]-LatChunk[YnameChunk-1])*400)
+                YtotDataEnd = int(YtotDataStart+(LatChunk[YnameChunk]-LatChunk[YnameChunk-1])*200)
                 XtotDataStart = 0
                 XtotDataEnd = 0
                 for XnameChunk in range(1, int(HorizontalTiles)+1):
  
                     # Define size of the chunk array
                     XtotDataStart = XtotDataEnd
-                    XtotDataEnd = XtotDataStart + (LonChunk[XnameChunk] - LonChunk[XnameChunk - 1]) * 400
+                    XtotDataEnd = XtotDataStart + (LonChunk[XnameChunk] - LonChunk[XnameChunk - 1]) * 200
                    
                     #  Define FPAR chunk file name, Open this file and open the array  								
-                    file_name=os.path.join(output_folder, '%s_MOD15_%s_16-daily_' %(dataset,unit) + Date.strftime('%Y') + '.' + Date.strftime('%m')+'.' + Date.strftime('%d')+'_chunk_h' + str(XnameChunk) + 'v'+ str(YnameChunk) + '.tif')
+                    file_name=os.path.join(output_folder, '%s_MOD15_%s_8-daily_' %(dataset,unit) + Date.strftime('%Y') + '.' + Date.strftime('%m')+'.' + Date.strftime('%d')+'_chunk_h' + str(XnameChunk) + 'v'+ str(YnameChunk) + '.tif')
                     fileopen = gdal.Open(file_name)
                     arrayChunk = np.array(fileopen.GetRasterBand(1).ReadAsArray())
 
@@ -183,8 +183,9 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, nameDownload):
                     os.remove(file_name)
   
             # Save total array
-            FPARfileName = os.path.join(output_folder, '%s_MOD15_%s_16-daily_' %(dataset,unit) + Date.strftime('%Y')+'.' + Date.strftime('%m')+'.' + Date.strftime('%d')+'.tif')
+            FPARfileName = os.path.join(output_folder, '%s_MOD15_%s_8-daily_' %(dataset,unit) + Date.strftime('%Y')+'.' + Date.strftime('%m')+'.' + Date.strftime('%d')+'.tif')
             TotData = np.flipud(TotData)
+            TotData[TotData >= 20] = -9999          												
             Save_as_Gtiff(TotData, FPARfileName, lonlim, latlim)         
         
 	return results		
@@ -232,18 +233,18 @@ def RetrieveData(Date, args):
                 
     # Save results as Gtiff
     if IsHorTilesNeeded==0 and IsVerTilesNeeded==0:
-        FPARfileName = os.path.join(output_folder, '%s_MOD15_%s_16-daily_' %(dataset,unit) + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
+        FPARfileName = os.path.join(output_folder, '%s_MOD15_%s_8-daily_' %(dataset,unit) + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
         Save_as_Gtiff(data,FPARfileName,lonlim1,latlim1)                     
                     
     else:
-        FPARfileName = os.path.join(output_folder, '%s_MOD15_%s_16-daily_' %(dataset,unit) + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '_chunk_h' + str(lonname) + 'v' + str(latname) + '.tif')
+        FPARfileName = os.path.join(output_folder, '%s_MOD15_%s_8-daily_' %(dataset,unit) + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '_chunk_h' + str(lonname) + 'v' + str(latname) + '.tif')
         Save_as_Gtiff(data,FPARfileName,lonlim1,latlim1) 
     return True
 
 def Make_TimeStamps(Startdate,Enddate):
     '''
     This function determines all time steps of which the FPAR must be downloaded   
-    The time stamps are 16 daily.
+    The time stamps are 8 daily.
 	
     Keywords arguments:
     Startdate -- 'yyyy-mm-dd'
@@ -257,8 +258,8 @@ def Make_TimeStamps(Startdate,Enddate):
     # Define the year of the end day
     YearEnd = datetime.datetime.strptime(Enddate,'%Y-%m-%d').timetuple().tm_year
 
-    # Change the DOY of the start day into a DOY of MODIS day (16-daily) and create new startdate
-    DOYstart = int(math.floor(DOY / 16.0) * 16) + 1
+    # Change the DOY of the start day into a DOY of MODIS day (8-daily) and create new startdate
+    DOYstart = int(math.floor(DOY / 8.0) * 8) + 1
     DOYstart = str(DOYstart)
     Day = datetime.datetime.strptime(DOYstart, '%j')
     Month = '%02d' % Day.month
@@ -278,21 +279,21 @@ def Make_TimeStamps(Startdate,Enddate):
             if i is 0:
                 Startdate1 = Startdate
                 Enddate1 = YearEndDate[0]
-                Dates = pd.date_range(Startdate1, Enddate1, freq = '16D')
+                Dates = pd.date_range(Startdate1, Enddate1, freq = '8D')
             if i is AmountOfYear:
                 Startdate1 = YearStartDate[i]
                 Enddate1 = Enddate
-                Dates1 = pd.date_range(Startdate1, Enddate1, freq = '16D')
+                Dates1 = pd.date_range(Startdate1, Enddate1, freq = '8D')
                 Dates = Dates.union(Dates1)
             else:
                 Startdate1 = YearStartDate[i]              
                 Enddate1 = YearEndDate[i] 
-                Dates1 = pd.date_range(Startdate1, Enddate1, freq = '16D')
+                Dates1 = pd.date_range(Startdate1, Enddate1, freq = '8D')
                 Dates = Dates.union(Dates1)
 																
     # If the startday is in the same year as the enddate               
     if AmountOfYear is 0:
-        Dates = pd.date_range(Startdate, Enddate, freq = '16D')
+        Dates = pd.date_range(Startdate, Enddate, freq = '8D')
     
     return(Dates)
             
@@ -524,10 +525,10 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, nameDownload)
                         # Open .hdf only band with FPAR and collect all tiles to one array
                         if nameDownload == 'Fpar_500m':
                             dataset_nmbr = 1	
-                            scale_factor = 0.01																						 
+                            scale_factor = 0.01																					
                         if nameDownload == 'Lai_500m':
                             dataset_nmbr = 2		
-                            scale_factor = 0.1																													
+                            scale_factor = 0.1																											
                         dataset = gdal.Open(file_name)
                         sdsdict = dataset.GetMetadata('SUBDATASETS')
                         sdslist = [sdsdict[k] for k in sdsdict.keys() if '_%s_NAME' %dataset_nmbr in k]
@@ -561,6 +562,14 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, nameDownload)
                         countYdata=(TilesVertical[1] - TilesVertical[0] + 2) - countY
                         DataTot[(countYdata - 1) * 2400:countYdata * 2400,(countX - 1) * 2400:countX * 2400] = data * 0.01
 
+    # Set data limits
+    if nameDownload == 'Fpar_500m':
+        upper_limit = 2.2																						
+    if nameDownload == 'Lai_500m':
+        upper_limit = 22		    
+    DataTot[DataTot >= upper_limit] = -9999 
+    DataTot[DataTot <= -0.3] = -9999
+				
     # Make geotiff file      
     name2 = os.path.join(output_folder, 'Merged.tif')
     driver = gdal.GetDriverByName("GTiff")
@@ -575,7 +584,7 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, nameDownload)
         geo_t = tuple(geo)        
         dst_ds.SetProjection(proj)		
         									
-    dst_ds.GetRasterBand(1).SetNoDataValue(-0.3)
+    dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
     dst_ds.SetGeoTransform(geo_t)
     dst_ds.GetRasterBand(1).WriteArray(DataTot)
     dst_ds = None
@@ -598,7 +607,7 @@ def Save_as_Gtiff(A,FPARfileName,lonlim,latlim):
     srs = osr.SpatialReference()
     srs.SetWellKnownGeogCS("WGS84")
     dst_ds.SetProjection(srs.ExportToWkt())
-    dst_ds.GetRasterBand(1).SetNoDataValue(-0.3)
+    dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
     dst_ds.SetGeoTransform([lonlim[0],0.005,0,latlim[1],0,-0.005])
     dst_ds.GetRasterBand(1).WriteArray(np.flipud(A))
     dst_ds = None

@@ -20,8 +20,8 @@ MOD15.LAI_16daily(Dir='C:/Temp3/', Startdate='2003-12-01', Enddate='2003-12-20',
            latlim=[41, 45], lonlim=[-8, -5])		   
 """
 
-from .FPAR_16daily import main as FPAR_16daily
-from .LAI_16daily import main as LAI_16daily
+from .FPAR_8daily import main as FPAR_8daily
+from .LAI_8daily import main as LAI_8daily
 
 __all__ = ['FPAR_16daily', 'LAI_16daily']
 
