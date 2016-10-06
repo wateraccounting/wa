@@ -155,14 +155,14 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     
             for YnameChunk in range(int(VerticalTiles), 0, -1):
                 YtotDataStart = int(YtotDataEnd)
-                YtotDataEnd = int(YtotDataStart+(LatChunk[YnameChunk]-LatChunk[YnameChunk-1])*400)
+                YtotDataEnd = int(YtotDataStart+(LatChunk[YnameChunk]-LatChunk[YnameChunk-1])*200)
                 XtotDataStart = 0
                 XtotDataEnd = 0
                 for XnameChunk in range(1, int(HorizontalTiles)+1):
  
                     # Define size of the chunk array
                     XtotDataStart = XtotDataEnd
-                    XtotDataEnd = XtotDataStart + (LonChunk[XnameChunk] - LonChunk[XnameChunk - 1]) * 400
+                    XtotDataEnd = XtotDataStart + (LonChunk[XnameChunk] - LonChunk[XnameChunk - 1]) * 200
                    
                     #  Define NPP chunk file name, Open this file and open the array  								
                     file_name=os.path.join(output_folder, 'NPP_MOD17_kg_C_m^-2_yearly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.' + Date.strftime('%d')+'_chunk_h' + str(XnameChunk) + 'v'+ str(YnameChunk) + '.tif')
