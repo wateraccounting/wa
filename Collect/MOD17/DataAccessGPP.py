@@ -250,8 +250,8 @@ def Make_TimeStamps(Startdate,Enddate):
 
     # Change the DOY of the start day into a DOY of MODIS day (16-daily) and create new startdate
     DOYstart = int(math.floor(DOY / 8.0) * 8) + 1
-    DOYstart = str(DOYstart)
-    Day = datetime.datetime.strptime(DOYstart, '%j')
+    DOYstart = str('%s-%s' %(DOYstart, Year))
+    Day = datetime.datetime.strptime(DOYstart, '%j-%Y')
     Month = '%02d' % Day.month
     Day = '%02d' % Day.day
     Startdate = (str(Year) + '-' + str(Month) + '-' + str(Day))

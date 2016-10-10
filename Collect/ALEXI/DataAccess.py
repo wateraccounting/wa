@@ -82,8 +82,8 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
     
 	# Change the startdate so it includes an ALEXI date			
     DOYstart = int(math.ceil(DOY/7.0)*7+1)
-    DOYstart = str(DOYstart)
-    Day = datetime.datetime.strptime(DOYstart, '%j')
+    DOYstart = str('%s-%s' %(DOYstart, Year))
+    Day = datetime.datetime.strptime(DOYstart, '%j-%Y')
     Month = '%02d' % Day.month
     Day = '%02d' % Day.day
     Date = (str(Year) + '-' + str(Month) + '-' + str(Day))
