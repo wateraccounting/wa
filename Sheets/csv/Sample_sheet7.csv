@@ -1,0 +1,134 @@
+LAND_USE;VARIABLE;SERVICE;VALUE;UNITS
+MODIFIED;Total runoff;-;500;m3
+MODIFIED;Total runoff;Non-consumptive;5;Mm3/yr
+MODIFIED;Dry season flow ('baseflow');-;320;m3/s
+MODIFIED;Dry season flow ('baseflow');Non-consumptive;4;Mm3/yr
+MODIFIED;Groundwater recharge;-;600;m3
+MODIFIED;Groundwater recharge;Non-consumptive;5;Mm3/yr
+MODIFIED;Reducing erosion and sedimentation;-;5100;kg sediments
+MODIFIED;Reducing erosion and sedimentation;Incremental ET natural;2;Mm3/yr
+MODIFIED;Reducing erosion and sedimentation;Landscape ET;5;Mm3/yr
+MODIFIED;Reduce greenhouse gas emissions;-;5020;kg C
+MODIFIED;Reduce greenhouse gas emissions;Incremental ET natural;7;Mm3/yr
+MODIFIED;Reduce greenhouse gas emissions;Landscape ET;2;Mm3/yr
+MODIFIED;Carbon sequestration;-;500;kg C
+MODIFIED;Micro-climate cooling;-;7;°C
+MODIFIED;Enhanced atmospheric moisture recycling;-;500;m3
+MODIFIED;C seq, Micro-clim cooling, & e. atm moist recy;Incremental ET natural;4;Mm3/yr
+MODIFIED;C seq, Micro-clim cooling, & e. atm moist recy;Landscape ET;6;Mm3/yr
+MODIFIED;Aquatic connectivity (fragmentations);-;500;%
+MODIFIED;Aquatic connectivity (fragmentations);Incremental ET natural;5;Mm3/yr
+MODIFIED;Aquatic connectivity (fragmentations);Landscape ET;4;Mm3/yr
+MODIFIED;Leisure;-;2;No./ha
+MODIFIED;Leisure;Non-consumptive;4;Mm3/yr
+MODIFIED;Leisure;Incremental ET natural;2;Mm3/yr
+MODIFIED;Leisure;Landscape ET;1;Mm3/yr
+PROTECTED;Total runoff;-;500;m3
+PROTECTED;Total runoff;Non-consumptive;3;Mm3/yr
+PROTECTED;Inland capture fishery;-;5;tonnes
+PROTECTED;Inland capture fishery;Non-consumptive;2;Mm3/yr
+PROTECTED;Inland capture fishery;Incremental ET natural;5;Mm3/yr
+PROTECTED;Inland capture fishery;Landscape ET;2;Mm3/yr
+PROTECTED;Natural livestock feed production;-;5;tonnes
+PROTECTED;Natural livestock feed production;Incremental ET natural;1;Mm3/yr
+PROTECTED;Natural livestock feed production;Landscape ET;6;Mm3/yr
+PROTECTED;Dry season flow ('baseflow');-;58;m3/s
+PROTECTED;Dry season flow ('baseflow');Non-consumptive;6;Mm3/yr
+PROTECTED;Groundwater recharge;-;15;m3
+PROTECTED;Groundwater recharge;Non-consumptive;4;Mm3/yr
+PROTECTED;Natural water storage in lakes;-;5;m3
+PROTECTED;Natural water storage in lakes;Non-consumptive;9;Mm3/yr
+PROTECTED;Natural water storage in lakes;Incremental ET natural;2;Mm3/yr
+PROTECTED;Natural water storage in lakes;Landscape ET;5;Mm3/yr
+PROTECTED;Peak flow attenuation;-;2;%
+PROTECTED;Peak flow attenuation;Non-consumptive;5;Mm3/yr
+PROTECTED;Reducing erosion and sedimentation;-;599;kg sediments
+PROTECTED;Reducing erosion and sedimentation;Incremental ET natural;1;Mm3/yr
+PROTECTED;Reducing erosion and sedimentation;Landscape ET;7;Mm3/yr
+PROTECTED;Carbon sequestration;-;5899;kg C
+PROTECTED;Micro-climate cooling;-;5;°C
+PROTECTED;Enhanced atmospheric moisture recycling;-;578;m3
+PROTECTED;C seq, Micro-clim cooling, & e. atm moist recy;Incremental ET natural;12;Mm3/yr
+PROTECTED;C seq, Micro-clim cooling, & e. atm moist recy;Landscape ET;3;Mm3/yr
+PROTECTED;Natural reduction of eutrophication in water;-;567;%
+PROTECTED;Natural reduction of eutrophication in water;Non-consumptive;5;Mm3/yr
+PROTECTED;Reduce greenhouse gas emissions;-;5789;kg C
+PROTECTED;Reduce greenhouse gas emissions;Incremental ET natural;3;Mm3/yr
+PROTECTED;Reduce greenhouse gas emissions;Landscape ET;13;Mm3/yr
+PROTECTED;Aquatic connectivity (fragmentations);-;8764;%
+PROTECTED;Aquatic connectivity (fragmentations);Incremental ET natural;7;Mm3/yr
+PROTECTED;Aquatic connectivity (fragmentations);Landscape ET;1;Mm3/yr
+PROTECTED;Environmental flow requirements;-;456;%
+PROTECTED;Environmental flow requirements;Non-consumptive;9;Mm3/yr
+PROTECTED;Leisure;-;3;No./ha
+PROTECTED;Leisure;Non-consumptive;18;Mm3/yr
+PROTECTED;Leisure;Incremental ET natural;3;Mm3/yr
+PROTECTED;Leisure;Landscape ET;4;Mm3/yr
+MANAGED;Total runoff;-;877;m3
+MANAGED;Total runoff;Non-consumptive;5;Mm3/yr
+MANAGED;Dry season flow ('baseflow');-;12;m3/s
+MANAGED;Dry season flow ('baseflow');Non-consumptive;4;Mm3/yr
+MANAGED;Groundwater recharge;-;7654;m3
+MANAGED;Groundwater recharge;Non-consumptive;8;Mm3/yr
+MANAGED;Reducing erosion and sedimentation;-;5;kg sediments
+MANAGED;Reducing erosion and sedimentation;Incremental ET natural;7;Mm3/yr
+MANAGED;Reducing erosion and sedimentation;Landscape ET;4;Mm3/yr
+MANAGED;Carbon sequestration;-;2;kg C
+MANAGED;Micro-climate cooling;-;2;°C
+MANAGED;Enhanced atmospheric moisture recycling;-;5;m3
+MANAGED;C seq, Micro-clim cooling, & e. atm moist recy;Incremental ET natural;5;Mm3/yr
+MANAGED;C seq, Micro-clim cooling, & e. atm moist recy;Landscape ET;1;Mm3/yr
+MANAGED;Reduce greenhouse gas emissions;-;7654;kg C
+MANAGED;Reduce greenhouse gas emissions;Incremental ET natural;1;Mm3/yr
+MANAGED;Reduce greenhouse gas emissions;Landscape ET;4;Mm3/yr
+MANAGED;Aquatic connectivity (fragmentations);-;12;%
+MANAGED;Aquatic connectivity (fragmentations);Incremental ET natural;3;Mm3/yr
+MANAGED;Aquatic connectivity (fragmentations);Landscape ET;5;Mm3/yr
+MANAGED;Leisure;-;1;No./ha
+MANAGED;Leisure;Non-consumptive;4;Mm3/yr
+MANAGED;Leisure;Incremental ET natural;2;Mm3/yr
+MANAGED;Leisure;Landscape ET;3;Mm3/yr
+UTILIZED;Total runoff;-;5899;m3
+UTILIZED;Total runoff;Non-consumptive;8;Mm3/yr
+UTILIZED;Inland capture fishery;-;456;tonnes
+UTILIZED;Inland capture fishery;Non-consumptive;3;Mm3/yr
+UTILIZED;Inland capture fishery;Incremental ET natural;1;Mm3/yr
+UTILIZED;Inland capture fishery;Landscape ET;5;Mm3/yr
+UTILIZED;Natural livestock feed production;-;8764;tonnes
+UTILIZED;Natural livestock feed production;Incremental ET natural;1;Mm3/yr
+UTILIZED;Natural livestock feed production;Landscape ET;4;Mm3/yr
+UTILIZED;Fuelwood from natural forest;-;5789;tonnes
+UTILIZED;Fuelwood from natural forest;Incremental ET natural;3;Mm3/yr
+UTILIZED;Fuelwood from natural forest;Landscape ET;1;Mm3/yr
+UTILIZED;Dry season flow ('baseflow');-;567;m3/s
+UTILIZED;Dry season flow ('baseflow');Non-consumptive;5;Mm3/yr
+UTILIZED;Groundwater recharge;-;578;m3
+UTILIZED;Groundwater recharge;Non-consumptive;7;Mm3/yr
+UTILIZED;Natural water storage in lakes;-;59;m3
+UTILIZED;Natural water storage in lakes;Non-consumptive;3;Mm3/yr
+UTILIZED;Natural water storage in lakes;Incremental ET natural;5;Mm3/yr
+UTILIZED;Natural water storage in lakes;Landscape ET;3;Mm3/yr
+UTILIZED;Peak flow attenuation;-;5;%
+UTILIZED;Peak flow attenuation;Non-consumptive;6;Mm3/yr
+UTILIZED;Reducing erosion and sedimentation;-;5899;kg sediments
+UTILIZED;Reducing erosion and sedimentation;Incremental ET natural;1;Mm3/yr
+UTILIZED;Reducing erosion and sedimentation;Landscape ET;4;Mm3/yr
+UTILIZED;Carbon sequestration;-;5919;kg C
+UTILIZED;Micro-climate cooling;-;2;°C
+UTILIZED;Enhanced atmospheric moisture recycling;-;5;m3
+UTILIZED;C seq, Micro-clim cooling, & e. atm moist recy;Incremental ET natural;5;Mm3/yr
+UTILIZED;C seq, Micro-clim cooling, & e. atm moist recy;Landscape ET;3;Mm3/yr
+UTILIZED;Natural reduction of eutrophication in water;-;15;%
+UTILIZED;Natural reduction of eutrophication in water;Non-consumptive;7;Mm3/yr
+UTILIZED;Reduce greenhouse gas emissions;-;58;kg C
+UTILIZED;Reduce greenhouse gas emissions;Incremental ET natural;5;Mm3/yr
+UTILIZED;Reduce greenhouse gas emissions;Landscape ET;3;Mm3/yr
+UTILIZED;Aquatic connectivity (fragmentations);-;5;%
+UTILIZED;Aquatic connectivity (fragmentations);Incremental ET natural;1;Mm3/yr
+UTILIZED;Aquatic connectivity (fragmentations);Landscape ET;1;Mm3/yr
+UTILIZED;Environmental flow requirements;-;5;%
+UTILIZED;Environmental flow requirements;Non-consumptive;7;Mm3/yr
+UTILIZED;Leisure;-;3;No./ha
+UTILIZED;Leisure;Non-consumptive;5;Mm3/yr
+UTILIZED;Leisure;Incremental ET natural;2;Mm3/yr
+UTILIZED;Leisure;Landscape ET;1;Mm3/yr

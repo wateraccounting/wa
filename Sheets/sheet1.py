@@ -19,6 +19,7 @@ def create_sheet1(basin, period, units, data, output, template=False):
     Keyword arguments:
     basin -- The name of the basin
     period -- The period of analysis
+    units -- The units of the data
     data -- A csv file that contains the water data. The csv file has to
             follow an specific format. A sample csv is available in the link:
             https://github.com/wateraccounting/wa/tree/master/Sheets/csv
@@ -109,6 +110,8 @@ def create_sheet1(basin, period, units, data, output, template=False):
     gw_uti_o = float(df_o.loc[(df_o.SUBCLASS == "GROUNDWATER") &
                               (df_o.VARIABLE == "Utilized")].VALUE)
 
+    basin_trans = float(df_o.loc[(df_o.SUBCLASS == "OTHER") &
+                        (df_o.VARIABLE == "Interbasin transfer")].VALUE)
     non_uti = float(df_o.loc[(df_o.SUBCLASS == "OTHER") &
                              (df_o.VARIABLE == "Non-utilizable")].VALUE)
     other_o = float(df_o.loc[(df_o.SUBCLASS == "OTHER") &
@@ -133,11 +136,11 @@ def create_sheet1(basin, period, units, data, output, template=False):
     # Titles
 
     xml_txt_box = tree.findall('''.//*[@id='basin']''')[0]
-    xml_txt_box.getchildren()[0].text = basin
+    xml_txt_box.getchildren()[0].text = 'Basin: ' + basin
 
     xml_txt_box = tree.findall('''.//*[@id='period']''')[0]
-    xml_txt_box.getchildren()[0].text = period
-    
+    xml_txt_box.getchildren()[0].text = 'Period: ' + period
+
     xml_txt_box = tree.findall('''.//*[@id='units']''')[0]
     xml_txt_box.getchildren()[0].text = 'Sheet 1: Resource Base (' + units + ')'
 
@@ -220,6 +223,7 @@ def create_sheet1(basin, period, units, data, output, template=False):
     exploitable_water = net_inflow - land_et
     reserved_outflow = max(com_o, nav_o, env_o)
 
+    non_uti = non_uti + basin_trans
     available_water = exploitable_water - non_uti - reserved_outflow
 
     utilized_flow = et_u_pr + et_u_ut + et_u_mo + et_u_ma
@@ -289,8 +293,11 @@ def create_sheet1(basin, period, units, data, output, template=False):
     xml_txt_box = tree.findall('''.//*[@id='outflow']''')[0]
     xml_txt_box.getchildren()[0].text = '%.1f' % outflow
 
-    xml_txt_box = tree.findall('''.//*[@id='q_sw_out']''')[0]
+    xml_txt_box = tree.findall('''.//*[@id='q_sw_outlet']''')[0]
     xml_txt_box.getchildren()[0].text = '%.1f' % q_sw_out
+
+    xml_txt_box = tree.findall('''.//*[@id='q_sw_out']''')[0]
+    xml_txt_box.getchildren()[0].text = '%.1f' % basin_trans
 
     xml_txt_box = tree.findall('''.//*[@id='q_gw_out']''')[0]
     xml_txt_box.getchildren()[0].text = '%.1f' % q_gw_out
