@@ -3,7 +3,7 @@ import sys
 from DataAccess import DownloadData
 
 
-def main(Dir, Var, Startdate, Enddate, latlim, lonlim, cores=False,
+def main(Dir, Vars, Startdate, Enddate, latlim, lonlim, cores=False,
          Periods=[1, 2, 3, 4, 5, 6, 7, 8]):
     """
     This function downloads GLDAS three-hourly data for a given variable, time
@@ -28,9 +28,10 @@ def main(Dir, Var, Startdate, Enddate, latlim, lonlim, cores=False,
                       7      18:00 - 21:00
                       8      21:00 - 24:00
     """
-    # Download data
-    DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
-                 TimeCase='three_hourly', CaseParameters=Periods)
+    for Var in Vars:
+		# Download data
+		DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
+					 TimeCase='three_hourly', CaseParameters=Periods)    # Download data
 
 if __name__ == '__main__':
     main(sys.argv)

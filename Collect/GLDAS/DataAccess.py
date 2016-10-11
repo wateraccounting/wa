@@ -178,7 +178,7 @@ def RetrieveData_three_hourly(Date, args):
                 try:
 																	
                     # Define time
-                    zID = int((Date.toordinal() - 730174) * 8 + period - 1) - 1
+                    zID = int((Date.toordinal() - 730174) * 8 + int(period) - 1) - 1
 			
                     # total URL
                     url_GLDAS = url + '.ascii?%s[%s][%s:1:%s][%s:1:%s]' %(Var,zID,yID[0],yID[1],xID[0],xID[1])
