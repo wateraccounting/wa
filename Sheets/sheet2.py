@@ -20,6 +20,7 @@ def create_sheet2(basin, period, units, data, output, template=False,
     Keyword arguments:
     basin -- The name of the basin
     period -- The period of analysis
+    units -- The units of the data
     data -- A csv file that contains the water data. The csv file has to
             follow an specific format. A sample csv is available in the link:
             https://github.com/wateraccounting/wa/tree/master/Sheets/csv
@@ -713,10 +714,10 @@ def create_sheet2(basin, period, units, data, output, template=False,
     # Titles
 
     xml_txt_box = tree.findall('''.//*[@id='basin']''')[0]
-    xml_txt_box.getchildren()[0].text = basin
+    xml_txt_box.getchildren()[0].text = 'Basin: ' + basin
 
     xml_txt_box = tree.findall('''.//*[@id='period']''')[0]
-    xml_txt_box.getchildren()[0].text = period
+    xml_txt_box.getchildren()[0].text = 'Period: ' + period
 
     xml_txt_box = tree.findall('''.//*[@id='units']''')[0]
     xml_txt_box.getchildren()[0].text = 'Sheet 2: Evapotranspiration (' + units + ')'
