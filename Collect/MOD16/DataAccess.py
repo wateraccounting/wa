@@ -316,14 +316,19 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                 if  os.path.isfile(file_name):
                     print "file ", file_name, " already exists"
                 else:
-                    curl = pycurl.Curl()
-                    curl.setopt(pycurl.URL, FTP_name)
-                    fp = open(file_name, "wb")
-                    curl.setopt(pycurl.WRITEDATA, fp)
-                    curl.perform()
-                    curl.close()
-                    fp.close()																
-
+                    downloaded = 0
+                    while downloaded == 0:
+                        curl = pycurl.Curl()
+                        curl.setopt(pycurl.URL, FTP_name)
+                        fp = open(file_name, "wb")
+                        curl.setopt(pycurl.WRITEDATA, fp)
+                        curl.perform()
+                        curl.close()
+                        fp.close()																
+                        statinfo = os.stat(file_name)																									
+                        # Say that download was succesfull		
+                        if int(statinfo.st_size) > 10000:																								
+                            downloaded = 1
                     print "downloading ", FTP_name
                     
                 # Open .hdf only band with ET and collect all tiles to one array
