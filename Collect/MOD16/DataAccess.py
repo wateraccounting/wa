@@ -296,8 +296,14 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
             LongMet[int((countX-1)*1200):int((countX)*1200)]=np.linspace(((Horizontal-18)*1200+0.5)*Distance,((Horizontal-18)*1200+1199.5)*Distance,1200)
          
             # Download the MODIS ET data by using pycurl     
-            ftp=FTP("ftp.ntsg.umt.edu", "", "")
-            ftp.login()
+            login = 0									
+            while login == 0:
+                try:							
+                   ftp=FTP("ftp.ntsg.umt.edu", "", "")
+                   ftp.login()
+                   login = 1	
+                except:
+                   login = 0	
             pathFTP='/pub/MODIS/NTSG_Products/MOD16/MOD16A2_MONTHLY.MERRA_GMAO_1kmALB/Y'+ Date.strftime('%Y')+'/M' + Date.strftime('%m')+'/'
             ftp.cwd(pathFTP)   
             data = []
@@ -318,19 +324,17 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                 else:
                     downloaded = 0
                     while downloaded == 0:
-                        curl = pycurl.Curl()
-                        curl.setopt(pycurl.URL, FTP_name)
-                        fp = open(file_name, "wb")
-                        curl.setopt(pycurl.WRITEDATA, fp)
-                        curl.perform()
-                        curl.close()
-                        fp.close()																
+                        directory=pathFTP
+                        ftp.cwd(directory)
+                        lf = open(file_name, "wb")
+                        ftp.retrbinary("RETR " + nameTotal, lf.write)
+                        lf.close()												
                         statinfo = os.stat(file_name)																									
                         # Say that download was succesfull		
-                        if int(statinfo.st_size) > 10000:																								
-                            downloaded = 1
-                    print "downloading ", FTP_name
-                    
+                        if int(statinfo.st_size) > 1000:																								
+                           downloaded = 1
+                        print "downloading ", FTP_name    
+                        
                 # Open .hdf only band with ET and collect all tiles to one array
                 dataset=gdal.Open(file_name)
                 sdsdict=dataset.GetMetadata('SUBDATASETS')
