@@ -519,7 +519,6 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, nameDownload)
 																				
 				  # Stop trying after 10 times																				
                     if N == 10:
-                        print 'Data from ' + Date.strftime('%Y-%m-%d') + ' is not available'
                         downloaded = 1
                     try:
                         # Open .hdf only band with FPAR and collect all tiles to one array
