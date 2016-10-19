@@ -478,17 +478,16 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                     downloaded = 0   
                     N=0  
 																				
-                    # if not downloaded try to download file																	
-                    while downloaded == 0:		
-																					
-                        try:# open http and download whole .hdf       
-                            nameDownload = full_url  
-                            file_name = os.path.join(output_folder,nameDownload.split('/')[-1])
-                            if os.path.isfile(file_name):
-                                print "file ", file_name, " already exists"
-                                downloaded = 1
-                            else:
-                                x = requests.get(nameDownload, allow_redirects = False)
+                     # if not downloaded try to download file																	
+                    try:# open http and download whole .hdf       
+                        nameDownload_url = full_url  
+                        file_name = os.path.join(output_folder,nameDownload_url.split('/')[-1])
+                        if os.path.isfile(file_name):
+                            print "file ", file_name, " already exists"
+                            downloaded = 1   
+                        else:
+                            while (downloaded == 0 or N<50):
+                                x = requests.get(nameDownload_url, allow_redirects = False)
                                 try:																						
                                     y = requests.get(x.headers['location'], auth = (username, password))
                                 except:
@@ -496,21 +495,24 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                                 z = open(file_name, 'wb')
                                 z.write(y.content)
                                 z.close()
-                                statinfo = os.stat(file_name)																									
+                                statinfo = os.stat(file_name)
+                                N = N + 1
                                 # Say that download was succesfull		
                                 if int(statinfo.st_size) > 10000:																								
-                                     downloaded = 1
-	    			
-                        # If download was not succesfull								
-                        except:	
-													
-                            # Try another time                     																				
-                            N = N + 1
+                                    downloaded = 1
+                                else:																													
+                                    print '%d attemps are needed to download %s' %(N, file_name)     			                  
+
+                    # If download was not succesfull								
+                    except:	
+	                  # Try another time                     																				
+                        N = N + 1
 																				
 				  # Stop trying after 10 times																				
-                    if N == 10:
-                        print 'Data from ' + Date.strftime('%Y-%m-%d') + ' is not available'
+                    if N == 50:
                         downloaded = 1
+                        print 'Was not able to download %s' % file_name																							 
+																				
                     try:
                         # Open .hdf only band with GPP and collect all tiles to one array
                         dataset = gdal.Open(file_name)
