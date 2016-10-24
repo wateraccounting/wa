@@ -511,10 +511,8 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, nameDownload)
                                 # Say that download was succesfull		
                                 if int(statinfo.st_size) > 10000:																								
                                     downloaded = 1
-                                else:																													
-                                    print '%d attemps are needed to download %s' %(N, file_name)     			                  
-
-                    # If download was not succesfull								
+	    			
+                        # If download was not succesfull								
                     except:	
 	                  # Try another time                     																				
                         N = N + 1
@@ -522,8 +520,6 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, nameDownload)
 				  # Stop trying after 10 times																				
                     if N == 10:
                         downloaded = 1
-                        print 'Was not able to download %s' %file_name																			  
-
                     try:
                         # Open .hdf only band with FPAR and collect all tiles to one array
                         if nameDownload == 'Fpar_500m':

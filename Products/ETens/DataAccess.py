@@ -59,7 +59,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
     for Date in Dates:
 
         # Define the output name and folder
-        file_name = 'ETensemble250m-mm-monthly-'+str(Date.year) +'.' +str(Date.month).zfill(2)+'.' +'01.tif'
+        file_name = 'ETensemble250m-mm-monthly-'+str(Date.year) +'.' +str(Date.month)+'.' +'01.tif'
         output_file = os.path.join(output_folder, file_name)    
 
         # If output file not exists create this 
@@ -115,25 +115,25 @@ def Download_ETens_from_WA_FTP(output_folder, Lat_tiles, Lon_tiles):
         for h_tile in range(Lon_tiles[0], Lon_tiles[1]+1):													
 
             Tilename = "h%sv%s.zip" %(h_tile, v_tile)
-
-            try:  
-                # Collect account and FTP information			
-                username, password = WebAccounts.Accounts(Type = 'FTP_WA')
-                FTP_name = "ftp://ftp.wateraccounting.unesco-ihe.org/WaterAccounting/Data_Satellite/Evaporation/ETensV1.0/%s" % Tilename
-                local_filename = os.path.join(output_folder, Tilename)   
+            if not os.path.exists(os.path.join(output_folder,Tilename)): 
+                try:  
+                    # Collect account and FTP information			
+                    username, password = WebAccounts.Accounts(Type = 'FTP_WA')
+                    FTP_name = "ftp://ftp.wateraccounting.unesco-ihe.org/WaterAccounting/Data_Satellite/Evaporation/ETensV1.0/%s" % Tilename
+                    local_filename = os.path.join(output_folder, Tilename)   
 			
-                # Download data from FTP 	
-                curl = pycurl.Curl()
-                curl.setopt(pycurl.URL, FTP_name)	
-                curl.setopt(pycurl.USERPWD, '%s:%s' %(username, password))								
-                fp = open(local_filename, "wb")								 
-                curl.setopt(pycurl.WRITEDATA, fp)
-                curl.perform()
-                curl.close()
-                fp.close()	
+                    # Download data from FTP 	
+                    curl = pycurl.Curl()
+                    curl.setopt(pycurl.URL, FTP_name)	
+                    curl.setopt(pycurl.USERPWD, '%s:%s' %(username, password))								
+                    fp = open(local_filename, "wb")								 
+                    curl.setopt(pycurl.WRITEDATA, fp)
+                    curl.perform()
+                    curl.close()
+                    fp.close()	
 																
-            except:
-                print "tile %s is not found and will be replaced by NaN values"	% Tilename
+                except:
+                    print "tile %s is not found and will be replaced by NaN values"	% Tilename
 																
     return()									
 																
@@ -147,21 +147,23 @@ def Unzip_ETens_data(output_folder, Lat_tiles, Lon_tiles):
     Lat_tiles -- [Lat_min, Lat_max] Tile number of the max and min latitude tile number
     Lon_tiles -- [Lon_min, Lon_max] Tile number of the max and min longitude tile number		
     """
-    # Unzip the zip files one by one			
-    for v_tile in range(Lat_tiles[0], Lat_tiles[1]+1):
-        for h_tile in range(Lon_tiles[0], Lon_tiles[1]+1):													
+    # Unzip the zip files one by one
+    try:				
+        for v_tile in range(Lat_tiles[0], Lat_tiles[1]+1):
+            for h_tile in range(Lon_tiles[0], Lon_tiles[1]+1):													
 
-            # Define the file and path to the zip file
-            Tilename = "h%sv%s.zip" %(h_tile, v_tile)    
-            input_zip_folder = os.path.join(output_folder, Tilename)				
+                # Define the file and path to the zip file
+                Tilename = "h%sv%s.zip" %(h_tile, v_tile)    
+                input_zip_folder = os.path.join(output_folder, Tilename)				
 
-            if os.path.exists(input_zip_folder):				 	
- 
-               # extract the data
-                z = zipfile.ZipFile(input_zip_folder, 'r')
-                z.extractall(output_folder)
-                z.close()	
-	
+                if os.path.exists(input_zip_folder):				 	
+     
+                   # extract the data
+                    z = zipfile.ZipFile(input_zip_folder, 'r')
+                    z.extractall(output_folder)
+                    z.close()	
+    except:
+        print 'Was not able to unzip %s, data will be replaced by NaN values' %Tilename				
     return()	
 
 def Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim):												
@@ -182,7 +184,7 @@ def Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim):
 
     # Create an empty start array
     Tot_dataset = np.zeros([4000 * (Lat_tiles[1]-Lat_tiles[0] + 1), 4000 * (Lon_tiles[1]-Lon_tiles[0] + 1)])
-
+    
     # Open the tiles and fill in the empty array
     for v_tile in range(Lat_tiles[0], Lat_tiles[1]+1):
         for h_tile in range(Lon_tiles[0], Lon_tiles[1]+1):													
@@ -205,7 +207,7 @@ def Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim):
     IDy_min = int(np.round(((100 - Lat_tiles[0] * 10) - latlim[1])/0.0025))
     IDy_max = int(int(Tot_dataset.shape[1]) - np.round((latlim[0] - (90 - Lat_tiles[1] * 10))/0.0025))
     IDx_min = int(np.round((lonlim[0]-(-190 + Lon_tiles[0] * 10))/0.0025))
-    IDx_max = int(int(Tot_dataset.shape[0]) - np.round(((- 180 + Lon_tiles[0] * 10) - lonlim[1])/0.0025))				
+    IDx_max = int(int(Tot_dataset.shape[0]) - np.round(((- 180 + Lon_tiles[1] * 10) - lonlim[1])/0.0025))				
 
     # Clip the ET data to the area of interest
     ET_data = np.zeros([int(np.round((latlim[1]-latlim[0]))/0.0025),int(np.round((lonlim[1]-lonlim[0])/0.0025))])				

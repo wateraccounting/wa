@@ -314,43 +314,27 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
             for i in data:
                 if re.search(searchname,i):
                     total=i
-            
-            N=0
-												
+                       
             try:# open http and download whole .hdf       
-                try:
-                    nameTotal=total.split( )[8]
-                    file_name=output_folder + nameTotal
-                    FTP_name='ftp://ftp.ntsg.umt.edu'+pathFTP+nameTotal
-                    if  os.path.isfile(file_name):
-                        print "file ", file_name, " already exists"
-                    else:
-                        downloaded = 0
-                        while (downloaded == 0 or N<50):
-                            directory=pathFTP
-                            ftp.cwd(directory)
-                            lf = open(file_name, "wb")
-                            ftp.retrbinary("RETR " + nameTotal, lf.write)
-                            lf.close()												
-                            statinfo = os.stat(file_name)	
-                            N = N + 1																												
-                            # Say that download was succesfull		
-                            if int(statinfo.st_size) > 1000:																								
-                                downloaded = 1
-                            else:																													
-                                print '%d attemps are needed to download %s' %(N, file_name)     			                  
- 																									
-                            print "downloading ", FTP_name    
-  
-                except:	
-	               # Try another time                     																				
-                    N = N + 1
-																				
-			   # Stop trying after 10 times																				
-                if N == 50:
-                    downloaded = 1
-                    print 'Was not able to download %s' % file_name		
-																	
+                nameTotal=total.split( )[8]
+                file_name=output_folder + nameTotal
+                FTP_name='ftp://ftp.ntsg.umt.edu'+pathFTP+nameTotal
+                if  os.path.isfile(file_name):
+                    print "file ", file_name, " already exists"
+                else:
+                    downloaded = 0
+                    while downloaded == 0:
+                        directory=pathFTP
+                        ftp.cwd(directory)
+                        lf = open(file_name, "wb")
+                        ftp.retrbinary("RETR " + nameTotal, lf.write)
+                        lf.close()												
+                        statinfo = os.stat(file_name)																									
+                        # Say that download was succesfull		
+                        if int(statinfo.st_size) > 1000:																								
+                           downloaded = 1
+                        print "downloading ", FTP_name    
+                        
                 # Open .hdf only band with ET and collect all tiles to one array
                 dataset=gdal.Open(file_name)
                 sdsdict=dataset.GetMetadata('SUBDATASETS')
