@@ -24,9 +24,15 @@ def create_sheet7(basin, period, units, data, output, template=False):
     data -- A csv file that contains the water data. The csv file has to
             follow an specific format. A sample csv is available in the link:
             https://github.com/wateraccounting/wa/tree/master/Sheets/csv
-    output -- The output jpg file for the sheet
+    output -- The output path of the jpg file for the sheet.
     template -- A svg file of the sheet. Use False (default) to use the
                 standard svg file.
+
+    Example:
+    from wa.Sheets import *
+    create_sheet7(basin='Sample data', period='2006-2016', units='Mm3/yr',
+                  data=r'C:\Sheets\csv\Sample_sheet7.csv',
+                  output=r'C:\Sheets\sheet_7.jpg')
     """
 
     # Check units
