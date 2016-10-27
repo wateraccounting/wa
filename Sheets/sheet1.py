@@ -23,9 +23,15 @@ def create_sheet1(basin, period, units, data, output, template=False):
     data -- A csv file that contains the water data. The csv file has to
             follow an specific format. A sample csv is available in the link:
             https://github.com/wateraccounting/wa/tree/master/Sheets/csv
-    output -- The output jpg file for the sheet
+    output -- The output path of the jpg file for the sheet.
     template -- A svg file of the sheet. Use False (default) to use the
                 standard svg file.
+
+    Example:
+    from wa.Sheets import *
+    create_sheet1(basin='Incomati', period='2005-2010', units='km3/year',
+                  data=r'C:\Sheets\csv\Sample_sheet1.csv',
+                  output=r'C:\Sheets\sheet_1.jpg')
     """
 
     # Read table
@@ -110,8 +116,8 @@ def create_sheet1(basin, period, units, data, output, template=False):
     gw_uti_o = float(df_o.loc[(df_o.SUBCLASS == "GROUNDWATER") &
                               (df_o.VARIABLE == "Utilized")].VALUE)
 
-    basin_trans = float(df_o.loc[(df_o.SUBCLASS == "OTHER") &
-                        (df_o.VARIABLE == "Interbasin transfer")].VALUE)
+    basin_transfers = float(df_o.loc[(df_o.SUBCLASS == "SURFACE WATER") &
+                            (df_o.VARIABLE == "Interbasin transfer")].VALUE)
     non_uti = float(df_o.loc[(df_o.SUBCLASS == "OTHER") &
                              (df_o.VARIABLE == "Non-utilizable")].VALUE)
     other_o = float(df_o.loc[(df_o.SUBCLASS == "OTHER") &
@@ -223,7 +229,6 @@ def create_sheet1(basin, period, units, data, output, template=False):
     exploitable_water = net_inflow - land_et
     reserved_outflow = max(com_o, nav_o, env_o)
 
-    non_uti = non_uti + basin_trans
     available_water = exploitable_water - non_uti - reserved_outflow
 
     utilized_flow = et_u_pr + et_u_ut + et_u_mo + et_u_ma
@@ -285,7 +290,7 @@ def create_sheet1(basin, period, units, data, output, template=False):
 
     # Blue box (right)
 
-    outflow = non_cons_water + non_rec_flow
+    outflow = non_cons_water + non_rec_flow + basin_transfers
 
     q_sw_out = sw_mrs_o + sw_tri_o + sw_usw_o + sw_flo_o
     q_gw_out = gw_nat_o + gw_uti_o
@@ -297,7 +302,7 @@ def create_sheet1(basin, period, units, data, output, template=False):
     xml_txt_box.getchildren()[0].text = '%.1f' % q_sw_out
 
     xml_txt_box = tree.findall('''.//*[@id='q_sw_out']''')[0]
-    xml_txt_box.getchildren()[0].text = '%.1f' % basin_trans
+    xml_txt_box.getchildren()[0].text = '%.1f' % basin_transfers
 
     xml_txt_box = tree.findall('''.//*[@id='q_gw_out']''')[0]
     xml_txt_box.getchildren()[0].text = '%.1f' % q_gw_out

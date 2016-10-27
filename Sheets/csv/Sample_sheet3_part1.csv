@@ -1,0 +1,43 @@
+USE;CLASS;SUBCLASS;TYPE;SUBTYPE;WATER_CONSUMPTION
+CROP;RAINFED;ET;Cereals;-;0.67
+CROP;IRRIGATED;ET rainfall;Cereals;-;1.09
+CROP;IRRIGATED;Incremental ET;Cereals;-;1.04
+CROP;RAINFED;ET;Non-cereals;Root/tuber crops;NA
+CROP;IRRIGATED;ET rainfall;Non-cereals;Root/tuber crops;NA
+CROP;IRRIGATED;Incremental ET;Non-cereals;Root/tuber crops;NA
+CROP;RAINFED;ET;Non-cereals;Leguminous crops;NA
+CROP;IRRIGATED;ET rainfall;Non-cereals;Leguminous crops;0.07
+CROP;IRRIGATED;Incremental ET;Non-cereals;Leguminous crops;0.09
+CROP;RAINFED;ET;Non-cereals;Sugar crops;NA
+CROP;IRRIGATED;ET rainfall;Non-cereals;Sugar crops;NA
+CROP;IRRIGATED;Incremental ET;Non-cereals;Sugar crops;NA
+CROP;RAINFED;ET;Non-cereals;Merged;NA
+CROP;IRRIGATED;ET rainfall;Non-cereals;Merged;NA
+CROP;IRRIGATED;Incremental ET;Non-cereals;Merged;NA
+CROP;RAINFED;ET;Fruit & vegetables;Vegetables & melons;NA
+CROP;IRRIGATED;ET rainfall;Fruit & vegetables;Vegetables & melons;0.04
+CROP;IRRIGATED;Incremental ET;Fruit & vegetables;Vegetables & melons;0.74
+CROP;RAINFED;ET;Fruit & vegetables;Fruits & nuts;NA
+CROP;IRRIGATED;ET rainfall;Fruit & vegetables;Fruits & nuts;0.15
+CROP;IRRIGATED;Incremental ET;Fruit & vegetables;Fruits & nuts;0.23
+CROP;RAINFED;ET;Fruit & vegetables;Merged;NA
+CROP;IRRIGATED;ET rainfall;Fruit & vegetables;Merged;NA
+CROP;IRRIGATED;Incremental ET;Fruit & vegetables;Merged;NA
+CROP;RAINFED;ET;Oilseeds;-;NA
+CROP;IRRIGATED;ET rainfall;Oilseeds;-;NA
+CROP;IRRIGATED;Incremental ET;Oilseeds;-;NA
+CROP;RAINFED;ET;Feed crops;-;NA
+CROP;IRRIGATED;ET rainfall;Feed crops;-;NA
+CROP;IRRIGATED;Incremental ET;Feed crops;-;NA
+CROP;RAINFED;ET;Beverage crops;-;NA
+CROP;IRRIGATED;ET rainfall;Beverage crops;-;NA
+CROP;IRRIGATED;Incremental ET;Beverage crops;-;NA
+CROP;RAINFED;ET;Other crops;-;NA
+CROP;IRRIGATED;ET rainfall;Other crops;-;NA
+CROP;IRRIGATED;Incremental ET;Other crops;-;NA
+NON-CROP;RAINFED;ET;Fish (Aquaculture);-;NA
+NON-CROP;IRRIGATED;ET rainfall;Fish (Aquaculture);-;NA
+NON-CROP;IRRIGATED;Incremental ET;Fish (Aquaculture);-;NA
+NON-CROP;RAINFED;ET;Timber;-;NA
+NON-CROP;IRRIGATED;ET rainfall;Timber;-;NA
+NON-CROP;IRRIGATED;Incremental ET;Timber;-;NA

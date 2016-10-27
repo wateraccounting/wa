@@ -1,0 +1,65 @@
+USE;CLASS;SUBCLASS;TYPE;SUBTYPE;LAND_PRODUCTIVITY;WATER_PRODUCTIVITY
+CROP;RAINFED;Yield;Cereals;-;906;0.45
+CROP;IRRIGATED;Yield rainfall;Cereals;-;320;0.32
+CROP;IRRIGATED;Incremental yield;Cereals;-;1286;0.65
+CROP;IRRIGATED;Total yield;Cereals;-;1606;0.52
+CROP;RAINFED;Yield;Non-cereals;Root/tuber crops;NA;NA
+CROP;IRRIGATED;Yield rainfall;Non-cereals;Root/tuber crops;NA;NA
+CROP;IRRIGATED;Incremental yield;Non-cereals;Root/tuber crops;NA;NA
+CROP;IRRIGATED;Total yield;Non-cereals;Root/tuber crops;NA;NA
+CROP;RAINFED;Yield;Non-cereals;Leguminous crops;NA;NA
+CROP;IRRIGATED;Yield rainfall;Non-cereals;Leguminous crops;600;0.67
+CROP;IRRIGATED;Incremental yield;Non-cereals;Leguminous crops;139;1.23
+CROP;IRRIGATED;Total yield;Non-cereals;Leguminous crops;739;0.73
+CROP;RAINFED;Yield;Non-cereals;Sugar crops;NA;NA
+CROP;IRRIGATED;Yield rainfall;Non-cereals;Sugar crops;NA;NA
+CROP;IRRIGATED;Incremental yield;Non-cereals;Sugar crops;NA;NA
+CROP;IRRIGATED;Total yield;Non-cereals;Sugar crops;NA;NA
+CROP;RAINFED;Yield;Non-cereals;Merged;NA;NA
+CROP;IRRIGATED;Yield rainfall;Non-cereals;Merged;NA;NA
+CROP;IRRIGATED;Incremental yield;Non-cereals;Merged;NA;NA
+CROP;IRRIGATED;Total yield;Non-cereals;Merged;NA;NA
+CROP;RAINFED;Yield;Fruit & vegetables;Vegetables & melons;NA;NA
+CROP;IRRIGATED;Yield rainfall;Fruit & vegetables;Vegetables & melons;47;0.44
+CROP;IRRIGATED;Incremental yield;Fruit & vegetables;Vegetables & melons;8636;8.19
+CROP;IRRIGATED;Total yield;Fruit & vegetables;Vegetables & melons;8683;7.48
+CROP;RAINFED;Yield;Fruit & vegetables;Fruits & nuts;NA;NA
+CROP;IRRIGATED;Yield rainfall;Fruit & vegetables;Fruits & nuts;2200;1.43
+CROP;IRRIGATED;Incremental yield;Fruit & vegetables;Fruits & nuts;5659;2.37
+CROP;IRRIGATED;Total yield;Fruit & vegetables;Fruits & nuts;7849;1.98
+CROP;RAINFED;Yield;Fruit & vegetables;Merged;NA;NA
+CROP;IRRIGATED;Yield rainfall;Fruit & vegetables;Merged;NA;NA
+CROP;IRRIGATED;Incremental yield;Fruit & vegetables;Merged;NA;NA
+CROP;IRRIGATED;Total yield;Fruit & vegetables;Merged;NA;NA
+CROP;RAINFED;Yield;Oilseeds;-;NA;NA
+CROP;IRRIGATED;Yield rainfall;Oilseeds;-;NA;NA
+CROP;IRRIGATED;Incremental yield;Oilseeds;-;NA;NA
+CROP;IRRIGATED;Total yield;Oilseeds;-;NA;NA
+CROP;RAINFED;Yield;Feed crops;-;NA;NA
+CROP;IRRIGATED;Yield rainfall;Feed crops;-;NA;NA
+CROP;IRRIGATED;Incremental yield;Feed crops;-;NA;NA
+CROP;IRRIGATED;Total yield;Feed crops;-;NA;NA
+CROP;RAINFED;Yield;Beverage crops;-;NA;NA
+CROP;IRRIGATED;Yield rainfall;Beverage crops;-;NA;NA
+CROP;IRRIGATED;Incremental yield;Beverage crops;-;NA;NA
+CROP;IRRIGATED;Total yield;Beverage crops;-;NA;NA
+CROP;RAINFED;Yield;Other crops;-;NA;NA
+CROP;IRRIGATED;Yield rainfall;Other crops;-;NA;NA
+CROP;IRRIGATED;Incremental yield;Other crops;-;NA;NA
+CROP;IRRIGATED;Total yield;Other crops;-;NA;NA
+NON-CROP;RAINFED;Yield;Livestock;Meat;NA;NA
+NON-CROP;IRRIGATED;Yield rainfall;Livestock;Meat;NA;NA
+NON-CROP;IRRIGATED;Incremental yield;Livestock;Meat;NA;NA
+NON-CROP;IRRIGATED;Total yield;Livestock;Meat;NA;NA
+NON-CROP;RAINFED;Yield;Livestock;Milk;NA;NA
+NON-CROP;IRRIGATED;Yield rainfall;Livestock;Milk;NA;NA
+NON-CROP;IRRIGATED;Incremental yield;Livestock;Milk;NA;NA
+NON-CROP;IRRIGATED;Total yield;Livestock;Milk;NA;NA
+NON-CROP;RAINFED;Yield;Fish (Aquaculture);-;NA;NA
+NON-CROP;IRRIGATED;Yield rainfall;Fish (Aquaculture);-;NA;NA
+NON-CROP;IRRIGATED;Incremental yield;Fish (Aquaculture);-;NA;NA
+NON-CROP;IRRIGATED;Total yield;Fish (Aquaculture);-;NA;NA
+NON-CROP;RAINFED;Yield;Timber;-;NA;NA
+NON-CROP;IRRIGATED;Yield rainfall;Timber;-;NA;NA
+NON-CROP;IRRIGATED;Incremental yield;Timber;-;NA;NA
+NON-CROP;IRRIGATED;Total yield;Timber;-;NA;NA

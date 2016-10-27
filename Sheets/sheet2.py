@@ -24,12 +24,18 @@ def create_sheet2(basin, period, units, data, output, template=False,
     data -- A csv file that contains the water data. The csv file has to
             follow an specific format. A sample csv is available in the link:
             https://github.com/wateraccounting/wa/tree/master/Sheets/csv
-    output -- The output jpg file for the sheet
+    output -- The output path of the jpg file for the sheet.
     template -- A svg file of the sheet. Use False (default) to use the
                 standard svg file.
     tolerance -- Tolerance (in km3/year) of the difference in total ET
                  measured from (1) evaporation and transpiration and
                  (2) beneficial and non-beneficial ET.
+
+    Example:
+    from wa.Sheets import *
+    create_sheet2(basin='Nile Basin', period='2010', units='km3/year',
+                  data=r'C:\Sheets\csv\Sample_sheet2.csv',
+                  output=r'C:\Sheets\sheet_2.jpg')
     """
 
     # Read table
