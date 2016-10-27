@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 
 
 def create_sheet2(basin, period, units, data, output, template=False,
-                  tolerance=0.1):
+                  tolerance=0.2):
     """
 
     Keyword arguments:
