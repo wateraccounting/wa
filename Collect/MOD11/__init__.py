@@ -4,12 +4,12 @@ Authors: Tim Hessels
          UNESCO-IHE 2016
 Contact: t.hessels@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
-Module: Collect/MOD13
+Module: Collect/MOD11
 
 Description:
-This module downloads MOD13 NDVI data from
-http://e4ftl01.cr.usgs.gov/. Use the MOD13.NDVI_16daily function to
-download and create 16 daily NDVI images in Gtiff format.
+This module downloads MOD11 LST data from
+http://e4ftl01.cr.usgs.gov/. Use the MOD11.LST_8daily function to
+download and create 8 daily LST images in Gtiff format.
 The data is available between 2000-02-18 till present.
 
 Examples:

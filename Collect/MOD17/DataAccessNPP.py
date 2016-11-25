@@ -16,7 +16,6 @@ import urllib
 from bs4 import BeautifulSoup
 import re
 import urlparse
-import math
 import subprocess
 import requests
 from joblib import Parallel, delayed
@@ -73,114 +72,23 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     file_nametext = os.path.join(output_folder, nameDownloadtext.split('/')[-1])
     urllib.urlretrieve(nameDownloadtext, file_nametext)
           
-    # Set start variables for chunks (chunks are used when the area is to large (larger than 5 degrees))    
-    IsHorTilesNeeded = 0
-    IsVerTilesNeeded = 0
-    VerticalTiles = 1
-    HorizontalTiles = 1
-    
-    # Cut in chunks if the latlim and lonlim are to large, to prevent for memory errors
-    if latlim[1] - latlim[0] > 5.1:
-        VerticalTiles = math.ceil((latlim[1] - latlim[0]) / float(5))
-
-        # Change chunk variable to indicate that chunks are used 
-        IsVerTilesNeeded = 1
-
-        # Define the latitude of the chunks	
-        LatChunk = np.arange(latlim[0], latlim[1], 5)
-        LatChunk = np.append(LatChunk, latlim[1])
-    else:
-        LatChunk = [latlim[0], latlim[1]]
-        
-    if lonlim[1] - lonlim[0] > 5.1:
-        HorizontalTiles = math.ceil((lonlim[1] - lonlim[0]) / float(5))
- 
-        # Change chunk variable to indicate that chunks are used  
-        IsHorTilesNeeded = 1
-
-        # Define the longitude of the chunks								 
-        LonChunk = np.arange(lonlim[0], lonlim[1],5)
-        LonChunk = np.append(LonChunk, lonlim[1])
-    else:
-        LonChunk = [lonlim[0], lonlim[1]]
-    
-    latname=0
-    
-    # Start loop of the chunks    
-    for TileVertical in range(0, int(VerticalTiles)):
-					
-        # Give latitude limits of the chunks					
-        latlim1 = [LatChunk[TileVertical], LatChunk[TileVertical+1]]
-        latname = latname + 1
-        lonname = 0
-        for TileHorizontal in range(0,int(HorizontalTiles)):
-									
-            # Give longitude limits of the chunks	 									
-            lonlim1 = [LonChunk[TileHorizontal], LonChunk[TileHorizontal+1]]
-            lonname = lonname+1
-                
-            # Open text file with tiles which is downloaded before
-            tiletext=np.genfromtxt(file_nametext,skip_header=7,skip_footer=1,usecols=(0,1,2,3,4,5,6,7,8,9))
-            tiletext2=tiletext[tiletext[:,2]>=-900,:]
+    # Open text file with tiles which is downloaded before
+    tiletext=np.genfromtxt(file_nametext,skip_header=7,skip_footer=1,usecols=(0,1,2,3,4,5,6,7,8,9))
+    tiletext2=tiletext[tiletext[:,2]>=-900,:]
             
-            # This function converts the values in the text file into horizontal and vertical number of the tiles which must be downloaded to cover the extent defined by the user
-            TilesVertical, TilesHorizontal = Tiles_to_download(tiletext2=tiletext2,lonlim1=lonlim1,latlim1=latlim1)
+    # This function converts the values in the text file into horizontal and vertical number of the tiles which must be downloaded to cover the extent defined by the user
+    TilesVertical, TilesHorizontal = Tiles_to_download(tiletext2=tiletext2,lonlim1=lonlim,latlim1=latlim)
             
-            # Pass variables to parallel function and run
-            args = [output_folder, TilesVertical, TilesHorizontal, IsVerTilesNeeded, IsHorTilesNeeded, lonlim1, latlim1, lonname, latname]
-            if not cores:
-                for Date in Dates:
-                     RetrieveData(Date, args)
-                results = True
-            else:
-                results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
-                                                 for Date in Dates)
-    # Remove all .hdf files
-    for f in os.listdir(output_folder):
-        if re.search(".hdf", f) or re.search(".txt", f):
-            os.remove(os.path.join(output_folder, f))
-												
-    # If chunks are used, than merge to one picture      
-    if IsHorTilesNeeded != 0 or IsVerTilesNeeded != 0:
+    # Pass variables to parallel function and run
+    args = [output_folder, TilesVertical, TilesHorizontal, lonlim, latlim]
+    if not cores:
         for Date in Dates:
-									
-            # Define the size of the total NPP picture									
-            TotSizeY = int((latlim[1] - latlim[0]) * 200)
-            TotSizeX = int((lonlim[1] - lonlim[0]) * 200)
-												
-            # Create Total data array and set the chunk tracking parameters												
-            TotData=np.zeros((TotSizeY, TotSizeX))
-            YtotDataStart = 0
-            YtotDataEnd = 0
-    
-            for YnameChunk in range(int(VerticalTiles), 0, -1):
-                YtotDataStart = int(YtotDataEnd)
-                YtotDataEnd = int(YtotDataStart+(LatChunk[YnameChunk]-LatChunk[YnameChunk-1])*200)
-                XtotDataStart = 0
-                XtotDataEnd = 0
-                for XnameChunk in range(1, int(HorizontalTiles)+1):
+            RetrieveData(Date, args)
+        results = True
+    else:
+        results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
+                                                 for Date in Dates)
  
-                    # Define size of the chunk array
-                    XtotDataStart = XtotDataEnd
-                    XtotDataEnd = XtotDataStart + (LonChunk[XnameChunk] - LonChunk[XnameChunk - 1]) * 200
-                   
-                    #  Define NPP chunk file name, Open this file and open the array  								
-                    file_name=os.path.join(output_folder, 'NPP_MOD17_kg_C_m^-2_yearly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.' + Date.strftime('%d')+'_chunk_h' + str(XnameChunk) + 'v'+ str(YnameChunk) + '.tif')
-                    fileopen = gdal.Open(file_name)
-                    arrayChunk = np.array(fileopen.GetRasterBand(1).ReadAsArray())
-
-                    # Add chunk array to the total array																				
-                    TotData[YtotDataStart:YtotDataEnd,XtotDataStart:XtotDataEnd]=arrayChunk
-                    fileopen = None          
-
-                    # remove the chunk tif file
-                    os.remove(file_name)
-  
-            # Save total array
-            NPPfileName = os.path.join(output_folder, 'NPP_MOD17_kg_C_m^-2_yearly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.' + Date.strftime('%d')+'.tif')
-            TotData = np.flipud(TotData)
-            Save_as_Gtiff(TotData, NPPfileName, lonlim, latlim)         
-        
 	return results		
 
 def RetrieveData(Date, args):
@@ -193,7 +101,7 @@ def RetrieveData(Date, args):
     args -- A list of parameters defined in the DownloadData function.
     """
     # Argument
-    [output_folder, TilesVertical, TilesHorizontal, IsVerTilesNeeded, IsHorTilesNeeded, lonlim1, latlim1, lonname, latname] = args
+    [output_folder, TilesVertical, TilesHorizontal, lonlim, latlim] = args
 
     # Collect the data from the MODIS webpage and returns the data and lat and long in meters of those tiles
     try:
@@ -209,13 +117,13 @@ def RetrieveData(Date, args):
               
     # Clip the data 
     try:														
-        nameOut = Clip_data(output_folder, lonlim1, latlim1, name2)
+        nameOut = Clip_data(output_folder, lonlim, latlim, name2)
     except:
         print "Was not able to clip the file" 
                   
     # Resample data
     try:																		
-        data = Resample_data(output_folder,nameOut,lonlim1,latlim1)
+        data = Resample_data(output_folder,nameOut,lonlim,latlim)
     except:
         print "Was not able to resample the file"   
                 
@@ -225,13 +133,14 @@ def RetrieveData(Date, args):
     os.remove(os.path.join(output_folder, nameOut))
                 
     # Save results as Gtiff
-    if IsHorTilesNeeded==0 and IsVerTilesNeeded==0:
-        NPPfileName = os.path.join(output_folder, 'NPP_MOD17_kg_C_m^-2_yearly_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
-        Save_as_Gtiff(data,NPPfileName,lonlim1,latlim1)                     
+    NPPfileName = os.path.join(output_folder, 'NPP_MOD17_kg_C_m^-2_yearly_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
+    Save_as_Gtiff(data,NPPfileName,lonlim,latlim)                     
                     
-    else:
-        NPPfileName = os.path.join(output_folder, 'NPP_MOD17_kg_C_m^-2_yearly_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '_chunk_h' + str(lonname) + 'v' + str(latname) + '.tif')
-        Save_as_Gtiff(data,NPPfileName,lonlim1,latlim1) 
+    # Remove all .hdf files
+    for f in os.listdir(output_folder):
+        if re.search(".hdf", f) or re.search(".txt", f):
+            os.remove(os.path.join(output_folder, f))
+												  
     return True
 
 def Resample_data(output_folder,nameOut,lonlim1,latlim1):

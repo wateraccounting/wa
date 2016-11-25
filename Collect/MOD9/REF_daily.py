@@ -4,7 +4,7 @@ from DataAccess import DownloadData
 
 def main(Dir, Startdate, Enddate, latlim, lonlim, cores=False):
     """
-    This function downloads MOD13 16-daily data for the specified time
+    This function downloads MOD9 reflectance daily data for the specified time
     interval, and spatial extent.
 
     Keyword arguments:

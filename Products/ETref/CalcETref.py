@@ -66,8 +66,7 @@ def calc_ETref(tmin_str, tmax_str, humid_str, press_str, wind_str, down_short_st
     #APPLY LAPSE RATE CORRECTION ON TEMPERATURE
     tmin = lapse_rate(inputs['tmin'], DEMmap_str)
     tmax = lapse_rate(inputs['tmax'], DEMmap_str)
-    
-
+				
     #PROCESS PRESSURE MAPS 
     press =adjust_P(inputs['press'], DEMmap_str)
     
