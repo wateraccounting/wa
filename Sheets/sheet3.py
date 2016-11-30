@@ -174,7 +174,7 @@ def create_sheet3(basin, period, units, data, output, template=False):
     crop_r01 = pd.np.nansum([crop_r01c01, crop_r01c02, crop_r01c03,
                              crop_r01c04, crop_r01c05, crop_r01c06,
                              crop_r01c07, crop_r01c08, crop_r01c09,
-                             crop_r01c10 + crop_r01c11 + crop_r01c12])
+                             crop_r01c10, crop_r01c11, crop_r01c12])
 
     crop_r02 = pd.np.nansum([crop_r02c01, crop_r02c02, crop_r02c03,
                              crop_r02c04, crop_r02c05, crop_r02c06,
