@@ -234,7 +234,7 @@ def Resample_data(output_folder,nameOut,lonlim1,latlim1):
     osng = osr.SpatialReference()
     osng.ImportFromEPSG(int(4326))
     dest2.SetGeoTransform([lonlim1[0], 0.005, 0.0, latlim1[1], 0.0, -0.005])
-    dest2.SetProjection (osng.ExportToWkt())
+    dest2.SetProjection(osng.ExportToWkt())
    
     # projection of the old array
     wgs84 = osr.SpatialReference()

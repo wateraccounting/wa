@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Authors: Tim Hessels
          UNESCO-IHE 2016
@@ -15,12 +16,11 @@ from osgeo import osr, gdal
 import urllib
 import re
 import math
-from ftplib import FTP
-import pycurl
 from joblib import Parallel, delayed
+from bs4 import BeautifulSoup
 
 # Water Accounting modules
-from wa import WebAccounts
+from wa import WA_Paths
 
 def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     """
@@ -45,18 +45,8 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     # Make an array of the days of which the ET is taken
     Dates = pd.date_range(Startdate,Enddate,freq = 'M')    
     
-    # Check the latitude and longitude and otherwise set lat or lon on greatest extent
-    if latlim[0] < -90 or latlim[1] > 90:
-        print 'Latitude above 90N or below 90S is not possible. Value set to maximum'
-        latlim[0] = np.max(latlim[0],-90)
-        latlim[1] = np.min(latlim[1],90)
-    if lonlim[0] < -180 or lonlim[1] > 180:
-        print 'Longitude must be between 180E and 180W. Now value is set to maximum'
-        lonlim[0] = np.max(lonlim[0],-180)
-        lonlim[1] = np.min(lonlim[1],180)
-        
     # Make directory for the MODIS ET data
-    output_folder=os.path.join(Dir,'Evaporation','MOD16/')
+    output_folder=os.path.join(Dir,'Evaporation','MOD16')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
         
@@ -64,95 +54,25 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     
     # Download list (txt file on the internet) which includes the lat and lon information for the integrized sinusoidal projection tiles of MODIS
     nameDownloadtext='http://modis-land.gsfc.nasa.gov/pdf/sn_gring_10deg.txt'  
-    file_nametext=output_folder + nameDownloadtext.split('/')[-1]
+    file_nametext=os.path.join(output_folder,nameDownloadtext.split('/')[-1])
     urllib.urlretrieve(nameDownloadtext,file_nametext)
-          
-    # Set start variables for chunks (chunks are used when the area is to large)    
-    IsHorTilesNeeded=0
-    IsVerTilesNeeded=0
-    VerticalTiles=1
-    HorizontalTiles=1
-    
-    # Cut in chunks if the latlim and lonlim are to large, to prevent for memory errors
-    if latlim[1]-latlim[0]>5.1:
-        VerticalTiles=int(math.ceil((latlim[1]-latlim[0])/float(5)))
-        IsVerTilesNeeded=1
-        LatChunk=np.arange(latlim[0],latlim[1],5)
-        LatChunk=np.append(LatChunk,latlim[1])
-    else:
-        LatChunk=[latlim[0],latlim[1]]
-        
-    if lonlim[1]-lonlim[0]>5.1:
-        HorizontalTiles=int(math.ceil((lonlim[1]-lonlim[0])/float(5)))
-        IsHorTilesNeeded=1
-        LonChunk=np.arange(lonlim[0],lonlim[1],5)
-        LonChunk=np.append(LonChunk,lonlim[1])
-    else:
-        LonChunk=[lonlim[0],lonlim[1]]
-    
-    latname=0
+
+    # Open text file with tiles which is downloaded before
+    tiletext=np.genfromtxt(file_nametext,skip_header=7,skip_footer=1,usecols=(0,1,2,3,4,5,6,7,8,9))
+    tiletext2=tiletext[tiletext[:,2]>=-900,:]
+            
+    # This function converts the values in the text file into horizontal and vertical number of the tiles which must be downloaded to cover the extent defined by the user
+    TilesVertical, TilesHorizontal = Tiles_to_download(tiletext2=tiletext2,lonlim1=lonlim,latlim1=latlim)
 	
-    # Start loop of the chunks    
-    for TileVertical in range(0, int(VerticalTiles)):
-					
-        # Give latitude limits of the chunks					
-        latlim1 = [LatChunk[TileVertical], LatChunk[TileVertical+1]]
-        latname = latname + 1
-        lonname = 0
-        for TileHorizontal in range(0,int(HorizontalTiles)):
-									
-            # Give longitude limits of the chunks	 									
-            lonlim1 = [LonChunk[TileHorizontal], LonChunk[TileHorizontal+1]]
-            lonname = lonname+1
-                
-            # Open text file with tiles which is downloaded before
-            tiletext=np.genfromtxt(file_nametext,skip_header=7,skip_footer=1,usecols=(0,1,2,3,4,5,6,7,8,9))
-            tiletext2=tiletext[tiletext[:,2]>=-900,:]
-            
-            # This function converts the values in the text file into horizontal and vertical number of the tiles which must be downloaded to cover the extent defined by the user
-            TilesVertical, TilesHorizontal = Tiles_to_download(tiletext2=tiletext2,lonlim1=lonlim1,latlim1=latlim1)
-            
-            # Pass variables to parallel function and run
-            args = [output_folder, TilesVertical, TilesHorizontal, IsVerTilesNeeded, IsHorTilesNeeded, lonlim1, latlim1, lonname, latname]
-            if not cores:
-                for Date in Dates:
-                     RetrieveData(Date, args)
-                results = True
-            else:
-                results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
-                                                 for Date in Dates)
-    # Remove all .hdf files
-    for f in os.listdir(output_folder):
-        if re.search(".hdf", f) or re.search(".txt", f):
-            os.remove(os.path.join(output_folder, f))
-												
-    # If chunks are used, than merge to one picture      
-    if IsHorTilesNeeded!=0 or IsVerTilesNeeded!=0:
+    # Pass variables to parallel function and run
+    args = [output_folder, TilesVertical, TilesHorizontal,latlim, lonlim]
+    if not cores:
         for Date in Dates:
-            TotSizeY=int((latlim[1]-latlim[0])*200)
-            TotSizeX=int((lonlim[1]-lonlim[0])*200)
-            TotData=np.zeros((TotSizeY,TotSizeX))
-            YtotDataStart=0
-            YtotDataEnd=0
-    
-            for YnameChunk in range(int(VerticalTiles),0,-1):
-                YtotDataStart=YtotDataEnd
-                YtotDataEnd=int(YtotDataStart+(LatChunk[YnameChunk]-LatChunk[YnameChunk-1])*200)
-                XtotDataStart=0
-                XtotDataEnd=0
-                for XnameChunk in range(1,int(HorizontalTiles)+1):
-                    XtotDataStart=XtotDataEnd
-                    XtotDataEnd=int(XtotDataStart+(LonChunk[XnameChunk]-LonChunk[XnameChunk-1])*200)
-                    file_name=os.path.join(output_folder, 'ET_MOD16A2_mm-month-1_monthly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.01_chunk_h' + str(XnameChunk) + 'v'+ str(YnameChunk) + '.tif')
-                    fileopen=gdal.Open(file_name)
-                    arrayChunk=np.array(fileopen.GetRasterBand(1).ReadAsArray())
-                    TotData[YtotDataStart:YtotDataEnd,XtotDataStart:XtotDataEnd]=arrayChunk
-                    fileopen=None          
-                    os.remove(file_name)
-            
-            ETfileName = os.path.join(output_folder, 'ET_MOD16A2_mm-month-1_monthly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.01.tif')
-            TotData=np.flipud(TotData)
-            Save_as_Gtiff(TotData,ETfileName,lonlim,latlim)           
+            RetrieveData(Date, args)
+            results = True
+    else:
+        results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
+                                                 for Date in Dates) 
         
 	return results		
 
@@ -166,7 +86,7 @@ def RetrieveData(Date, args):
     args -- A list of parameters defined in the DownloadData function.
     """
     # Argument
-    [output_folder, TilesVertical, TilesHorizontal, IsVerTilesNeeded, IsHorTilesNeeded, lonlim1, latlim1, lonname, latname] = args
+    [output_folder, TilesVertical, TilesHorizontal,latlim, lonlim] = args
 
     # Collect the data from the MODIS webpage and returns the data and lat and long in meters of those tiles
     DataTot, LatMet, LongMet = Collect_data(TilesHorizontal,TilesVertical,Date,output_folder)
@@ -184,10 +104,10 @@ def RetrieveData(Date, args):
             Longitude[lat,lon]=LongMet[lon]/(PerimeterEarth*math.cos(Latitude[lat]*(3.14159265359/180)))*(180/3.14159265359)
                 
     # Make new grid for new projected dataset
-    LatStep=int(abs(latlim1[1]-latlim1[0])/0.005)
-    LatPro=np.linspace(latlim1[0]+0.01,(latlim1[1]+0.005),LatStep)+0.00025
-    LonStep=int(abs(lonlim1[1]-lonlim1[0])/0.005)
-    LonPro=np.linspace(lonlim1[0]+0.005,(lonlim1[1]-0.01),LonStep)+0.00025
+    LatStep=int(abs(latlim[1]-latlim[0])/0.005)
+    LatPro=np.linspace(latlim[0]+0.01,(latlim[1]+0.005),LatStep)+0.00025
+    LonStep=int(abs(lonlim[1]-lonlim[0])/0.005)
+    LonPro=np.linspace(lonlim[0]+0.005,(lonlim[1]-0.01),LonStep)+0.00025
     A=np.zeros((LatStep,LonStep))
                 
     # Find the nearest value in the integrized sinusoidal projection for the WGS84 projection
@@ -203,15 +123,14 @@ def RetrieveData(Date, args):
             Row=np.where(Longitude[int(Colomn[0]),:]==Nearest2)
             A[Kolom,Rij]=DataTot[int(DataTot.shape[0])-int(Colomn[0]),int(Row[0])]
                 
-                
-    # Save results as Gtiff
-    if IsHorTilesNeeded==0 and IsVerTilesNeeded==0:
-        ETfileName = os.path.join(output_folder, 'ET_MOD16A2_mm-month-1_monthly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.01.tif')
-        Save_as_Gtiff(A,ETfileName,lonlim1,latlim1)                     
+
+    ETfileName = os.path.join(output_folder, 'ET_MOD16A2_mm-month-1_monthly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.01.tif')
+    Save_as_Gtiff(A,ETfileName,lonlim,latlim)                     
                     
-    else:
-        ETfileName = os.path.join(output_folder, 'ET_MOD16A2_mm-month-1_monthly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.01_chunk_h' + str(lonname) + 'v'+ str(latname) + '.tif')
-        Save_as_Gtiff(A,ETfileName,lonlim1,latlim1) 
+    # Remove all .hdf files
+    for f in os.listdir(output_folder):
+        if re.search(".hdf", f) or re.search(".txt", f):
+            os.remove(os.path.join(output_folder, f))
 
     return True
 
@@ -279,7 +198,7 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
     # Make a new tile for the data
     sizeX=int(TilesHorizontal[1]-TilesHorizontal[0]+1)*1200
     sizeY=int(TilesVertical[1]-TilesVertical[0]+1)*1200
-    DataTot=np.zeros((sizeY,sizeX))
+    DataTot=np.ones((sizeY,sizeX))* -9999
     
     # Make a new tile for the lat and long info
     LatMet=np.zeros((sizeY))
@@ -295,68 +214,65 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
             countX=int(Horizontal-TilesHorizontal[0]+1)
             LongMet[int((countX-1)*1200):int((countX)*1200)]=np.linspace(((Horizontal-18)*1200+0.5)*Distance,((Horizontal-18)*1200+1199.5)*Distance,1200)
          
-            # Download the MODIS ET data by using pycurl     
-            login = 0									
-            while login == 0:
-                try:							
-                   ftp=FTP("ftp.ntsg.umt.edu", "", "")
-                   ftp.login()
-                   login = 1	
-                except:
-                   login = 0	
-            pathFTP='/pub/MODIS/NTSG_Products/MOD16/MOD16A2_MONTHLY.MERRA_GMAO_1kmALB/Y'+ Date.strftime('%Y')+'/M' + Date.strftime('%m')+'/'
-            ftp.cwd(pathFTP)   
-            data = []
-            ftp.dir(data.append)
-
-            searchname='MOD16A2.A'+Date.strftime('%Y')+'M'+Date.strftime('%m')+'.h'+ str(Horizontal).zfill(2)+'v'+ str(Vertical).zfill(2)
-            total=[]
-            for i in data:
-                if re.search(searchname,i):
-                    total=i
-                       
-            try:# open http and download whole .hdf       
-                nameTotal=total.split( )[8]
-                file_name=output_folder + nameTotal
-                FTP_name='ftp://ftp.ntsg.umt.edu'+pathFTP+nameTotal
-                if  os.path.isfile(file_name):
-                    print "file ", file_name, " already exists"
-                else:
-                    downloaded = 0
-                    while downloaded == 0:
-                        directory=pathFTP
-                        ftp.cwd(directory)
-                        lf = open(file_name, "wb")
-                        ftp.retrbinary("RETR " + nameTotal, lf.write)
-                        lf.close()												
-                        statinfo = os.stat(file_name)																									
-                        # Say that download was succesfull		
-                        if int(statinfo.st_size) > 1000:																								
-                           downloaded = 1
-                        print "downloading ", FTP_name    
-                        
-                # Open .hdf only band with ET and collect all tiles to one array
-                dataset=gdal.Open(file_name)
-                sdsdict=dataset.GetMetadata('SUBDATASETS')
-                sdslist =[sdsdict[k] for k in sdsdict.keys() if '_1_NAME' in k]
-                sds=[]
-               
-                for n in sdslist:
-                    sds.append(gdal.Open(n))
-                    full_layer = [i for i in sdslist if 'ET_1km' in i]
-                    idx = sdslist.index(full_layer[0]) 
-                    data = sds[idx].ReadAsArray() 
-                    countYdata=(TilesVertical[1]-TilesVertical[0]+2)-countY
-                    DataTot[(countYdata-1)*1200:countYdata*1200,(countX-1)*1200:countX*1200]=data*0.1
-                    DataTot[DataTot>3000]=0
-                    sds=None
-                del data
-                    
+            # Download the MODIS FPAR data            
+            url = 'http://files.ntsg.umt.edu/data/NTSG_Products/MOD16/MOD16A2_MONTHLY.MERRA_GMAO_1kmALB/Y%s/M%02s/' %(Date.strftime('%Y'), Date.strftime('%m')) 
+            curl_path_exe = WA_Paths.Paths(Type = 'curl.exe')
+								
+            if curl_path_exe is '':
+                 f = os.popen("curl -l " + url, "r")	
+            else:														
+                 f = os.popen('"%s" -l ' %(curl_path_exe) + url,  "r")
+												
+            # Sum all the files on the server												
+            soup = BeautifulSoup(f, "lxml")
+										
+            try:
+													
+                for i in soup.findAll('a', attrs = {'href': re.compile('(?i)(hdf)$')}):
+													
+                    # Find the file with the wanted tile number
+                    nameHDF=str(i)
+                    HDF_name = nameHDF.split('>')[-2][:-3]
+                    Hfile=HDF_name[18:20]
+                    Vfile=HDF_name[21:23]
+                    if int(Vfile) is int(Vertical) and int(Hfile) is int(Horizontal):
+    
+                        HTTP_name = url + HDF_name
+                        output_name = os.path.join(output_folder, HDF_name)
+                        if  os.path.isfile(output_name):
+                            print "file", output_name, "already exists"																
+                        else:
+                            downloaded = 0																				
+                            while downloaded == 0:																				
+																				
+                                urllib.urlretrieve(HTTP_name,output_name)
+    
+                                statinfo = os.stat(output_name)																									
+                                # Say that download was succesfull		
+                                if int(statinfo.st_size) > 1000:																								
+                                   downloaded = 1
+                                   print "downloaded ", HTTP_name    
+             
+                        # Open .hdf only band with ET and collect all tiles to one array
+                        dataset=gdal.Open(output_name)
+                        sdsdict=dataset.GetMetadata('SUBDATASETS')
+                        sdslist =[sdsdict[k] for k in sdsdict.keys() if '_1_NAME' in k]
+                        sds=[]
+               												
+                        sds=gdal.Open(sdslist[0])
+                        data = np.float_(sds.ReadAsArray()) 
+                        countYdata=(TilesVertical[1]-TilesVertical[0]+2)-countY
+                        DataTot[(int(countYdata)-1)*1200:int(countYdata)*1200,(int(countX)-1)*1200:int(countX)*1200]=data*0.1
+                        DataTot[DataTot>3000]=-9999
+                        sds=None
+                        del data
+           
             except:
                 data=np.ones((1200,1200))*(-99990)
                 countYdata=(TilesVertical[1]-TilesVertical[0]+2)-countY
-                DataTot[(countYdata-1)*1200:countYdata*1200,(countX-1)*1200:countX*1200]=data*0.1
+                DataTot[(int(countYdata)-1)*1200:int(countYdata)*1200,(int(countX)-1)*1200:int(countX)*1200]=data*0.1
                 DataTot[DataTot>3000]=-9999
+
     return(DataTot,LatMet,LongMet)
     
 def Save_as_Gtiff(A,ETfileName,lonlim,latlim):

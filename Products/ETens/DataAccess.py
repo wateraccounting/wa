@@ -205,9 +205,9 @@ def Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim):
 
     # Define the area of interest
     IDy_min = int(np.round(((100 - Lat_tiles[0] * 10) - latlim[1])/0.0025))
-    IDy_max = int(int(Tot_dataset.shape[1]) - np.round((latlim[0] - (90 - Lat_tiles[1] * 10))/0.0025))
+    IDy_max = int(int(Tot_dataset.shape[0]) - np.round((latlim[0] - (90 - Lat_tiles[1] * 10))/0.0025))
     IDx_min = int(np.round((lonlim[0]-(-190 + Lon_tiles[0] * 10))/0.0025))
-    IDx_max = int(int(Tot_dataset.shape[0]) - np.round(((- 180 + Lon_tiles[1] * 10) - lonlim[1])/0.0025))				
+    IDx_max = int(int(Tot_dataset.shape[1]) - np.round(((- 180 + Lon_tiles[1] * 10) - lonlim[1])/0.0025))				
 
     # Clip the ET data to the area of interest
     ET_data = np.zeros([int(np.round((latlim[1]-latlim[0]))/0.0025),int(np.round((lonlim[1]-lonlim[0])/0.0025))])				
