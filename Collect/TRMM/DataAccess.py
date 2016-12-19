@@ -9,12 +9,13 @@ Module: Collect/TRMM
 
 import numpy as np
 import os
-from osgeo import osr, gdal
+import gdal
 import pandas as pd
 from ftplib import FTP
 from struct import unpack
 from joblib import Parallel, delayed
 
+import wa.General.data_conversions as DC
 
 def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
     """
@@ -166,16 +167,9 @@ def RetrieveData(Date, args):
         data[data < 0] = -9999
 
         # Make geotiff file
-        driver = gdal.GetDriverByName("GTiff")
-        dst_ds = driver.Create(DirFile, data.shape[1], int(yID[1]-yID[0]),
-                               1, gdal.GDT_Float32, ['COMPRESS=LZW'])
-        srs = osr.SpatialReference()
-        srs.SetWellKnownGeogCS("WGS84")
-        dst_ds.SetProjection(srs.ExportToWkt())
-        dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
-        dst_ds.SetGeoTransform([lonlim[0], 0.25, 0, latlim[1], 0, -0.25])
-        dst_ds.GetRasterBand(1).WriteArray(data)
-        dst_ds = None
+        geo = [lonlim[0], 0.25, 0, latlim[1], 0, -0.25]
+        DC.Save_as_tiff(name=DirFile, data=data, geo=geo, projection="WGS84")
+								
     except:
         print "file not exists"
     return True

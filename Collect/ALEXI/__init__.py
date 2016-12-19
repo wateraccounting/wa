@@ -5,7 +5,7 @@ Authors: Tim Hessels and Gonzalo Espinoza
 Contact: t.hessels@unesco-ihe.org
          g.espinoza@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
-Module: Collect/TRMM
+Module: Collect/ALEXI
 
 Restrictions:
 The data and this python file may not be distributed to others without
@@ -23,7 +23,7 @@ for the period of 1 January - 7 January.
 Examples:
 from wa.Collect import ALEXI
 ALEXI.weekly(Dir='C:/Temp/', Startdate='2003-12-01', Enddate='2004-01-20',
-           latlim=[-10, 30], lonlim=[-20, 120])
+           latlim=[-10, 30], lonlim=[-20, -10])
 """
 
 from .weekly import main as weekly

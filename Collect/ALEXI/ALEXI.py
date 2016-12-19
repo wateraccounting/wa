@@ -22,7 +22,7 @@ The output file with the name 2003.01.01 contains the total evaporation in mm
 for the period of 1 January - 7 January.
 
 Example:
-from wa.Level1 import ALEXI
+from wa.Collect import ALEXI
 ALEXI.fromFTP_weekly(Startdate='2003-02-24', Enddate='2003-03-09',
                      latlim=[50,54], lonlim=[3,7], Dir='C:/Temp/')
 

@@ -30,14 +30,16 @@ ALEXI.weekly(Dir='C:/Temp/', Startdate='2003-02-24', Enddate='2003-03-09',
 # General modules
 import numpy as np
 import os
-from osgeo import osr, gdal
 import pandas as pd
 from ftplib import FTP
 import datetime
 import math
 
 # Water Accounting Modules
-import WebAccounts
+import wa.WebAccounts as WebAccounts
+import wa.General.raster_conversions as RC
+import wa.General.data_conversions as DC
+
 
 def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
     """
@@ -93,7 +95,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
     Date = pd.Timestamp(Date)																																				
 																																					
     # Define directory and create it if not exists
-    output_folder = os.path.join(Dir, 'Evaporation', 'ALEXI/')
+    output_folder = os.path.join(Dir, 'Evaporation', 'ALEXI')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -105,10 +107,10 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
             
         # Date as printed in filename
         Datesname=Date+pd.DateOffset(days=-7)
-        DirFile=output_folder + 'ETa_ALEXI_CSFR_mm-week-1_weekly_' + Datesname.strftime('%Y') + '.' + Datesname.strftime('%m') + '.' + Datesname.strftime('%d') + '.tif'
+        DirFile= os.path.join(output_folder,'ETa_ALEXI_CSFR_mm-week-1_weekly_%s.%02s.%02s.tif' %(Datesname.strftime('%Y'), Datesname.strftime('%m'), Datesname.strftime('%d')))
             
         # Define end filename
-        filename="ALEXI_weekly_mm_" + Date.strftime('%j') + "_"+  Date.strftime('%Y') +".tif"
+        filename = "ALEXI_weekly_mm_%s_%s.tif" %(Date.strftime('%j'), Date.strftime('%Y'))
         
 		# Temporary filename for the downloaded global file												
         local_filename = os.path.join(output_folder, filename)
@@ -179,28 +181,18 @@ def Download_ALEXI_from_WA_FTP(local_filename, DirFile, filename, lonlim, latlim
         ftp.retrbinary("RETR " + filename, lf.write)
         lf.close()
 
-        # Open global ALEXI data                
-        f=gdal.Open(local_filename)
-        band=f.GetRasterBand(1)
-        dataset=band.ReadAsArray()
+        # Open global ALEXI data   
+        dataset = RC.Open_tiff_array(local_filename)             
                 
         # Clip extend out of world data
         data = dataset[yID[0]:yID[1],xID[0]:xID[1]]                 
         data[data < 0] = -9999
                 
-        # make geotiff file              
-        driver = gdal.GetDriverByName("GTiff")
-        dst_ds = driver.Create(DirFile, data.shape[1], int(yID[1]-yID[0]), 1, gdal.GDT_Float32, ['COMPRESS=LZW'])                    
-        srs = osr.SpatialReference()
-        srs.SetWellKnownGeogCS("WGS84")
-        dst_ds.SetProjection(srs.ExportToWkt())
-        dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
-        dst_ds.SetGeoTransform([lonlim[0],0.05,0,latlim[1],0,-0.05])
-        dst_ds.GetRasterBand(1).WriteArray(data)
-        dst_ds = None
+        # make geotiff file     
+        geo = [lonlim[0],0.05,0,latlim[1],0,-0.05]
+        DC.Save_as_tiff(name = DirFile, data = data, geo = geo, projection = "WGS84")																
                 
         # delete old tif file
-        f=None
         os.remove(local_filename)
                 
     except:

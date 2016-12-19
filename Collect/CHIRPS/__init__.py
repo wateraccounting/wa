@@ -16,10 +16,10 @@ format. The CHIRP data is available since 1981-01-01 till the present.
 
 Examples:
 from wa.Collect import CHIRPS
-CHIRPS.daily(Dir='C:/Temp/', Startdate='1999-02-01', Enddate='1999-02-22',
-             latlim=[-10, 30], lonlim=[-20, 120], cores=2)
+CHIRPS.daily(Dir='C:/Temp/', Startdate='1999-02-01', Enddate='1999-02-03',
+             latlim=[-10, 30], lonlim=[-20, 120])
 CHIRPS.monthly(Dir='C:/Temp/', Startdate='1999-02-01', Enddate='1999-02-28',
-               latlim=[-10, 30], lonlim=[-20, 120], cores=2)
+               latlim=[-10, 30], lonlim=[-20, 120])
 """
 
 from .daily import main as daily

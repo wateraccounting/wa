@@ -14,9 +14,8 @@ Use the DEM functions to download and create DEM images in Gtiff format.
 
 Examples:
 from wa.Collect import DEM
-DEM.HydroSHED(Dir='C:/TempDEM/', latlim=[-10, 30], lonlim=[-20, 120], Resample=0)
+DEM.HydroSHED(Dir='C:/TempDEM4/', latlim=[29, 32], lonlim=[-113, -109])
 """
-
 from .HydroSHED import main as HydroSHED
 
 __all__ = ['HydroSHED']

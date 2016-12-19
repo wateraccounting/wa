@@ -4,13 +4,14 @@
 import numpy as np
 import calendar
 import os
-from osgeo import osr, gdal
+import gdal
 import pandas as pd
 import requests
 from joblib import Parallel, delayed
 
 # Water Accounting modules
 from wa import WebAccounts
+import wa.General.data_conversions as DC
 
 def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
                  TimeCase, CaseParameters):    
@@ -230,16 +231,10 @@ def RetrieveData_three_hourly(Date, args):
             lonlimGLDAS = xID[0] * 0.25 - 180
             latlimGLDAS = yID[1] * 0.25 - 60
 
-            # Save to geotiff file                    
-            driver = gdal.GetDriverByName("GTiff")
-            dst_ds = driver.Create(BasinDir, int(data.shape[1]), int(data.shape[0]), 1, gdal.GDT_Float32, ['COMPRESS=LZW'])                    
-            srs = osr.SpatialReference()
-            srs.SetWellKnownGeogCS("WGS84")
-            dst_ds.SetProjection(srs.ExportToWkt())
-            dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
-            dst_ds.SetGeoTransform([lonlimGLDAS,0.25,0,latlimGLDAS,0,-0.25])
-            dst_ds.GetRasterBand(1).WriteArray(np.flipud(data[:,:]))
-            dst_ds = None
+            # Save to geotiff file     
+            geo = [lonlimGLDAS,0.25,0,latlimGLDAS,0,-0.25]
+            DC.Save_as_tiff(name=BasinDir, data=np.flipud(data[:,:]), geo=geo, projection="WGS84")
+               											
             print 'File for ' + Date.strftime('%Y-%m-%d') + ' created.'
             
             # Delete data and text file												
@@ -342,21 +337,17 @@ def RetrieveData_daily(Date, args):
  
             try:	
                 # Save to geotiff file
-                driver = gdal.GetDriverByName("GTiff")
-                dst_ds = driver.Create(BasinDir, int(data_end.shape[2]), int(data_end.shape[1]), 1, gdal.GDT_Float32, ['COMPRESS=LZW'])
-                srs = osr.SpatialReference()
-                srs.SetWellKnownGeogCS("WGS84")
-                dst_ds.SetProjection(srs.ExportToWkt())
-                dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
-                dst_ds.SetGeoTransform([lonlimGLDAS, 0.25, 0, latlimGLDAS, 0, -0.25])
 
                 if T == 'mean':
-                    dst_ds.GetRasterBand(1).WriteArray(np.flipud(np.mean(data_end, axis=0)))
+                    data = np.flipud(np.mean(data_end, axis=0))
                 if T == 'max':
-                    dst_ds.GetRasterBand(1).WriteArray(np.flipud(np.max(data_end, axis=0)))
+                    data = np.flipud(np.max(data_end, axis=0))
                 if T == 'min':
-                    dst_ds.GetRasterBand(1).WriteArray(np.flipud(np.min(data_end, axis=0)))
-                    dst_ds = None
+                    data = np.flipud(np.min(data_end, axis=0))
+ 
+                geo = [lonlimGLDAS,0.25,0,latlimGLDAS,0,-0.25]
+                DC.Save_as_tiff(name=BasinDir, data=data, geo=geo, projection="WGS84")																
+																				
             except:
                 print 'GLDAS map from '+ Date.strftime('%Y-%m-%d') + ' is not created'	
 																
@@ -452,16 +443,10 @@ def RetrieveData_monthly(Date, args):
             lonlimGLDAS = xID[0] * 0.25 - 180
             latlimGLDAS = yID[1] * 0.25 - 60
 
-            # Save to geotiff file                    
-            driver = gdal.GetDriverByName("GTiff")
-            dst_ds = driver.Create(BasinDir, int(data.shape[1]), int(data.shape[0]), 1, gdal.GDT_Float32, ['COMPRESS=LZW'])                    
-            srs = osr.SpatialReference()
-            srs.SetWellKnownGeogCS("WGS84")
-            dst_ds.SetProjection(srs.ExportToWkt())
-            dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
-            dst_ds.SetGeoTransform([lonlimGLDAS,0.25,0,latlimGLDAS,0,-0.25])
-            dst_ds.GetRasterBand(1).WriteArray(np.flipud(data[:,:]))
-            dst_ds = None
+            # Save to geotiff file    
+            geo = [lonlimGLDAS,0.25,0,latlimGLDAS,0,-0.25]
+            DC.Save_as_tiff(name=BasinDir, data=np.flipud(data[:,:]), geo=geo, projection="WGS84")	
+                												
             print 'File for ' + Date.strftime('%Y-%m-%d') + ' created.'
             
             # Delete data and text file												

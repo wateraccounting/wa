@@ -4,7 +4,7 @@ from wa.Collect.DEM.DataAccess import DownloadData
 import sys
 
 
-def main(Dir, latlim, lonlim, Resample=0):
+def main(Dir, latlim, lonlim):
     """
     Downloads HydroSHED data from http://earlywarning.usgs.gov/hydrodata/
 
@@ -18,10 +18,6 @@ def main(Dir, latlim, lonlim, Resample=0):
     Dir -- 'C:/file/to/path/'    
     latlim -- [ymin, ymax] (values must be between -50 and 50)
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
-    Resample -- 1 = The data will be resampled to 0.001 degree spatial
-                    resolution
-             -- 0 = The data will have the same pixel size as the data obtained
-                    from the internet
     """
 
     # Create directory if not exists for the output
@@ -34,7 +30,7 @@ def main(Dir, latlim, lonlim, Resample=0):
     if not os.path.exists(nameEnd):
 
         # Download and process the data
-        DownloadData(output_folder, latlim, lonlim, Resample)
+        DownloadData(output_folder, latlim, lonlim)
 
     else:
         print "DEM HydroSHED already exists in output folder"

@@ -23,8 +23,7 @@ Futher information of the variable can be printed with the following commands:
 Examples:
 from wa.Collect import GLDAS
 GLDAS.three_hourly(Dir='C:/Temp/', Vars=['qair','tair'], Startdate='2004-12-20', Enddate='2005-01-10',
-                   latlim=[38, 41], lonlim=[-76, -73], cores=2,
-                   Periods=[4, 5])
+                   latlim=[38, 41], lonlim=[-76, -73], Periods=[4, 5])
 GLDAS.daily(Dir='C:/Temp/', Vars=['qair'], Startdate='2004-12-20', Enddate='2005-01-01',
             latlim=[38, 41], lonlim=[-76, -73],
             SumMean=1, Min=1, Max=1)

@@ -13,10 +13,11 @@ import os
 import numpy as np
 import pandas as pd
 from ftplib import FTP
-import gzip
-from osgeo import osr, gdal
 from joblib import Parallel, delayed
 
+# WA+ modules
+import wa.General.raster_conversions as RC
+import wa.General.data_conversions as DC
 
 def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
     """
@@ -62,7 +63,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
         lonlim[1] = np.min(lonlim[1], 180)
 
     # make directory if it not exists
-    output_folder = os.path.join(Dir, 'Precipitation', 'CHIRPS/')
+    output_folder = os.path.join(Dir, 'Precipitation', 'CHIRPS')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -102,8 +103,7 @@ def RetrieveData(Date, args):
 				
 	# Define FTP path to directory 			
     if TimeCase == 'daily':
-        pathFTP = 'pub/org/chg/products/CHIRPS-2.0/global_daily/tifs/p05/' + \
-                  Date.strftime('%Y') + '/'
+        pathFTP = 'pub/org/chg/products/CHIRPS-2.0/global_daily/tifs/p05/%s/' %Date.strftime('%Y') 
     elif TimeCase == 'monthly':
         pathFTP = 'pub/org/chg/products/CHIRPS-2.0/global_monthly/tifs/'
     else:
@@ -118,26 +118,13 @@ def RetrieveData(Date, args):
 				
 	# create all the input name (filename) and output (outfilename, filetif, DiFileEnd) names			
     if TimeCase == 'daily':
-        filename = 'chirps-v2.0.' + Date.strftime('%Y') + '.' + \
-                   Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif.gz'
-        outfilename = output_folder + 'chirps-v2.0.' + \
-            Date.strftime('%Y') + '.' + Date.strftime('%m') + \
-            '.' + Date.strftime('%d') + '.tif'
-        filetif = output_folder + 'chirps-v2.0.' + Date.strftime('%Y') + \
-            '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif'
-        DirFileEnd = output_folder + 'P_CHIRPS.v2.0_mm-day-1_daily_' + \
-            Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + \
-            Date.strftime('%d') + '.tif'
+        filename = 'chirps-v2.0.%s.%02s.%02s.tif.gz' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d'))
+        outfilename = os.path.join(output_folder,'chirps-v2.0.%s.%02s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d')))
+        DirFileEnd = os.path.join(output_folder,'P_CHIRPS.v2.0_mm-day-1_daily_%s.%02s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d')))
     elif TimeCase == 'monthly':
-        filename = 'chirps-v2.0.' + Date.strftime('%Y') + '.' + \
-            Date.strftime('%m') + '.tif.gz'
-        outfilename = output_folder + 'chirps-v2.0.' + \
-            Date.strftime('%Y') + '.' + Date.strftime('%m') + '.tif'
-        filetif = output_folder + 'chirps-v2.0.' + Date.strftime('%Y') + \
-            '.' + Date.strftime('%m') + '.tif'
-        DirFileEnd = output_folder + 'P_CHIRPS.v2.0_mm-month-1_monthly_' + \
-            Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + \
-            Date.strftime('%d') + '.tif'
+        filename = 'chirps-v2.0.%s.%02s.tif.gz' %(Date.strftime('%Y'), Date.strftime('%m'))
+        outfilename = os.path.join(output_folder,'chirps-v2.0.%s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m')))
+        DirFileEnd = os.path.join(output_folder,'P_CHIRPS.v2.0_mm-month-1_monthly_%s.%02s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d')))											
     else:
         raise KeyError("The input time interval is not supported")
 
@@ -149,39 +136,22 @@ def RetrieveData(Date, args):
         lf.close()
 
         # unzip the file
-        zip_filename = output_folder + filename
-        with gzip.GzipFile(zip_filename, 'rb') as zf:
-            file_content = zf.read()
-            save_file_content = file(outfilename, 'wb')
-            save_file_content.write(file_content)
-        save_file_content.close()
-        zf.close()
-        os.remove(zip_filename)
+        zip_filename = os.path.join(output_folder, filename)
+        DC.Extract_Data_gz(zip_filename, outfilename)
 
         # open tiff file
-        ds = gdal.Open(filetif)
-        dataset = np.array(ds.GetRasterBand(1).ReadAsArray())
+        dataset = RC.Open_tiff_array(outfilename)
 
         # clip dataset to the given extent
         data = dataset[yID[0]:yID[1], xID[0]:xID[1]]
         data[data < 0] = -9999
 
         # save dataset as geotiff file
-        driver = gdal.GetDriverByName("GTiff")
-        dst_ds = driver.Create(DirFileEnd, data.shape[1],
-                               int(yID[1]-yID[0]), 1, gdal.GDT_Float32,
-                               ['COMPRESS=LZW'])
-        srs = osr.SpatialReference()
-        srs.SetWellKnownGeogCS("WGS84")
-        dst_ds.SetProjection(srs.ExportToWkt())
-        dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
-        dst_ds.SetGeoTransform([lonlim[0], 0.05, 0, latlim[1], 0, -0.05])
-        dst_ds.GetRasterBand(1).WriteArray(data)
-        dst_ds = None
+        geo = [lonlim[0], 0.05, 0, latlim[1], 0, -0.05]
+        DC.Save_as_tiff(name=DirFileEnd, data=data, geo=geo, projection="WGS84")
 
         # delete old tif file
-        ds = None
-        os.remove(filetif)
+        os.remove(outfilename)
 
     except:
         print "file not exists"

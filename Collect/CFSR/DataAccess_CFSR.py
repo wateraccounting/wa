@@ -16,8 +16,7 @@ from joblib import Parallel, delayed
 
 # WA+ modules
 from wa.Collect.CFSR.Download_data_CFSR import Download_data
-from wa.Collect.CFSR.Convert_grib2_to_netCDF_CFSR import Convert_grib2_to_netCDF
-from wa.Collect.CFSR.Save_as_Gtiff_CFSR import Save_as_Gtiff
+from wa.General import data_conversions as DC
 
 def CollectData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores, Version):    
     """
@@ -130,41 +129,40 @@ def RetrieveData(Date, args):
 
         # convert grb2 to netcdf (wgrib2 module is needed)    
         for i in range(0,4):
-            Convert_grib2_to_netCDF(Date, local_filename, output_folder, i)
+            nameNC = 'Output' + str(Date.strftime('%Y')) + str(Date.strftime('%m')) + str(Date.strftime('%d')) + '-' + str(i+1) + '.nc'
+				
+            # Total path of the output 				
+            FileNC6hour = os.path.join(output_folder, nameNC)
+				
+	       # Band number of the grib data which is converted in .nc			
+            band=(int(Date.strftime('%d')) - 1) * 28 + (i + 1) * 7
+
+            # Convert the data
+            DC.Convert_grb2_to_nc(local_filename, FileNC6hour, band)
      
         if Version == 1:
-            # Convert the latlim and lonlim into array
-            Xstart = np.floor((lonlim[0] + 180.1562497) / 0.3125)
-            Xend = np.ceil((lonlim[1] + 180.1562497) / 0.3125) + 1
-            Ystart = np.floor((latlim[0] + 89.9171038899) / 0.3122121663)
-            Yend = np.ceil((latlim[1] + 89.9171038899) / 0.3122121663)
+									
+            if Date < pd.Timestamp(pd.datetime(2010, 12, 31)):
+	            		   							
+                # Convert the latlim and lonlim into array
+                Xstart = np.floor((lonlim[0] + 180.1562497) / 0.3125)
+                Xend = np.ceil((lonlim[1] + 180.1562497) / 0.3125) + 1
+                Ystart = np.floor((latlim[0] + 89.9171038899) / 0.3122121663)
+                Yend = np.ceil((latlim[1] + 89.9171038899) / 0.3122121663)
             
-            # Calculate the real latlim and lonlim
-            lat1 = -89.9171038899 + 0.31221216633 * Ystart
-            lat2 = -89.9171038899 + 0.31221216633 * Yend
-            latproj = [lat1, lat2]    
-            lon1 = -180.1562497 + 0.3125 * Xstart
-            lon2 = -180.1562497 + 0.3125 * (Xend - 1)
-            lonproj = [lon1, lon2] 
-            
-            # Create a new dataset   
-            Datatot = np.zeros([576, 1152])	
+                # Create a new dataset   
+                Datatot = np.zeros([576, 1152])	
+
+            else:
+                Version = 2																
 												
         if Version == 2:	
-									
+					
             # Convert the latlim and lonlim into array
             Xstart = np.floor((lonlim[0] + 180.102272725) / 0.204545)
             Xend = np.ceil((lonlim[1] + 180.102272725) / 0.204545) + 1
             Ystart = np.floor((latlim[0] + 89.9462116040955806) / 0.204423)
             Yend = np.ceil((latlim[1] + 89.9462116040955806) / 0.204423)
-            
-            # Calculate the real latlim and lonlim
-            lat1 = -89.9462116040955806 + 0.204423 * Ystart
-            lat2 = -89.9462116040955806 + 0.204423 * Yend
-            latproj = [lat1, lat2]    
-            lon1 = -180.102272725 + 0.204545 * Xstart
-            lon2 = -180.102272725 + 0.204545 * (Xend - 1)
-            lonproj = [lon1, lon2] 
             
             # Create a new dataset   
             Datatot = np.zeros([880, 1760])		
@@ -190,6 +188,11 @@ def RetrieveData(Date, args):
         DatasetEnd = DatatotDayEnd[int(Ystart):int(Yend), int(Xstart):int(Xend)]											
 											
         # save file
-        Save_as_Gtiff(DatasetEnd, Version, outputnamePath, lonproj, latproj) 		
-					
+        if Version == 1:
+	        pixel_size = 0.3125
+        if Version == 2:
+	        pixel_size = 0.204545   
+        geo = [lonlim[0],pixel_size,0,latlim[1],0,-pixel_size]  
+        DC.Save_as_tiff(data = np.flipud(DatasetEnd), name = outputnamePath, geo = geo, projection = "WGS84") 	
+				
     return True

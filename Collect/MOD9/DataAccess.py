@@ -21,8 +21,8 @@ import requests
 from joblib import Parallel, delayed
 
 # Water Accounting modules
-from wa import WebAccounts
-from wa import WA_Paths
+import wa.WebAccounts as WebAccounts
+import wa.WA_Paths as WA_Paths
 
 def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     """
