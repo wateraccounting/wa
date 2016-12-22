@@ -176,8 +176,7 @@ def RetrieveData(Date, args):
             f.close()
             data = np.array(Data)
             Datatot = Datatot + data
-           
-								
+           			
         # Calculate the average in W/m^2 over the day   
         DatatotDay = Datatot / 4
         DatatotDayEnd = np.zeros([int(Datatot.shape[0]), int(Datatot.shape[1])])

@@ -8,8 +8,8 @@ Module: Collect/MOD9
 
 Description:
 This module downloads MOD9 reflectance data from
-http://e4ftl01.cr.usgs.gov/. Use the MOD9.REF_daily function to
-download and create 16 daily NDVI images in Gtiff format.
+https://e4ftl01.cr.usgs.gov/. Use the MOD9.REF_daily function to
+download and create daily Reflectance images in Gtiff format.
 The data is available between 2000-02-18 till present.
 
 Examples:

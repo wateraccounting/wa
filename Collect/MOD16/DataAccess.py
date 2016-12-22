@@ -12,15 +12,18 @@ Module: Collect/MOD16
 import os
 import numpy as np
 import pandas as pd
-from osgeo import osr, gdal
+import gdal
 import urllib
 import re
-import math
+import glob
 from joblib import Parallel, delayed
 from bs4 import BeautifulSoup
 
 # Water Accounting modules
+import wa.General.raster_conversions as RC
+import wa.General.data_conversions as DC
 from wa import WA_Paths
+from wa import WebAccounts
 
 def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     """
@@ -49,8 +52,6 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     output_folder=os.path.join(Dir,'Evaporation','MOD16')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-        
-    # Part to select the tiles
     
     # Download list (txt file on the internet) which includes the lat and lon information for the integrized sinusoidal projection tiles of MODIS
     nameDownloadtext='http://modis-land.gsfc.nasa.gov/pdf/sn_gring_10deg.txt'  
@@ -73,7 +74,18 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     else:
         results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
                                                  for Date in Dates) 
-        
+                                    
+    # Remove all .hdf files	
+    os.chdir(output_folder)
+    files = glob.glob("*.hdf")																																				
+    for f in files:
+        os.remove(os.path.join(output_folder, f))      
+
+    # Remove all .txt files	
+    files = glob.glob("*.txt")																																				
+    for f in files:
+        os.remove(os.path.join(output_folder, f))      
+													
 	return results		
 
 def RetrieveData(Date, args):
@@ -89,63 +101,30 @@ def RetrieveData(Date, args):
     [output_folder, TilesVertical, TilesHorizontal,latlim, lonlim] = args
 
     # Collect the data from the MODIS webpage and returns the data and lat and long in meters of those tiles
-    DataTot, LatMet, LongMet = Collect_data(TilesHorizontal,TilesVertical,Date,output_folder)
-                
-    # Make the new latitude and longitude for the WGS84 projection
-    Latitude=np.zeros((int(DataTot.shape[0]),1))
-    Longitude=np.zeros((int(DataTot.shape[0]),int(DataTot.shape[1])))
-                    
-    PerimeterEarth=6371007.181
-                
-    # Calculate the integrized sinusoidal projection latitude and longitude for every pixel of the MODIS tile
-    for lat in range(0,int(DataTot.shape[0])):
-        Latitude[lat]=LatMet[lat]/PerimeterEarth*180/3.14159265359
-        for lon in range(0,int(DataTot.shape[1])):
-            Longitude[lat,lon]=LongMet[lon]/(PerimeterEarth*math.cos(Latitude[lat]*(3.14159265359/180)))*(180/3.14159265359)
-                
-    # Make new grid for new projected dataset
-    LatStep=int(abs(latlim[1]-latlim[0])/0.005)
-    LatPro=np.linspace(latlim[0]+0.01,(latlim[1]+0.005),LatStep)+0.00025
-    LonStep=int(abs(lonlim[1]-lonlim[0])/0.005)
-    LonPro=np.linspace(lonlim[0]+0.005,(lonlim[1]-0.01),LonStep)+0.00025
-    A=np.zeros((LatStep,LonStep))
-                
-    # Find the nearest value in the integrized sinusoidal projection for the WGS84 projection
-    Kolom=-1
-    for i in LatPro:
-        Rij=-1
-        Kolom=Kolom+1
-        Nearest=find_nearest(Latitude,i)
-        Colomn=np.where(np.any(Latitude==Nearest, axis=1))
-        for j in LonPro:   
-            Rij=Rij+1
-            Nearest2=find_nearest(Longitude[int(Colomn[0]),:],j)
-            Row=np.where(Longitude[int(Colomn[0]),:]==Nearest2)
-            A[Kolom,Rij]=DataTot[int(DataTot.shape[0])-int(Colomn[0]),int(Row[0])]
-                
+    try:
+        Collect_data(TilesHorizontal,TilesVertical,Date,output_folder)
+    except:
+        print "Was not able to download the file"  
+    
+    # Define the output name of the collect data function
+    name_collect = os.path.join(output_folder, 'Merged.tif')	         
 
+    # Reproject the MODIS product to epsg_to
+    epsg_to ='4326'
+    name_reprojected = RC.reproject_MODIS(name_collect, epsg_to)				
+
+    # Clip the data to the users extend			
+    data, geo = RC.clip_data(name_reprojected, latlim, lonlim)
+				
     ETfileName = os.path.join(output_folder, 'ET_MOD16A2_mm-month-1_monthly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.01.tif')
-    Save_as_Gtiff(A,ETfileName,lonlim,latlim)                     
-                    
-    # Remove all .hdf files
-    for f in os.listdir(output_folder):
-        if re.search(".hdf", f) or re.search(".txt", f):
-            os.remove(os.path.join(output_folder, f))
+    DC.Save_as_tiff(name=ETfileName, data=data, geo=geo, projection='4326')
+                   				
+    # remove the side products       
+    os.remove(os.path.join(output_folder, name_collect))
+    os.remove(os.path.join(output_folder, name_reprojected))                
 
     return True
 
-def find_nearest(array,value):
-    '''
-	This function finds the nearest value in a column. 
-		
-    Keywords arguments:
-    array -- [] numpy 1D array
-    value -- value of which the nearest number must be found within the array
-	'''
-    
-    # This function find the nearest value of an array
-    idx = (np.abs(array-value)).argmin()
-    return array[idx]
     
 def Tiles_to_download(tiletext2,lonlim1,latlim1):
     '''
@@ -267,31 +246,30 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                         sds=None
                         del data
            
-            except:
-                data=np.ones((1200,1200))*(-99990)
-                countYdata=(TilesVertical[1]-TilesVertical[0]+2)-countY
-                DataTot[(int(countYdata)-1)*1200:int(countYdata)*1200,(int(countX)-1)*1200:int(countX)*1200]=data*0.1
-                DataTot[DataTot>3000]=-9999
+            except:   
+                proj='PROJCS["unnamed",GEOGCS["Unknown datum based upon the custom spheroid",DATUM["Not specified (based on custom spheroid)",SPHEROID["Custom spheroid",6371007.181,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Sinusoidal"],PARAMETER["longitude_of_center",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1]]'																													 
+                data=np.ones((1200, 1200)) * (-9999)
+                countYdata=(TilesVertical[1] - TilesVertical[0] + 2) - countY
+                DataTot[(countYdata - 1) * 1200:countYdata * 1200,(countX - 1) * 1200:countX * 1200] = data * 0.1
 
-    return(DataTot,LatMet,LongMet)
-    
-def Save_as_Gtiff(A,ETfileName,lonlim,latlim):
-    '''
-	This function saves an array as a tiff file
-
-    Keywords arguments:
-    A -- Numpy array (includes values for the tiff file)
-    NDVIfileName -- 'C:/file/to/path/' (the output tiff file)	
-    lonlim -- [ymin, ymax] (longitude limits of the whole image)
-    latlim -- [ymin, ymax] (latitude limits of the whole image) 	
-    ''' 
-      
+	# Make geotiff file      
+    name2 = os.path.join(output_folder, 'Merged.tif')
     driver = gdal.GetDriverByName("GTiff")
-    dst_ds = driver.Create(ETfileName, A.shape[1], A.shape[0], 1, gdal.GDT_Float32, ['COMPRESS=LZW'])                    
-    srs = osr.SpatialReference()
-    srs.SetWellKnownGeogCS("WGS84")
-    dst_ds.SetProjection(srs.ExportToWkt())
+    dst_ds = driver.Create(name2, DataTot.shape[1], DataTot.shape[0], 1, gdal.GDT_Float32, ['COMPRESS=LZW'])     
+    try:
+        dst_ds.SetProjection(proj)
+    except:
+        proj='PROJCS["unnamed",GEOGCS["Unknown datum based upon the custom spheroid",DATUM["Not specified (based on custom spheroid)",SPHEROID["Custom spheroid",6371007.181,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Sinusoidal"],PARAMETER["longitude_of_center",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1]]'																													 
+        x1 = (TilesHorizontal[0] - 18) * 1200 * Distance
+        x4 = (TilesVertical[0] - 9) * 1200 * -1 * Distance
+        geo = [x1, Distance, 0.0, x4, 0.0, -Distance]															
+        geo_t = tuple(geo)        
+        dst_ds.SetProjection(proj)		
+        									
     dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
-    dst_ds.SetGeoTransform([lonlim[0],0.005,0,latlim[1],0,-0.005])
-    dst_ds.GetRasterBand(1).WriteArray(np.flipud(A))
+    dst_ds.SetGeoTransform(geo_t)
+    dst_ds.GetRasterBand(1).WriteArray(DataTot)
     dst_ds = None
+    sds = None
+				
+    return(DataTot,LatMet,LongMet)

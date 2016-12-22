@@ -11,20 +11,22 @@ Module: Collect/MOD17
 import os
 import numpy as np
 import pandas as pd
-from osgeo import osr, gdal
+import gdal
 import urllib
 from bs4 import BeautifulSoup
 import re
 import urlparse
 import math
 import datetime
-import subprocess
+import glob
 import requests
 from joblib import Parallel, delayed
 
 # Water Accounting modules
-from wa import WebAccounts
+import wa.General.raster_conversions as RC
+import wa.General.data_conversions as DC
 from wa import WA_Paths
+from wa import WebAccounts
 
 def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     """
@@ -86,7 +88,17 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     else:
         results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
                                                  for Date in Dates)
+    # Remove all .hdf files	
+    os.chdir(output_folder)
+    files = glob.glob("*.hdf")																																				
+    for f in files:
+        os.remove(os.path.join(output_folder, f))      
 
+    # Remove all .txt files	
+    files = glob.glob("*.txt")																																				
+    for f in files:
+        os.remove(os.path.join(output_folder, f))      
+								
 	return results		
 
 def RetrieveData(Date, args):
@@ -107,38 +119,23 @@ def RetrieveData(Date, args):
     except:
         print "Was not able to download the file"  
          
-    # Reproject the data to the WGS84 projection
-    try:									
-        name1, name2 = Reproject_data(output_folder)
-    except:
-        print "Was not able to reproject the file" 
-              
-    # Clip the data 
-    try:														
-        nameOut = Clip_data(output_folder, lonlim, latlim, name2)
-    except:
-        print "Was not able to clip the file" 
-                  
-    # Resample data
-    try:																		
-        data = Resample_data(output_folder,nameOut,lonlim,latlim)
-    except:
-        print "Was not able to resample the file"   
-                
-    # remove the side products       
-    os.remove(os.path.join(output_folder, name1))
-    os.remove(os.path.join(output_folder, name2))
-    os.remove(os.path.join(output_folder, nameOut))
-                
+      # Define the output name of the collect data function
+    name_collect = os.path.join(output_folder, 'Merged.tif')	         
+
+    # Reproject the MODIS product to epsg_to
+    epsg_to ='4326'
+    name_reprojected = RC.reproject_MODIS(name_collect, epsg_to)				
+
+    # Clip the data to the users extend			
+    data, geo = RC.clip_data(name_reprojected, latlim, lonlim)
+                                
     # Save results as Gtiff
     GPPfileName = os.path.join(output_folder, 'GPP_MOD17_kg-C-m^-2_8-daily_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
-    Save_as_Gtiff(data,GPPfileName,lonlim,latlim)                     
-                    
-    # Remove all .hdf files
-    for f in os.listdir(output_folder):
-        if re.search(".hdf", f) or re.search(".txt", f):
-            os.remove(os.path.join(output_folder, f))
-
+    DC.Save_as_tiff(name=GPPfileName, data=data, geo=geo, projection='4326')
+ 
+    # remove the side products       
+    os.remove(os.path.join(output_folder, name_collect))
+    os.remove(os.path.join(output_folder, name_reprojected))
 
     return True
 
@@ -197,80 +194,7 @@ def Make_TimeStamps(Startdate,Enddate):
         Dates = pd.date_range(Startdate, Enddate, freq = '8D')
     
     return(Dates)
-            
-            
 
-def Resample_data(output_folder,nameOut,lonlim1,latlim1):
-    '''
-    This function resample the dataset
-	
-    Keywords arguments:
-    output_folder -- 'C:/file/to/path/'
-    nameOut -- Name of the dataset that must be resampled
-    lonlim1 -- [ymin, ymax] (longitude limits of the chunk or whole image)
-    latlim1 -- [ymin, ymax] (latitude limits of the chunk or whole image) 
-    '''
-    # Open dataset that must be resampled  
-    g = gdal.Open(nameOut)
-
-    # Now, we create an in-memory raster
-    mem_drv = gdal.GetDriverByName( 'MEM' )
-   
-    # Size of the new array
-    ncol = int((lonlim1[1] - lonlim1[0]) / 0.005)
-    nrow = int((latlim1[1] - latlim1[0]) / 0.005)
-    dest2 = mem_drv.Create('', ncol, nrow, 1, gdal.GDT_Float32)
-
-    # Set the geotransform of the new resampled array
-    osng = osr.SpatialReference()
-    osng.ImportFromEPSG(int(4326))
-    dest2.SetGeoTransform([lonlim1[0], 0.005, 0.0, latlim1[1], 0.0, -0.005])
-    dest2.SetProjection (osng.ExportToWkt())
-   
-    # projection of the old array
-    wgs84 = osr.SpatialReference()
-    wgs84.ImportFromEPSG(int(4326))
-   
-    # Perform the projection/resampling 
-    res = gdal.ReprojectImage(g, dest2 ,wgs84.ExportToWkt(), osng.ExportToWkt(), gdal.GRA_Bilinear)   
-
-    # Open the array of the resampled data   
-    band = dest2.GetRasterBand(1)
-    data = np.flipud(band.ReadAsArray(0, 0, ncol, nrow))
- 
-    # remove the links to the images	 
-    g = None
-    dest2 = None
-    return(data)   
-                
-                
-def Clip_data(output_folder, lonlim1, latlim1, name2):
-    '''
-    This function clips the dataset
-	
-    Keywords arguments:
-    output_folder -- 'C:/file/to/path/'
-    lonlim1 -- [ymin, ymax] (longitude limits of the chunk or whole image)
-    latlim1 -- [ymin, ymax] (latitude limits of the chunk or whole image) 
-    name2 -- Name of the dataset that must be clipped			
-    '''
-    # Define the output name
-    nameOut = os.path.join(output_folder, 'Clipped.tif')
-
-    # find path to the executable
-    path = WA_Paths.Paths(Type = 'GDAL')
-    if path is '':	
-        fullCmd = ' '.join(['gdal_translate -projwin %s %s %s %s' % (lonlim1[0] - 0.004, latlim1[1] + 0.004, lonlim1[1] + 0.004, latlim1[0] - 0.004), '-of GTiff', name2, nameOut])  # -r {nearest}
-
-    else:
-        gdal_translate_path = os.path.join(path,'gdal_translate.exe')
-	
-        # Apply the clipping part by using gdal_translate
-        fullCmd = ' '.join(['"%s" -projwin %s %s %s %s' % (gdal_translate_path, lonlim1[0] - 0.004, latlim1[1] + 0.004, lonlim1[1] + 0.004, latlim1[0] - 0.004), '-of GTiff', name2, nameOut])  # -r {nearest}
-
-    process = subprocess.Popen(fullCmd)
-    process.wait() 
-    return(nameOut)
     
 def Tiles_to_download(tiletext2,lonlim1,latlim1):
     '''
@@ -306,36 +230,6 @@ def Tiles_to_download(tiletext2,lonlim1,latlim1):
     TilesVertical = [TotalTiles[:,0].min(), TotalTiles[:,0].max()]
     TilesHorizontal = [TotalTiles[:,1].min(), TotalTiles[:,1].max()]
     return(TilesVertical, TilesHorizontal)
-    
-def Reproject_data(output_folder):       
-    '''
-    Reproject the merged data file
-	
-    Keywords arguments:
-    output_folder -- 'C:/file/to/path/'
-    '''     
-                
-    # Define the input and output name
-    name1 = os.path.join(output_folder, 'Merged.tif')
-    name2 = os.path.join(output_folder, 'reprojected.tif')
-
-    # Define the projection in EPSG code
-    epsg_to = 4326
-
-    # find path to the executable
-    path = WA_Paths.Paths(Type = 'GDAL')
-    if path is '':	
-        fullCmd = ' '.join(['gdalwarp -overwrite -s_srs "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs"', '-t_srs EPSG:%s -of GTiff' %(epsg_to), name1, name2])  # -r {nearest}
-     
-    else:
-        gdalwarp_path = os.path.join(path,'gdalwarp.exe')	
-	
-        # Apply the reprojection by using gdalwarp
-        fullCmd = ' '.join(["%s" %(gdalwarp_path) , '-overwrite -s_srs "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs"', '-t_srs EPSG:%s -of GTiff' %(epsg_to), name1, name2])  # -r {nearest}
-
-    process = subprocess.Popen(fullCmd)
-    process.wait() 
-    return(name1, name2)    
     
 def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
     '''
@@ -478,24 +372,3 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
     dst_ds = None
     sds = None
     return()
-    
-def Save_as_Gtiff(A,GPPfileName,lonlim,latlim):
-    '''
-	This function saves an array as a tiff file
-
-    Keywords arguments:
-    A -- Numpy array (includes values for the tiff file)
-    GPPfileName -- 'C:/file/to/path/' (the output tiff file)	
-    lonlim -- [ymin, ymax] (longitude limits of the whole image)
-    latlim -- [ymin, ymax] (latitude limits of the whole image) 	
-    '''    
-    # Make geotiff file              
-    driver = gdal.GetDriverByName("GTiff")
-    dst_ds = driver.Create(GPPfileName, A.shape[1], A.shape[0], 1, gdal.GDT_Float32, ['COMPRESS=LZW'])                    
-    srs = osr.SpatialReference()
-    srs.SetWellKnownGeogCS("WGS84")
-    dst_ds.SetProjection(srs.ExportToWkt())
-    dst_ds.GetRasterBand(1).SetNoDataValue(-0.3)
-    dst_ds.SetGeoTransform([lonlim[0],0.005,0,latlim[1],0,-0.005])
-    dst_ds.GetRasterBand(1).WriteArray(np.flipud(A))
-    dst_ds = None

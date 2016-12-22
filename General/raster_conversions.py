@@ -8,7 +8,10 @@ import gdal
 import osr
 import os
 import numpy as np
+import subprocess
 from pyproj import Proj, transform
+
+import wa.WA_Paths as WA_Paths
 
 def Open_array_info(filename=''):
 
@@ -56,8 +59,8 @@ def clip_data(input_file, latlim, lonlim):
     # Define the array that must remain
     Geo_in = dest_in.GetGeoTransform()
     Geo_in = list(Geo_in)			
-    Start_x = np.max([int(round(((lonlim[0] - Geo_in[2]) - Geo_in[0])/ Geo_in[1])),0])   				
-    End_x = np.min([int(round(((lonlim[1] + Geo_in[2]) - Geo_in[0])/ Geo_in[1])),int(dest_in.RasterXSize)])				
+    Start_x = np.max([int(round(((lonlim[0] - Geo_in[1]) - Geo_in[0])/ Geo_in[1])),0])   				
+    End_x = np.min([int(round(((lonlim[1] + Geo_in[1]) - Geo_in[0])/ Geo_in[1])),int(dest_in.RasterXSize)])				
 				
     Start_y = np.max([int(round((Geo_in[3] - (latlim[1] - Geo_in[5]))/ -Geo_in[5])),0])
     End_y = np.min([int(round(((latlim[0] + Geo_in[5]) - Geo_in[3])/ Geo_in[5])), int(dest_in.RasterYSize)])	
@@ -155,12 +158,37 @@ def reproject_dataset_epsg(dataset, pixel_spacing, epsg_to, method = 2):
       
     # Perform the projection/resampling
     if method is 1:				
-        res = gdal.ReprojectImage(g, dest, wgs84.ExportToWkt(), osng.ExportToWkt(),gdal.GRA_NearestNeighbour)
+        gdal.ReprojectImage(g, dest, wgs84.ExportToWkt(), osng.ExportToWkt(),gdal.GRA_NearestNeighbour)
     if method is 2:				
-        res = gdal.ReprojectImage(g, dest, wgs84.ExportToWkt(), osng.ExportToWkt(),gdal.GRA_Bilinear)						
+        gdal.ReprojectImage(g, dest, wgs84.ExportToWkt(), osng.ExportToWkt(),gdal.GRA_Bilinear)						
 
     return dest, ulx, lry, lrx, uly, epsg_to
 
+def reproject_MODIS(input_name, epsg_to):       
+    '''
+    Reproject the merged data file
+	
+    Keywords arguments:
+    output_folder -- 'C:/file/to/path/'
+    '''                    
+    # Define the output name
+    name_out = ''.join(input_name.split(".")[:-1]) + '_reprojected.tif'
+
+    # find path to the executable
+    path = WA_Paths.Paths(Type = 'GDAL')
+    if path is '':	
+        fullCmd = ' '.join(['gdalwarp -overwrite -s_srs "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs"', '-t_srs EPSG:%s -of GTiff' %(epsg_to), input_name, name_out])  # -r {nearest}
+    else:    
+        gdalwarp_path = os.path.join(path,'gdalwarp.exe')	
+	
+        # Apply the reprojection by using gdalwarp
+        fullCmd = ' '.join(["%s" %(gdalwarp_path), '-overwrite -s_srs "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs"', '-t_srs EPSG:%s -of GTiff' %(epsg_to), input_name, name_out])  # -r {nearest}
+
+    process = subprocess.Popen(fullCmd)
+    process.wait() 
+				
+    return(name_out)  
+				
 def reproject_dataset_example(dataset, dataset_example,method=1):
 
     # open dataset that must be transformed    
@@ -190,9 +218,9 @@ def reproject_dataset_example(dataset, dataset_example,method=1):
     
     # Perform the projection/resampling
     if method is 1:				
-        res = gdal.ReprojectImage(g, dest1, wgs84.ExportToWkt(), osng.ExportToWkt(), gdal.GRA_NearestNeighbour)
+        gdal.ReprojectImage(g, dest1, wgs84.ExportToWkt(), osng.ExportToWkt(), gdal.GRA_NearestNeighbour)
     if method is 2:				
-        res = gdal.ReprojectImage(g, dest1, wgs84.ExportToWkt(), osng.ExportToWkt(), gdal.GRA_Bilinear)
+        gdal.ReprojectImage(g, dest1, wgs84.ExportToWkt(), osng.ExportToWkt(), gdal.GRA_Bilinear)
     return(dest1)				
 				
 def Get_epsg(g):				
