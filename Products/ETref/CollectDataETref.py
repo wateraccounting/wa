@@ -26,7 +26,7 @@ def CollectData(Dir, Startdate, Enddate, latlim, lonlim, cores, LANDSAF):
     LANDSAF -- if 1 than LANDSAF data will be used instead of CFSR data				
     """
     # download DEM map (will only be done when it is not there yet)
-    DEM.HydroSHED(Dir, latlim, lonlim, Resample=0)
+    DEM.HydroSHED(Dir, latlim, lonlim)
 	 
     if LANDSAF == 0:
         # download CFSR data (will only be done when it is not there yet)

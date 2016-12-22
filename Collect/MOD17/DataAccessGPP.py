@@ -259,7 +259,7 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
             countX=Horizontal - TilesHorizontal[0] + 1
             
             # Download the MODIS GPP data            
-            url = 'http://e4ftl01.cr.usgs.gov/MOLT/MOD17A2H.006/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
+            url = 'https://e4ftl01.cr.usgs.gov/MOLT/MOD17A2H.006/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
             curl_path_exe = WA_Paths.Paths(Type = 'curl.exe')
 								
             if curl_path_exe is '':
