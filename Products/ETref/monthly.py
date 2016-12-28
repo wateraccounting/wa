@@ -15,7 +15,8 @@ import os
 import gdal
 
 # import WA+ modules
-from StandardDef_ETref import GetGeoInfo, CreateGeoTiff
+from wa.General import raster_conversions as RC
+from wa.General import data_conversions as DC
 from wa.Products.ETref import daily
 
 def main(Dir, Startdate = '', Enddate = '',
@@ -58,9 +59,9 @@ def main(Dir, Startdate = '', Enddate = '',
         else:
             DEMmap=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m_reshaped_for_ETref.tif')
         # Get some geo-data to save results
-        NDV, xsize, ysize, GeoT, Projection, DataType = GetGeoInfo(DEMmap)
+        geo_ET, proj, size_X, size_Y = RC.Open_array_info(DEMmap)
       
-        dataMonth=np.zeros([ysize,xsize])
+        dataMonth=np.zeros([size_Y,size_X])
        
         for Day in Days[:-1]: 
             output_folder_day=os.path.join(Dir,'ETref','Daily')
@@ -79,7 +80,7 @@ def main(Dir, Startdate = '', Enddate = '',
         DirMonth=output_folder + '\ETref_mm-month_'+Date.strftime('%Y.%m.%d')
        
         # Create the tiff file
-        CreateGeoTiff(DirMonth,dataMonth, NDV, xsize, ysize, GeoT, Projection)
+        DC.Save_as_tiff(DirMonth,dataMonth, geo_ET, proj)
 
 if __name__ == '__main__':
     main(sys.argv)

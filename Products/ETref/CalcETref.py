@@ -12,11 +12,12 @@ import gdal
 import numpy as np
 
 # import WA+ modules
-from StandardDef_ETref import reproject_dataset, OpenAsArray, GetGeoInfo
-from GLDAS_gap_filling_ETref import gap_filling
-from Interpolate_Meteo_ETref import process_GLDAS, lapse_rate, adjust_P, slope_correct
+from wa.Products.ETref.Interpolate_Meteo_ETref import process_GLDAS, lapse_rate, adjust_P, slope_correct
+import wa.General.raster_conversions as RC
+import wa.General.data_conversions as DC
 
-def calc_ETref(tmin_str, tmax_str, humid_str, press_str, wind_str, down_short_str, down_long_str, up_long_str, DEMmap_str, DOY):
+
+def calc_ETref(Dir, tmin_str, tmax_str, humid_str, press_str, wind_str, down_short_str, down_long_str, up_long_str, DEMmap_str, DOY):
     """
     This function calculates the ETref by using all the input parameters (path)
     according to FAO standards
@@ -36,22 +37,23 @@ def calc_ETref(tmin_str, tmax_str, humid_str, press_str, wind_str, down_short_st
     """
 
     # Get some geo-data to save results
-    NDV, xsize, ysize, GeoT, Projection, DataType = GetGeoInfo(DEMmap_str)
-    raster_shape = OpenAsArray(DEMmap_str).shape 
+    GeoT, Projection, xsize, ysize = RC.Open_array_info(DEMmap_str)
+    #NDV, xsize, ysize, GeoT, Projection, DataType = GetGeoInfo(DEMmap_str)
+    raster_shape = [xsize, ysize]
 
     # Create array to store results
     ETref = np.zeros(raster_shape)
 								
     # gap fill
-    tmin_str_GF = gap_filling(tmin_str,-9999)
-    tmax_str_GF = gap_filling(tmax_str,-9999)
-    humid_str_GF = gap_filling(humid_str,-9999)
-    press_str_GF = gap_filling(press_str,-9999)
-    wind_str_GF = gap_filling(wind_str,-9999)
-    down_short_str_GF = gap_filling(down_short_str,np.nan)
-    down_long_str_GF = gap_filling(down_long_str,np.nan)
+    tmin_str_GF = RC.gap_filling(tmin_str,-9999)
+    tmax_str_GF = RC.gap_filling(tmax_str,-9999)
+    humid_str_GF = RC.gap_filling(humid_str,-9999)
+    press_str_GF = RC.gap_filling(press_str,-9999)
+    wind_str_GF = RC.gap_filling(wind_str,-9999)
+    down_short_str_GF = RC.gap_filling(down_short_str,np.nan)
+    down_long_str_GF = RC.gap_filling(down_long_str,np.nan)
     if up_long_str is not 2:				
-        up_long_str_GF = gap_filling(up_long_str,np.nan)
+        up_long_str_GF = RC.gap_filling(up_long_str,np.nan)
     else:
         up_long_str_GF = 'nan'							
     
@@ -64,23 +66,20 @@ def calc_ETref(tmin_str, tmax_str, humid_str, press_str, wind_str, down_short_st
     input_array = dict({'tmin':None,'tmax':None,'humid':None,'press':None,'wind':None,'albedo':None,'down_short':None,'down_long':None,'up_short':None,'up_long':None,'net_radiation':None,'ea':None,'es':None,'delta':None})
     
     #APPLY LAPSE RATE CORRECTION ON TEMPERATURE
-    tmin = lapse_rate(inputs['tmin'], DEMmap_str)
-    tmax = lapse_rate(inputs['tmax'], DEMmap_str)
+    tmin = lapse_rate(Dir, inputs['tmin'], DEMmap_str)
+    tmax = lapse_rate(Dir, inputs['tmax'], DEMmap_str)
 				
     #PROCESS PRESSURE MAPS 
-    press =adjust_P(inputs['press'], DEMmap_str)
+    press =adjust_P(Dir, inputs['press'], DEMmap_str)
     
     #PREPARE HUMIDITY MAPS
-    dest = reproject_dataset(inputs['humid'], DEMmap_str,method = 'bilinear')
-    band=dest.GetRasterBand(1)
-    humid=band.ReadAsArray()
+    dest = RC.reproject_dataset_example(inputs['humid'], DEMmap_str, method = 2)
+    humid=dest.GetRasterBand(1).ReadAsArray()
     dest = None
     
-     
     #CORRECT WIND MAPS
-    dest = reproject_dataset(inputs['wind'], DEMmap_str,method = 'bilinear')
-    band=dest.GetRasterBand(1)
-    wind=band.ReadAsArray()*0.75
+    dest = RC.reproject_dataset_example(inputs['wind'], DEMmap_str,method = 2)
+    wind=dest.GetRasterBand(1).ReadAsArray()*0.75
     dest = None
    
     #PROCESS GLDAS DATA
@@ -103,7 +102,6 @@ def calc_ETref(tmin_str, tmax_str, humid_str, press_str, wind_str, down_short_st
         Short_Clear_gdal=gdal.Open(Short_Clear)
         Short_Clear_data = Short_Clear_gdal.GetRasterBand(1).ReadAsArray()
         
-        
         # Calculate Long wave Net radiation
         Rnl = 4.903e-9 * (((tmin + 273.16)**4+(tmax + 273.16)**4)/2)*(0.34 - 0.14 * np.sqrt(ea)) * (1.35 * Short_Net_data/Short_Clear_data -0.35)
         
@@ -113,25 +111,20 @@ def calc_ETref(tmin_str, tmax_str, humid_str, press_str, wind_str, down_short_st
        
     else:
         #OPEN DOWNWARD SHORTWAVE RADIATION
-        dest = reproject_dataset(inputs['down_short'], DEMmap_str,method = 'bilinear')
-        band=dest.GetRasterBand(1)
-        down_short=band.ReadAsArray()
+        dest = RC.reproject_dataset_example(inputs['down_short'], DEMmap_str,method = 2)
+        down_short=dest.GetRasterBand(1).ReadAsArray()
         dest = None
         down_short, tau, bias = slope_correct(down_short,press,ea,DEMmap_str,DOY)
         
-           
         #OPEN OTHER RADS
         up_short = down_short*0.23
         
-        
-        dest = reproject_dataset(inputs['down_long'], DEMmap_str,method = 'bilinear')
-        band=dest.GetRasterBand(1)
-        down_long=band.ReadAsArray()
+        dest =  RC.reproject_dataset_example(inputs['down_long'], DEMmap_str,method = 2)
+        down_long=dest.GetRasterBand(1).ReadAsArray()
         dest = None
                 
-        dest = reproject_dataset(inputs['up_long'], DEMmap_str,method = 'bilinear')
-        band=dest.GetRasterBand(1)
-        up_long=band.ReadAsArray()
+        dest =  RC.reproject_dataset_example(inputs['up_long'], DEMmap_str,method = 2)
+        up_long=dest.GetRasterBand(1).ReadAsArray()
         dest = None
                
         #OPEN NET RADIATION AND CONVERT W*m-2 TO MJ*d-1*m-2

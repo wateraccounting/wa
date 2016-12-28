@@ -12,7 +12,8 @@ import os
 import numpy as np
 
 # import WA+ modules
-from StandardDef_ETref import ReprojectRaster, reproject_dataset, OpenAsArray, GetGeoInfo
+from wa.General import data_conversions as DC
+from wa.General import raster_conversions as RC
 from SlopeInfluence_ETref import SlopeInfluence				
 					
 def process_GLDAS(Tmax, Tmin, humidity, surface_pressure):
@@ -47,7 +48,7 @@ def process_GLDAS(Tmax, Tmin, humidity, surface_pressure):
     
     return ea, es, delta
 
-def lapse_rate(temperature_map, DEMmap):    
+def lapse_rate(Dir,temperature_map, DEMmap):    
     """
     This function downscales the GLDAS temperature map by using the DEM map
   				
@@ -57,26 +58,29 @@ def lapse_rate(temperature_map, DEMmap):
     """
 				
     # calculate average altitudes corresponding to T resolution
-    DEM_avg = ReprojectRaster(DEMmap, temperature_map, overwrite=False, output='DEM_avg.tif')
-    
+    dest = RC.reproject_dataset_example(DEMmap, temperature_map,method = 4)				
+    DEM_ave_out_name = os.path.join(Dir,'HydroSHED', 'DEM','DEM_ave.tif')
+    geo_out, proj, size_X, size_Y = RC.Open_array_info(temperature_map)				
+    DEM_ave_data = dest.GetRasterBand(1).ReadAsArray()
+    DC.Save_as_tiff(DEM_ave_out_name, DEM_ave_data, geo_out, proj)
+    dest = None
+   
     # determine lapse-rate [degress Celcius per meter]
     lapse_rate_number = 0.0065
     
     # open maps as numpy arrays
-    dest = reproject_dataset(DEM_avg, DEMmap,method = 'bilinear')
-    band=dest.GetRasterBand(1)
-    dem_avg=band.ReadAsArray()
+    dest = RC.reproject_dataset_example(DEM_ave_out_name, DEMmap, method = 2)			
+    dem_avg=dest.GetRasterBand(1).ReadAsArray()
     dem_avg[dem_avg<0]=0
     dest = None
 
     # Open the temperature dataset
-    dest = reproject_dataset(temperature_map, DEMmap, method = 'bilinear')
-    band=dest.GetRasterBand(1)
-    T=band.ReadAsArray()
+    dest = RC.reproject_dataset_example(temperature_map, DEMmap, method = 2)	
+    T=dest.GetRasterBand(1).ReadAsArray()
     dest = None
     
     # Open Demmap
-    demmap = OpenAsArray(DEMmap)
+    demmap = RC.Open_tiff_array(DEMmap)
     dem_avg[demmap<=0]=0
     demmap[demmap==-32768]=np.nan
     
@@ -85,7 +89,7 @@ def lapse_rate(temperature_map, DEMmap):
     
     return T
     
-def adjust_P(pressure_map, DEMmap):
+def adjust_P(Dir, pressure_map, DEMmap):
     """
     This function downscales the GLDAS air pressure map by using the DEM map
   				
@@ -95,29 +99,30 @@ def adjust_P(pressure_map, DEMmap):
     """	
 
     # calculate average latitudes
-    DEM_avg = ReprojectRaster(DEMmap, pressure_map, overwrite=False, output='DEM_avg.tif')
-    
+    destDEMave = RC.reproject_dataset_example(DEMmap, pressure_map, method = 4)				
+    DEM_ave_out_name = os.path.join(Dir, 'HydroSHED', 'DEM','DEM_ave.tif')
+    geo_out, proj, size_X, size_Y = RC.Open_array_info(pressure_map)				
+    DEM_ave_data = destDEMave.GetRasterBand(1).ReadAsArray()
+    DC.Save_as_tiff(DEM_ave_out_name, DEM_ave_data, geo_out, proj)    
+
     # open maps as numpy arrays
-    dest = reproject_dataset(DEM_avg, DEMmap,method = 'bilinear')
-    band=dest.GetRasterBand(1)
-    dem_avg=band.ReadAsArray()
+    dest = RC.reproject_dataset_example(DEM_ave_out_name, DEMmap, method = 2)
+    dem_avg=dest.GetRasterBand(1).ReadAsArray()
     dest = None
     
     # open maps as numpy arrays
-    dest = reproject_dataset(pressure_map, DEMmap, method = 'bilinear')
-    band=dest.GetRasterBand(1)
-    P=band.ReadAsArray()
+    dest = RC.reproject_dataset_example(pressure_map, DEMmap, method = 2)
+    P=dest.GetRasterBand(1).ReadAsArray()
     dest = None
     
-  
-    demmap = OpenAsArray(DEMmap)
+    demmap = RC.Open_tiff_array(DEMmap)
     dem_avg[demmap<=0]=0
     demmap[demmap==-32768]=np.nan
     
     # calculate second part
     P = P + (101.3*((293-0.0065*(demmap-dem_avg))/293)**5.26 - 101.3)
 
-    os.remove('DEM_avg.tif')
+    os.remove(DEM_ave_out_name)
 
     return P
 
@@ -136,7 +141,7 @@ def slope_correct(down_short_hor, pressure, ea, DEMmap, DOY):
     """	
 
     # Get Geo Info
-    NDV, xsize, ysize, GeoT, Projection, DataType = GetGeoInfo(DEMmap)
+    GeoT, Projection, xsize, ysize = RC.Open_array_info(DEMmap)	
     
     minx = GeoT[0]
     miny = GeoT[3] + xsize*GeoT[4] + ysize*GeoT[5] 
@@ -145,13 +150,12 @@ def slope_correct(down_short_hor, pressure, ea, DEMmap, DOY):
     y = np.flipud(np.arange(ysize)*-GeoT[5] + miny + -GeoT[5]/2)
     
     # Calculate Extraterrestrial Solar Radiation [W m-2]
-    demmap = OpenAsArray(DEMmap)   
+    demmap = RC.Open_tiff_array(DEMmap)   
     demmap[demmap<0]=0
     
 	# apply the slope correction			
     Ra_hor, Ra_slp, sinb, sinb_hor, fi, slope, ID = SlopeInfluence(demmap,y,x,DOY)
     
-
     # Calculate atmospheric transmissivity
     Rs_hor = down_short_hor
     

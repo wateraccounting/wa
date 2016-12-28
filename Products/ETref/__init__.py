@@ -21,7 +21,7 @@ The LANDSAF data can be downloaded from CMSAF.eu. You need to have the following
 
 The ~LANDSAF is the path which you have to define as the SourceLANDSAF parameter
 
-ETref.monthly(Dir='C:/TempR/', Startdate='2012-09-01', Enddate='2012-12-31',
+ETref.monthly(Dir='C:/TempR/', Startdate='2012-09-01', Enddate='2012-09-02',
            latlim=[33, 35], lonlim=[35, 37], pixel_size=0.01)
 ETref.daily(Dir='C:/TempTestLANDSAF3/', Startdate='2005-01-02', Enddate='2005-01-04',
            latlim=[33, 35], lonlim=[35, 37], LANDSAF=1, SourceLANDSAF =r'D:\LANDSAF')

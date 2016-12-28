@@ -12,7 +12,6 @@ import os
 import subprocess
 from wa import WA_Paths
 
-
 def Convert_grb2_to_nc(input_wgrib, output_nc, band):
 	
     # find path to the executable

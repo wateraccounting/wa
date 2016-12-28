@@ -12,10 +12,10 @@ import pandas as pd
 from joblib import Parallel, delayed
 
 # import WA+ modules
-from StandardDef_ETref import GetGeoInfo, CreateGeoTiff
-from Reshape_DEM_ETref import Reshape_DEM
-from SetPathETref import SetPaths
-from CalcETref import calc_ETref
+from wa.General import raster_conversions as RC
+from wa.General import data_conversions as DC
+from wa.Products.ETref.SetPathETref import SetPaths
+from wa.Products.ETref.CalcETref import calc_ETref
 
 
 def SetVariables(Dir, Startdate, Enddate, latlim, lonlim, pixel_size, cores, LANDSAF):
@@ -71,11 +71,15 @@ def ETref(Date, args):
     if not pixel_size:
         DEMmap_str=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m.tif')
     else:
+        DEMmap_str=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m.tif')
+        dest, ulx, lry, lrx, uly, epsg_to = RC.reproject_dataset_epsg(DEMmap_str, pixel_spacing = pixel_size, epsg_to=4326, method = 2)			
         DEMmap_str=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m_reshaped_for_ETref.tif')
-        Reshape_DEM(Dir, pixel_size, DEMmap_str)
+        DEM_data = dest.GetRasterBand(1).ReadAsArray()
+        geo_dem = [ulx, pixel_size, 0.0, uly, 0.0, - pixel_size]            
+        DC.Save_as_tiff(name=DEMmap_str, data=DEM_data, geo=geo_dem, projection='4326')
 
     # Calc ETref	
-    ETref = calc_ETref(tmin_str, tmax_str, humid_str, press_str, wind_str, input1_str, input2_str, input3_str, DEMmap_str, DOY)
+    ETref = calc_ETref(Dir, tmin_str, tmax_str, humid_str, press_str, wind_str, input1_str, input2_str, input3_str, DEMmap_str, DOY)
 
     # Make directory for the MODIS ET data
     output_folder=os.path.join(Dir,'ETref','Daily')
@@ -83,14 +87,15 @@ def ETref(Date, args):
         os.makedirs(output_folder)    
 
     # Create the output names        
-    NameETref='ETref_mm-day_'+Date.strftime('%Y.%m.%d')    
+    NameETref='ETref_mm-day_'+Date.strftime('%Y.%m.%d') + '.tif'    
     NameEnd=os.path.join(output_folder,NameETref)
      
     # Collect geotiff information 					
-    NDV, xsize, ysize, GeoT, Projection, DataType = GetGeoInfo(DEMmap_str)	
+    geo_out, proj, size_X, size_Y = RC.Open_array_info(DEMmap_str)	
 
     # Create daily ETref tiff files								
-    CreateGeoTiff(NameEnd,ETref, NDV, xsize, ysize, GeoT, Projection)
+    DC.Save_as_tiff(name=NameEnd, data=ETref, geo=geo_out, projection=proj)
+
 
 
 

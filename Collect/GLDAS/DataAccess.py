@@ -4,7 +4,6 @@
 import numpy as np
 import calendar
 import os
-import gdal
 import pandas as pd
 import requests
 from joblib import Parallel, delayed
@@ -50,7 +49,8 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
         TimeFreq = 'D'
 								
         # Define URL by using personal account								
-        url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025SUBP_3H' %(username,password)
+        #url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025SUBP_3H' %(username,password)
+        url = 'https://hydro1.sci.gsfc.nasa.gov/dods/GLDAS_NOAH025SUBP_3H' #%(username,password)
 								
         # Name the definition that will be used to obtain the data								
         RetrieveData_fcn = RetrieveData_three_hourly
@@ -82,8 +82,9 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
         TimeFreq = 'D'
         
         # Define URL by using personal account	
-        url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025SUBP_3H' %(username,password)
-								
+        #url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025SUBP_3H' %(username,password)
+        url = 'https://hydro1.sci.gsfc.nasa.gov/dods/GLDAS_NOAH025SUBP_3H' #%(username,password)
+										
         # Name the definition that will be used to obtain the data									
         RetrieveData_fcn = RetrieveData_daily
 
@@ -104,8 +105,10 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
         TimeFreq = 'MS'
 								
         # Define URL by using personal account							
-        url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025_M' %(username,password)
-								
+        #url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025_M' %(username,password)
+        url = 'https://hydro1.sci.gsfc.nasa.gov/dods/GLDAS_NOAH025_M' #%(username,password)
+		
+ 								
         # Name the definition that will be used to obtain the data									
         RetrieveData_fcn = RetrieveData_monthly
    
@@ -185,7 +188,7 @@ def RetrieveData_three_hourly(Date, args):
                     url_GLDAS = url + '.ascii?%s[%s][%s:1:%s][%s:1:%s]' %(Var,zID,yID[0],yID[1],xID[0],xID[1])
 			
                     # open URL
-                    dataset = requests.get(url_GLDAS, allow_redirects=False)
+                    dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
                     try:
                         get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True)	
                     except:
@@ -291,7 +294,7 @@ def RetrieveData_daily(Date, args):
                 try:																	
                     																	
                     # open URL
-                    dataset = requests.get(url_GLDAS, allow_redirects=False)
+                    dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
                     try:
                         get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True)	
                     except:
@@ -397,7 +400,7 @@ def RetrieveData_monthly(Date, args):
             try:																	
                     																	
                 # open URL
-                dataset = requests.get(url_GLDAS, allow_redirects=False)
+                dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
                 try:
                     get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True)	
                 except:

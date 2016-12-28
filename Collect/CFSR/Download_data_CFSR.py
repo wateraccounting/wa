@@ -34,14 +34,16 @@ def Download_data(Date, Version, output_folder, Var):
 									
             # Create the command and run the command in cmd
             if Version == 1:
-			    FTP_name = 'ftp://nomads.ncdc.noaa.gov/CFSR/HP_time_series/' + Date.strftime('%Y') + Date.strftime('%m')+ '/' + filename
+                FTP_name = 'ftp://nomads.ncdc.noaa.gov/CFSR/HP_time_series/' + Date.strftime('%Y') + Date.strftime('%m')+ '/' + filename
 							
             if Version == 2:
-                FTP_name = 'http://nomads.ncdc.noaa.gov/modeldata/cfsv2_analysis_timeseries/' + Date.strftime('%Y') + '/' + Date.strftime('%Y') + Date.strftime('%m')+ '/' + filename
+                FTP_name = 'https://nomads.ncdc.noaa.gov/modeldata/cfsv2_analysis_timeseries/' + Date.strftime('%Y') + '/' + Date.strftime('%Y') + Date.strftime('%m')+ '/' + filename
 
             curl = pycurl.Curl()
             curl.setopt(pycurl.URL, FTP_name)
             fp = open(local_filename, "wb")
+            curl.setopt(pycurl.SSL_VERIFYPEER, 0)
+            curl.setopt(pycurl.SSL_VERIFYHOST, 0)
             curl.setopt(pycurl.WRITEDATA, fp)
             curl.perform()
             curl.close()

@@ -17,9 +17,9 @@ import osr
 import netCDF4
 
 # import WA+ modules
+from wa.General import data_conversions as DC
+from wa.General import raster_conversions as RC
 from SlopeInfluence_ETref import SlopeInfluence	
-from StandardDef_ETref import GetGeoInfo, OpenAsArray, ReprojectRaster
-from StandardDef_ETref import CreateGeoTiff
 from wa import WA_Paths
 
 def CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim):
@@ -49,19 +49,17 @@ def CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim):
        
     ShortwaveBasin(SourceLANDSAF, Dir, latlim, lonlim, Dates=[Startdate,Enddate])
     DEMmap_str=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m.tif') 
-    NDV, xsize, ysize, GeoT, Projection, DataType = GetGeoInfo(DEMmap_str)	
+    geo_out, proj, size_X, size_Y = RC.Open_array_info(DEMmap_str)	
 
     # Open DEM map 
-    gdalDEM=gdal.Open(DEMmap_str)
-    demmap = OpenAsArray(DEMmap_str)
+    demmap = RC.Open_tiff_array(DEMmap_str)
     demmap[demmap<0]=0
             
-    # make lat and lon arrays
-    GeoTransform = gdalDEM.GetGeoTransform()
-    dlat = GeoTransform[5] * -1
-    dlon = GeoTransform[1]
-    lat = GeoTransform[3] - (np.arange(gdalDEM.RasterYSize)+0.5)*dlat
-    lon = GeoTransform[0] + (np.arange(gdalDEM.RasterXSize)+0.5)*dlon			
+    # make lat and lon arrays)
+    dlat = geo_out[5] 
+    dlon = geo_out[1]
+    lat = geo_out[3] + (np.arange(size_Y)+0.5)*dlat
+    lon = geo_out[0] + (np.arange(size_X)+0.5)*dlon			
 				
 				
     for date in Dates:
@@ -74,15 +72,13 @@ def CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim):
         SISname = os.path.join(SISdir,'SAF_SIS_Daily_W-m2_' + date.strftime('%Y-%m-%d') + '.tif')
             
         #PREPARE SID MAPS
-        ReprojectRaster(SIDname,DEMmap_str,overwrite=True,output=SIDname, method = 'lanczos')
-        SID=gdal.Open(SIDname)
-        SIDdata=SID.GetRasterBand(1).ReadAsArray()
+        SIDdest = RC.reproject_dataset_example(SIDname,DEMmap_str,method = 3)																				
+        SIDdata=SIDdest.GetRasterBand(1).ReadAsArray()
 
         #PREPARE SIS MAPS
-        ReprojectRaster(SISname,DEMmap_str,overwrite=True,output=SISname, method = 'lanczos')
-        SIS=gdal.Open(SISname)
-        SISdata=SIS.GetRasterBand(1).ReadAsArray()
-        
+        SISdest = RC.reproject_dataset_example(SISname,DEMmap_str,method = 3)																				
+        SISdata=SISdest.GetRasterBand(1).ReadAsArray()
+
         # Calculate ShortWave net
         Short_Wave_Net = SIDdata * (Sloping/Horizontal)+SISdata *86400/1e6
         
@@ -107,9 +103,8 @@ def CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim):
         nameClear= os.path.join(PathClear,nameFileClear)
             
         # Save net and clear short wave radiation
-        CreateGeoTiff(nameNet,Short_Wave_Net, NDV, xsize, ysize, GeoT, Projection, DataType)
-        CreateGeoTiff(nameClear,Short_Wave_Clear, NDV, xsize, ysize, GeoT, Projection, DataType)
-
+        DC.Save_as_tiff(nameNet, Short_Wave_Net, geo_out, proj)
+        DC.Save_as_tiff(nameClear, Short_Wave_Clear, geo_out, proj)							
     return
 
 

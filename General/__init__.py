@@ -10,8 +10,8 @@ Description:
 This module consists of the general functions that are used in the WA+ toolbox
 """
 
-from wa.General import raster_conversions, data_conversions
+from wa.General import data_conversions, raster_conversions
 
-__all__ = ['raster_conversions', 'data_conversions']
+__all__ = ['data_conversions','raster_conversions']
 
 __version__ = '0.1'

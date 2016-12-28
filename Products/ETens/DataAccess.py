@@ -10,17 +10,15 @@ Module: Products/ETens
 # General modules
 from netCDF4 import Dataset
 import numpy as np
-import gdal
 import os
 import pandas as pd
 import re
 import pycurl
-import zipfile
-import osr
 import shutil
 
 # WA+ modules
 import wa.WebAccounts as WebAccounts
+from wa.General import data_conversions as DC
 
 def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
 
@@ -79,7 +77,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
             ET_data = Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim)
 
             # Save this array as a tiff file
-            Save_as_Tiff(output_file, ET_data, geo_new)
+            DC.Save_as_tiff(output_file, ET_data, geo_new, projection='4326')
 
     # Remove all the raw dataset    
     for v_tile in range(Lat_tiles[0], Lat_tiles[1]+1):
@@ -157,11 +155,8 @@ def Unzip_ETens_data(output_folder, Lat_tiles, Lon_tiles):
                 input_zip_folder = os.path.join(output_folder, Tilename)				
 
                 if os.path.exists(input_zip_folder):				 	
-     
-                   # extract the data
-                    z = zipfile.ZipFile(input_zip_folder, 'r')
-                    z.extractall(output_folder)
-                    z.close()	
+                    # Extract data                     
+                    DC.Extract_Data(input_zip_folder, output_folder)
     except:
         print 'Was not able to unzip %s, data will be replaced by NaN values' %Tilename				
     return()	
@@ -215,26 +210,4 @@ def Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim):
     ET_data[ET_data>=9999] = np.nan			
 
     return(ET_data)
-
-def Save_as_Tiff(output_file, ET_data, geo_new):
-    """
-    This function creates an array for the extent
-
-    Keyword Arguments:
-    output_folder -- Directory of the outputs
-	ET_data -- Array with the ETensemble data
-	geo_new -- [geo1, geo2, geo3, geo4, geo5, geo6] Georeference of the ET data			
-    """
-	# create dataset for output
-    fmt = 'GTiff'
-    driver = gdal.GetDriverByName(fmt)
-    dst_dataset = driver.Create(output_file, int(ET_data.shape[1]), int(ET_data.shape[0]), 1,gdal.GDT_Float32)
-    dst_dataset.SetGeoTransform(geo_new)
-    srs = osr.SpatialReference()
-    srs.SetWellKnownGeogCS("WGS84")
-    dst_dataset.SetProjection(srs.ExportToWkt())				
-    dst_dataset.GetRasterBand(1).WriteArray(ET_data)
-    dst_dataset = None
-
-
 

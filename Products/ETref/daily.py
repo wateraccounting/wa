@@ -11,9 +11,9 @@ import sys
 import numpy as np
 
 # import WA+ modules
-from CollectDataETref import CollectData
-from CollectLANDSAFETref import CollectLANDSAF
-from SetVarETref import SetVariables
+from wa.Products.ETref.CollectDataETref import CollectData
+from wa.Products.ETref.CollectLANDSAFETref import CollectLANDSAF
+from wa.Products.ETref.SetVarETref import SetVariables
 
 def main(Dir, Startdate = '', Enddate = '',
          latlim = [-60, 60], lonlim = [-180, 180], pixel_size = False, cores = False, LANDSAF =  0, SourceLANDSAF=  ''):
