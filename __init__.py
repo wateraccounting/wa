@@ -16,8 +16,8 @@ This data is used within a water accounting framework.
 """
 
 
-from wa import WA_Paths, WebAccounts, General, Collect, Products, Sheets
+from wa import Collect_Tools, WA_Paths, WebAccounts, General, Collect, Products, Sheets
 
-__all__ = ['WA_Paths', 'WebAccounts', 'General', 'Collect', 'Products', 'Sheets']
+__all__ = ['Collect_Tools', 'WA_Paths', 'WebAccounts', 'General', 'Collect', 'Products', 'Sheets']
 
 __version__ = '0.1'
