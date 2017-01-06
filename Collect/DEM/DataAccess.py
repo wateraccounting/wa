@@ -216,7 +216,7 @@ def Find_Document_Names(latlim, lonlim):
 
             name.append(str(DirectionLat + str('%02d' % int(abs(latname))) +
                         DirectionLon + str('%03d' % int(abs(lonname))) +
-                        "_con_grid.zip"))
+                        "_dem_grid.zip"))
     return(name, rangeLon, rangeLat)
 
 
@@ -230,56 +230,19 @@ def Download_Data(nameFile, output_folder_trash):
                            stored
     """
     # download data from the internet
-    allcontinents = ["AF", "AS", "au", "CA", "EU", "NA", "SA"]
-    DoContinent = "AF"
-    TotalSize = 0
-    downloaded = 0   
+    allcontinents = ["af", "as", "au", "ca", "eu", "na", "sa"]
     for continent in allcontinents:
-        try:
-            url="http://earlywarning.usgs.gov/hydrodata/sa_con_3s_grid/" + continent + "/" + nameFile
-            site = urllib.urlopen(url)
-            meta=site.info()
-            if meta.getheaders("Content-Length")[0]>TotalSize:
-                DoContinent=continent
-                TotalSize=meta.getheaders("Content-Length")[0]
-            
-        except:
-            continue
-
-    # Reset the begin parameters for downloading												
-    N=0  	
-																	
-    # if not downloaded try to download file																	
-    while downloaded == 0 or N > 5:								
-        try:
-            url = ("http://earlywarning.usgs.gov/hydrodata/sa_con_3s_grid/"
-                       "%s/%s") % (continent, nameFile)
-		
-            url = ("http://earlywarning.usgs.gov/hydrodata/sa_con_3s_grid/"
-                         "%s/%s") % (DoContinent, nameFile)
-
+        try:	
+            url="http://www.hydrosheds.org/data/HydroSHEDS_DEM/DEM_3s_GRID/%s_dem_3s_zip_grid/%s" %(continent,nameFile)
             file_name = url.split('/')[-1]
             output_file = os.path.join(output_folder_trash, file_name)
-            urllib.urlretrieve(url, output_file)		
-            statinfo = os.stat(output_file)																									
-
-            # Say that download was succesfull
-            if int(statinfo.st_size) < 4000:																								
-                    N = N + 1
-								
-            if int(statinfo.st_size) > 4000:																								
-                    downloaded = 1
-								
-        # If download was not succesfull								
-        except:	
-																			
-            # Try another time                     																				
-            N = N + 1
-																				
-            # Stop trying after 10 times																				
-            if N == 5:
-                    print 'Data from HydroSHED %s is not available' %continent
-                    downloaded = 1
-	    			
+            urllib.urlretrieve(url, output_file)	
+												
+            if int(os.stat(output_file).st_size) > 10000:
+                break													
+							
+        except:
+            continue
+    			
     return(output_file, file_name)
 
