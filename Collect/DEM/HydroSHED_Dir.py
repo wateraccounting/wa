@@ -1,19 +1,22 @@
 # -*- coding: utf-8 -*-
 """
 Authors: Tim Hessels
-         UNESCO-IHE 2016
+         UNESCO-IHE 2017
 Contact: t.hessels@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
 Module: Collect/DEM
 """
+
+#General modules
 import os
-from wa.Collect.DEM.DataAccess import DownloadData
 import sys
 
+# Water Accounting modules
+from wa.Collect.DEM.DataAccess import DownloadData
 
 def main(Dir, latlim, lonlim):
     """
-    Downloads HydroSHED data from http://www.hydrosheds.org/download/
+    Downloads HydroSHED flow direction data from http://www.hydrosheds.org/download/
 
     this data includes a Digital Elevation Model (DEM)
     The spatial resolution is 90m
@@ -25,20 +28,20 @@ def main(Dir, latlim, lonlim):
     """
 
     # Create directory if not exists for the output
-    output_folder = os.path.join(Dir, 'HydroSHED', 'DEM')
+    output_folder = os.path.join(Dir, 'HydroSHED', 'DIR')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
     # Define the output map and create this if not exists
-    nameEnd = os.path.join(Dir, 'HydroSHED', 'DEM', 'DEM_HydroShed_m.tif')
-    parameter = "dem"
+    nameEnd = os.path.join(Dir, 'HydroSHED', 'DIR', 'DIR_HydroShed_-.tif')
+    parameter = "dir"
     if not os.path.exists(nameEnd):
 
         # Download and process the data
         DownloadData(output_folder, latlim, lonlim, parameter)
 
     else:
-        print "DEM HydroSHED already exists in output folder"
+        print "DIR HydroSHED already exists in output folder"
 
 if __name__ == '__main__':
     main(sys.argv)

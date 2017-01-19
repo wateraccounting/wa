@@ -6,6 +6,7 @@ Contact: t.hessels@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
 Module: Collect/DEM
 """
+
 # General modules
 import numpy as np
 import os
@@ -18,7 +19,7 @@ import gdal
 import wa.General.raster_conversions as RC
 import wa.General.data_conversions as DC
 
-def DownloadData(output_folder, latlim, lonlim):
+def DownloadData(output_folder, latlim, lonlim, parameter):
     """
     This function downloads DEM data from HydroSHED
 
@@ -31,9 +32,18 @@ def DownloadData(output_folder, latlim, lonlim):
              -- 0 = The data will have the same pixel size as the data obtained
                     from the internet
     """
-    # converts the latlim and lonlim into names of the tiles which must be
+    # Define parameter depedent variables
+    if parameter == "dir":
+        para_name = "DIR"
+        unit = "-"								  
+								
+    if parameter == "dem":
+        para_name = "DEM"
+        unit = "m"							
+
+   # converts the latlim and lonlim into names of the tiles which must be
     # downloaded
-    name, rangeLon, rangeLat = Find_Document_Names(latlim, lonlim)
+    name, rangeLon, rangeLat = Find_Document_Names(latlim, lonlim, parameter)
     nameResults = []
 				
 	# Memory for the map x and y shape (starts with zero)			
@@ -50,7 +60,7 @@ def DownloadData(output_folder, latlim, lonlim):
             # Download the data from
             # http://earlywarning.usgs.gov/hydrodata/
             output_file, file_name = Download_Data(nameFile,
-                                                   output_folder_trash)
+                                                   output_folder_trash, parameter, para_name)
 
             # extract zip data
             DC.Extract_Data(output_file, output_folder_trash)
@@ -140,7 +150,7 @@ def DownloadData(output_folder, latlim, lonlim):
                            size_X_end)
 
     # name of the end result
-    output_DEM_name = "DEM_HydroShed_m.tif"
+    output_DEM_name = "%s_HydroShed_%s.tif" %(para_name,unit)
     Save_name = os.path.join(output_folder, output_DEM_name)   
 				
 	
@@ -182,7 +192,7 @@ def Merge_DEM(latlim, lonlim, nameResults, size_Y_tot, size_X_tot):
     datasetTot = np.flipud(datasetTot)
     return(datasetTot)
 
-def Find_Document_Names(latlim, lonlim):
+def Find_Document_Names(latlim, lonlim, parameter):
     """
     This function will translate the latitude and longitude limits into
     the filenames that must be downloaded from the hydroshed webpage
@@ -216,11 +226,11 @@ def Find_Document_Names(latlim, lonlim):
 
             name.append(str(DirectionLat + str('%02d' % int(abs(latname))) +
                         DirectionLon + str('%03d' % int(abs(lonname))) +
-                        "_dem_grid.zip"))
+                        "_%s_grid.zip" %parameter))
     return(name, rangeLon, rangeLat)
 
 
-def Download_Data(nameFile, output_folder_trash):
+def Download_Data(nameFile, output_folder_trash, parameter,para_name):
     """
     This function downloads the DEM data from the HydroShed website
 
@@ -229,11 +239,13 @@ def Download_Data(nameFile, output_folder_trash):
     output_folder_trash -- Dir, directory where the downloaded data must be
                            stored
     """
+	
     # download data from the internet
     allcontinents = ["af", "as", "au", "ca", "eu", "na", "sa"]
     for continent in allcontinents:
         try:	
-            url="http://www.hydrosheds.org/data/HydroSHEDS_DEM/DEM_3s_GRID/%s_dem_3s_zip_grid/%s" %(continent,nameFile)
+            # info about the roots http://www.hydrosheds.org/download/getroot									
+            url="http://www.hydrosheds.org/data/HydroSHEDS_%s/%s_3s_GRID/%s_%s_3s_zip_grid/%s" %(para_name,para_name,continent,parameter,nameFile)
             file_name = url.split('/')[-1]
             output_file = os.path.join(output_folder_trash, file_name)
             urllib.urlretrieve(url, output_file)	
