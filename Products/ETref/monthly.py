@@ -74,10 +74,10 @@ def main(Dir, Startdate = '', Enddate = '',
             dataDay=None
          
         # make geotiff file 
-        output_folder=os.path.join(Dir,'ETref','Monthly')
-        if os.path.exists(output_folder)==False:       
-            os.makedirs(output_folder)
-        DirMonth=os.path.join(output_folder,'\ETref_mm-month_'+Date.strftime('%Y.%m.%d') + '.tif')
+        output_folder_month=os.path.join(Dir,'ETref','Monthly')
+        if os.path.exists(output_folder_month)==False:       
+            os.makedirs(output_folder_month)
+        DirMonth=os.path.join(output_folder_month,'ETref_mm-month_'+Date.strftime('%Y.%m.%d') + '.tif')
        
         # Create the tiff file
         DC.Save_as_tiff(DirMonth,dataMonth, geo_ET, proj)
