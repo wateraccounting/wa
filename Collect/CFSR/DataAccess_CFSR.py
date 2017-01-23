@@ -142,7 +142,7 @@ def RetrieveData(Date, args):
      
         if Version == 1:
 									
-            if Date < pd.Timestamp(pd.datetime(2010, 12, 31)):
+            if Date < pd.Timestamp(pd.datetime(2011, 01, 01)):
 	            		   							
                 # Convert the latlim and lonlim into array
                 Xstart = np.floor((lonlim[0] + 180.1562497) / 0.3125)

@@ -4,6 +4,8 @@ Created on Fri Dec 16 19:04:22 2016
 
 @author: tih
 """
+import pandas as pd
+import glob
 import gdal
 import osr
 import os
@@ -16,7 +18,7 @@ import wa.WA_Paths as WA_Paths
 
 def Open_array_info(filename=''):
 
-    f = gdal.Open(filename)
+    f = gdal.Open(r"%s" %filename)
     if f is None:
         print '%s does not exists' %filename
     else:					
@@ -239,7 +241,7 @@ def Get_epsg(g):
         epsg_to=int((str(Projection[-1]).split(']')[0])[0:-1])				      
     except:
        epsg_to=4326	
-       print 'Was not able to get the projection, so WGS84 is assumed'							
+       #print 'Was not able to get the projection, so WGS84 is assumed'							
     return(epsg_to)			
 
 def gap_filling(dataset,NoDataValue):
@@ -275,4 +277,30 @@ def gap_filling(dataset,NoDataValue):
 				
     return (EndProduct)
 
-			
+def Get3Darray_time_series_monthly(Dir_Basin, Data_Path, Startdate, Enddate, Example_data = None):	
+
+    Dates = pd.date_range(Startdate, Enddate, freq = 'MS')
+    os.chdir(os.path.join(Dir_Basin,Data_Path))
+    i = 0
+    for Date in Dates:
+        End_tiff_file_name = '%d.%02d.01.tif' %(Date.year, Date.month)					
+        file_name = glob.glob('*%s' %End_tiff_file_name)
+        file_name_path = os.path.join(Dir_Basin, Data_Path, file_name[0])								
+        if Example_data is not None:
+            if Date == Dates[0]:
+                    geo_out, proj, size_X, size_Y = Open_array_info(Example_data)													
+                    dataTot=np.zeros([size_Y,size_X,len(Dates)])														
+                      									
+            dest = reproject_dataset_example(file_name_path, Example_data, method=1)
+            Array_one_date = dest.GetRasterBand(1).ReadAsArray() 								
+        else: 								
+            if Date is Dates[0]:
+                    geo_out, proj, size_X, size_Y = Open_array_info(file_name_path)													
+                    dataTot=np.zeros([size_Y,size_X,len(Dates)])			
+            Array_one_date = Open_tiff_array(file_name_path)
+								
+        dataTot[:,:,i]	 = Array_one_date						
+        i += 1
+								
+    return(dataTot)								
+								
