@@ -14,12 +14,13 @@ import urllib
 import shutil
 import tempfile
 import gdal
+import glob
 
 # WA+ modules
 import wa.General.raster_conversions as RC
 import wa.General.data_conversions as DC
 
-def DownloadData(output_folder, latlim, lonlim, parameter):
+def DownloadData(output_folder, latlim, lonlim, parameter, resolution):
     """
     This function downloads DEM data from HydroSHED
 
@@ -33,23 +34,45 @@ def DownloadData(output_folder, latlim, lonlim, parameter):
                     from the internet
     """
     # Define parameter depedent variables
-    if parameter == "dir":
+    if parameter == "dir_3s":
         para_name = "DIR"
-        unit = "-"								  
+        unit = "-"
+        resolution = '3s'								  
+        parameter = 'dir'
 								
-    if parameter == "dem":
+    if parameter == "dem_3s":
         para_name = "DEM"
         unit = "m"							
-
+        resolution = '3s'
+        parameter = 'dem'	
+								
+    if parameter == "dir_15s":
+        para_name = "DIR"
+        unit = "-"
+        resolution = '15s'		
+        parameter = 'dir'	
+								
+    if parameter == "dem_15s":
+        para_name = "DEM"
+        unit = "m"
+        resolution = '15s'		
+        parameter = 'dem'	
+								
    # converts the latlim and lonlim into names of the tiles which must be
     # downloaded
-    name, rangeLon, rangeLat = Find_Document_Names(latlim, lonlim, parameter)
-    nameResults = []
+    if resolution == '3s':
+								
+        name, rangeLon, rangeLat = Find_Document_Names(latlim, lonlim, parameter)
+
 				
-	# Memory for the map x and y shape (starts with zero)			
-    size_X_tot = 0
-    size_Y_tot = 0
-				
+       	# Memory for the map x and y shape (starts with zero)			
+        size_X_tot = 0
+        size_Y_tot = 0
+ 
+    if resolution == '15s':
+       name = Find_Document_names_15s(latlim, lonlim, parameter, resolution) 
+								
+    nameResults = []				
     # Create a temporary folder for processing				
     output_folder_trash = tempfile.mkdtemp()
 
@@ -60,7 +83,7 @@ def DownloadData(output_folder, latlim, lonlim, parameter):
             # Download the data from
             # http://earlywarning.usgs.gov/hydrodata/
             output_file, file_name = Download_Data(nameFile,
-                                                   output_folder_trash, parameter, para_name)
+                                                   output_folder_trash, parameter, para_name,resolution)
 
             # extract zip data
             DC.Extract_Data(output_file, output_folder_trash)
@@ -69,98 +92,175 @@ def DownloadData(output_folder, latlim, lonlim, parameter):
             # The input is the file name and in which directory the data must be stored
             file_name_tiff = file_name.split('.')[0] + '_trans_temporary.tif'
             file_name_extract = file_name.split('_')[0:3]
-            file_name_extract2 = file_name_extract[0]+'_'+file_name_extract[1]
+            if resolution == '3s':
+                file_name_extract2 = file_name_extract[0]+'_'+file_name_extract[1]									
+                
+            if resolution == '15s':
+                file_name_extract2 = file_name_extract[0]+'_'+file_name_extract[1]+'_15s' 												
+
             input_adf = os.path.join(output_folder_trash, file_name_extract2,
-                                    file_name_extract2, 'hdr.adf')
+                                    file_name_extract2, 'hdr.adf')            
             output_tiff = os.path.join(output_folder_trash, file_name_tiff)
 
             # convert data from adf to a tiff file
             output_tiff = DC.Convert_adf_to_tiff(input_adf, output_tiff)
 
         except:
-            # If tile not excist create a replacing zero tile (sea tiles)
-            output = nameFile.split('.')[0] + "_trans_temporary.tif"
-            output_tiff = os.path.join(output_folder_trash, output)
-            file_name = nameFile
-            data = np.zeros((6000, 6000))
-            data = data.astype(np.float32)
+									
+            if resolution == '3s':									
+                # If tile not excist create a replacing zero tile (sea tiles)
+                output = nameFile.split('.')[0] + "_trans_temporary.tif"
+                output_tiff = os.path.join(output_folder_trash, output)
+                file_name = nameFile
+                data = np.zeros((6000, 6000))
+                data = data.astype(np.float32)
             
-            # Create the latitude bound             												
-            Vfile = str(file_name)[1:3]
-            SignV = str(file_name)[0]
-            SignVer = 1
-            # If the sign before the filename is a south sign than latitude is negative 												
-            if SignV is "s":
-                SignVer = -1
-            Bound2 = int(SignVer)*int(Vfile)
+                # Create the latitude bound             												
+                Vfile = str(file_name)[1:3]
+                SignV = str(file_name)[0]
+                SignVer = 1
+                # If the sign before the filename is a south sign than latitude is negative 												
+                if SignV is "s":
+                    SignVer = -1
+                Bound2 = int(SignVer)*int(Vfile)
             
-            # Create the longitude bound 
-            Hfile = str(file_name)[4:7]
-            SignH = str(file_name)[3]
-            SignHor = 1
-            # If the sign before the filename is a west sign than longitude is negative 																								
-            if SignH is "w":
-                SignHor = -1
-            Bound1 = int(SignHor) * int(Hfile)
+                # Create the longitude bound 
+                Hfile = str(file_name)[4:7]
+                SignH = str(file_name)[3]
+                SignHor = 1
+                # If the sign before the filename is a west sign than longitude is negative 																								
+                if SignH is "w":
+                    SignHor = -1
+                Bound1 = int(SignHor) * int(Hfile)
 
-            # Geospatial data for the tile
-            geo_in = [Bound2, 0.00083333333333333, 0.0, int(Bound1 + 5),
-                      0.0, 0.0008333333333333333333]
+                # Geospatial data for the tile
+                geo_in = [Bound2, 0.00083333333333333, 0.0, int(Bound1 + 5),
+                          0.0, 0.0008333333333333333333]
+
+                # save chunk as tiff file
+                DC.Save_as_tiff(name=output_tiff, data=data, geo=geo_in,
+                             projection="WGS84")
+
+            if resolution == '15s':
+													
+                print 'no 15s data is in dataset'
+
+        if resolution =='3s':
+
+            # clip data
+            Data, Geo_data = RC.clip_data(output_tiff, latlim, lonlim)
+            size_Y_out = int(np.shape(Data)[0]) 
+            size_X_out = int(np.shape(Data)[1])
+												
+            # Total size of the product so far
+            size_Y_tot = int(size_Y_tot + size_Y_out)
+            size_X_tot = int(size_X_tot + size_X_out)
+
+            if nameFile is name[0]:
+                Geo_x_end = Geo_data[0]
+                Geo_y_end = Geo_data[3]
+            else:									
+                Geo_x_end = np.min([Geo_x_end,Geo_data[0]]) 								
+                Geo_y_end = np.max([Geo_y_end,Geo_data[3]]) 								
+
+            # create name for chunk
+            FileNameEnd = "%s_temporary.tif" % (nameFile)
+            nameForEnd = os.path.join(output_folder_trash, FileNameEnd)
+            nameResults.append(str(nameForEnd))
 
             # save chunk as tiff file
-            DC.Save_as_tiff(name=output_tiff, data=data, geo=geo_in,
-                         projection="WGS84")
+            DC.Save_as_tiff(name=nameForEnd, data=Data, geo=Geo_data,
+                          projection="WGS84")
 
-        # clip data
-        Data, Geo_data = RC.clip_data(output_tiff, latlim, lonlim)
-        size_Y_out = int(np.shape(Data)[0]) 
-        size_X_out = int(np.shape(Data)[1])
-												
-        # Total size of the product so far
-        size_Y_tot = int(size_Y_tot + size_Y_out)
-        size_X_tot = int(size_X_tot + size_X_out)
-
-        if nameFile is name[0]:
-            Geo_x_end = Geo_data[0]
-            Geo_y_end = Geo_data[3]
-        else:									
-            Geo_x_end = np.min([Geo_x_end,Geo_data[0]]) 								
-            Geo_y_end = np.max([Geo_y_end,Geo_data[3]]) 								
-
-        # create name for chunk
-        FileNameEnd = "%s_temporary.tif" % (nameFile)
-        nameForEnd = os.path.join(output_folder_trash, FileNameEnd)
-        nameResults.append(str(nameForEnd))
-
-        # save chunk as tiff file
-        DC.Save_as_tiff(name=nameForEnd, data=Data, geo=Geo_data,
-                     projection="WGS84")
-
-    size_X_end = int(size_X_tot/len(rangeLat)) 
-    size_Y_end = int(size_Y_tot/len(rangeLon)) 
+    if resolution =='3s':
+        size_X_end = int(size_X_tot/len(rangeLat)) 
+        size_Y_end = int(size_Y_tot/len(rangeLon)) 
 		
-    # Define the georeference of the end matrix			
-    geo_out = [Geo_x_end, Geo_data[1], 0, Geo_y_end, 0, Geo_data[5]]
+        # Define the georeference of the end matrix			
+        geo_out = [Geo_x_end, Geo_data[1], 0, Geo_y_end, 0, Geo_data[5]]
 
-    latlim_out = [geo_out[3] + geo_out[5] * size_Y_end, geo_out[3]]
-    lonlim_out = [geo_out[0], geo_out[0] + geo_out[1] * size_X_end]
+        latlim_out = [geo_out[3] + geo_out[5] * size_Y_end, geo_out[3]]
+        lonlim_out = [geo_out[0], geo_out[0] + geo_out[1] * size_X_end]
+
 				
-    # merge chunk together resulting in 1 tiff map
-    datasetTot = Merge_DEM(latlim_out, lonlim_out, nameResults, size_Y_end,
-                           size_X_end)
+        # merge chunk together resulting in 1 tiff map
+        datasetTot = Merge_DEM(latlim_out, lonlim_out, nameResults, size_Y_end,
+                                    size_X_end)
+																																				
+        datasetTot[datasetTot<-9999] = -9999		
+																																	
+
+    if resolution =='15s':
+        output_file_merged = os.path.join(output_folder_trash,'merged.tif') 
+        Merge_DEM_15s(output_folder_trash, output_file_merged,latlim, lonlim)            
+
+        datasetTot, geo_out = RC.clip_data(output_file_merged, latlim, lonlim)
 
     # name of the end result
-    output_DEM_name = "%s_HydroShed_%s.tif" %(para_name,unit)
+    output_DEM_name = "%s_HydroShed_%s_%s.tif" %(para_name,unit,resolution)
+
     Save_name = os.path.join(output_folder, output_DEM_name)   
 				
-	
     # Make geotiff file
     DC.Save_as_tiff(name=Save_name, data=datasetTot, geo=geo_out, projection="WGS84")
-    
-	# Delete the temporary folder
+    os.chdir(output_folder)
+    # Delete the temporary folder
     shutil.rmtree(output_folder_trash)
 
+def Merge_DEM_15s(output_folder_trash,output_file_merged,latlim, lonlim):
+    os.chdir(output_folder_trash)					
+    tiff_files = glob.glob('*.tif') 
+    resolution_geo = []
+    lonmin =  lonlim[0]	
+    lonmax =  lonlim[1]
+    latmin =  latlim[0]
+    latmax =  latlim[1]
+    resolution_geo = 0.00416667						
+    for tiff_file in tiff_files:
+        inFile=os.path.join(output_folder_trash,tiff_file)						
+        geo, proj, size_X, size_Y = RC.Open_array_info(inFile)
+        resolution_geo = geo[1]	
 
+        lonmin_one = geo[0] 	
+        lonmax_one = geo[0] + size_X *	geo[1]
+        latmin_one = geo[3] + size_Y *	geo[5]	
+        latmax_one = geo[3]								
+																	
+        if lonmin_one < lonmin:
+           lonmin = lonmin_one					
+        if lonmax_one > lonmax:
+            lonmax = lonmax_one	
+        if latmin_one < latmin:
+            latmin = latmin_one	
+        if latmax_one > latmax:
+            latmax = latmax_one	
+         
+    size_x_merged = int((lonmax-lonmin) / resolution_geo)      	
+    size_y_merged = int((latmax-latmin) / resolution_geo) 
+
+    data_merged = np.ones([size_y_merged,size_x_merged]) * -9999
+    for tiff_file in tiff_files:
+        inFile=os.path.join(output_folder_trash,tiff_file)						
+        geo, proj, size_X, size_Y = RC.Open_array_info(inFile)
+        Data = RC.Open_tiff_array(inFile)
+        lonmin_tiff = geo[0] 
+        latmax_tiff = geo[3] 
+        lon_tiff_position = int((lonmin_tiff - lonmin)/ resolution_geo)							
+        lat_tiff_position = int((latmax - latmax_tiff)/ resolution_geo)	
+        Data[Data<-9999] = -9999   
+        data_merged[lat_tiff_position:lat_tiff_position+size_Y,lon_tiff_position:lon_tiff_position+size_X][data_merged[lat_tiff_position:lat_tiff_position+size_Y,lon_tiff_position:lon_tiff_position+size_X]==-9999] = Data[data_merged[lat_tiff_position:lat_tiff_position+size_Y,lon_tiff_position:lon_tiff_position+size_X]==-9999]
+    try:   
+        geo_out = [lonmin, geo[1], 0.0, latmax, 0.0, geo[5]]
+        data_merged[data_merged<-9999] = -9999    							
+    except:
+        geo_out = [lonmin, resolution_geo, 0.0, latmax, 0.0, -1*resolution_geo]
+        proj = "WGS84"								
+    geo_out = tuple(geo_out) 
+    data_merged[data_merged<-9999] = -9999     
+    DC.Save_as_tiff(name=output_file_merged, data=data_merged, geo=geo_out, projection=proj)
+    	 			
+    return()								
+	
 def Merge_DEM(latlim, lonlim, nameResults, size_Y_tot, size_X_tot):
     """
     This function will merge the tiles
@@ -230,7 +330,7 @@ def Find_Document_Names(latlim, lonlim, parameter):
     return(name, rangeLon, rangeLat)
 
 
-def Download_Data(nameFile, output_folder_trash, parameter,para_name):
+def Download_Data(nameFile, output_folder_trash, parameter,para_name,resolution):
     """
     This function downloads the DEM data from the HydroShed website
 
@@ -244,8 +344,11 @@ def Download_Data(nameFile, output_folder_trash, parameter,para_name):
     allcontinents = ["af", "as", "au", "ca", "eu", "na", "sa"]
     for continent in allcontinents:
         try:	
-            # info about the roots http://www.hydrosheds.org/download/getroot									
-            url="http://www.hydrosheds.org/data/HydroSHEDS_%s/%s_3s_GRID/%s_%s_3s_zip_grid/%s" %(para_name,para_name,continent,parameter,nameFile)
+            # info about the roots http://www.hydrosheds.org/download/getroot	
+            if resolution == '3s':								
+                url="http://www.hydrosheds.org/data/HydroSHEDS_%s/%s_%s_GRID/%s_%s_%s_zip_grid/%s" %(para_name,para_name,resolution,continent,parameter,resolution,nameFile)
+            if resolution == '15s':								
+                url="http://www.hydrosheds.org/data/HydroSHEDS_%s/%s_%s_GRID/%s" %(para_name,para_name,resolution,nameFile)
             file_name = url.split('/')[-1]
             output_file = os.path.join(output_folder_trash, file_name)
             urllib.urlretrieve(url, output_file)	
@@ -257,4 +360,28 @@ def Download_Data(nameFile, output_folder_trash, parameter,para_name):
             continue
     			
     return(output_file, file_name)
+
+
+def Find_Document_names_15s(latlim, lonlim, parameter, resolution):
+
+    continents = ['na','ca','sa','eu','af','as','au'] 
+    continents_download = []
+       
+    for continent in continents:				
+        extent = DEM_15s_extents.Continent[continent]
+        if (extent[0] < lonlim[0] and extent[1] > lonlim[0] and extent[2] < latlim[0] and extent[3] > latlim[0]) or (extent[0] < lonlim[1] and extent[1] > lonlim[1] and extent[2] < latlim[1] and extent[3] > latlim[1]) == True:
+            name = '%s_%s_%s_grid.zip' %(continent, parameter, resolution)
+            continents_download = np.append(continents_download,name)
+           
+    return(continents_download)
+      
+class DEM_15s_extents:
+        Continent = { 'na' : [-138, -52, 24, 60],
+					'ca' : [-119, -60, 5, 39],
+                      'sa' : [-93, -32, -56, 15],
+                      'eu' : [-14, 70, 12, 62],
+                      'af' : [-19, 55, -35, 38],
+                      'as' : [57, 180, -12, 61],
+                      'au' : [112, 180, -56, -10]}    	
+
 

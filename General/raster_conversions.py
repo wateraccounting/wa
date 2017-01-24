@@ -289,17 +289,17 @@ def Get3Darray_time_series_monthly(Dir_Basin, Data_Path, Startdate, Enddate, Exa
         if Example_data is not None:
             if Date == Dates[0]:
                     geo_out, proj, size_X, size_Y = Open_array_info(Example_data)													
-                    dataTot=np.zeros([size_Y,size_X,len(Dates)])														
+                    dataTot=np.zeros([len(Dates),size_Y,size_X])														
                       									
             dest = reproject_dataset_example(file_name_path, Example_data, method=1)
             Array_one_date = dest.GetRasterBand(1).ReadAsArray() 								
         else: 								
             if Date is Dates[0]:
                     geo_out, proj, size_X, size_Y = Open_array_info(file_name_path)													
-                    dataTot=np.zeros([size_Y,size_X,len(Dates)])			
+                    dataTot=np.zeros([len(Dates),size_Y,size_X])			
             Array_one_date = Open_tiff_array(file_name_path)
 								
-        dataTot[:,:,i]	 = Array_one_date						
+        dataTot[i,:,:]	 = Array_one_date						
         i += 1
 								
     return(dataTot)								

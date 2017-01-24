@@ -11,7 +11,7 @@ from wa.Collect.DEM.DataAccess import DownloadData
 import sys
 
 
-def main(Dir, latlim, lonlim):
+def main(Dir, latlim, lonlim, resolution = '3s'):
     """
     Downloads HydroSHED data from http://www.hydrosheds.org/download/
 
@@ -30,12 +30,13 @@ def main(Dir, latlim, lonlim):
         os.makedirs(output_folder)
 
     # Define the output map and create this if not exists
-    nameEnd = os.path.join(Dir, 'HydroSHED', 'DEM', 'DEM_HydroShed_m.tif')
-    parameter = "dem"
+    nameEnd = os.path.join(Dir, 'HydroSHED', 'DEM', 'DEM_HydroShed_m_%s.tif' %resolution)
+    parameter = "dem_%s" %resolution	 							
+ 
     if not os.path.exists(nameEnd):
 
         # Download and process the data
-        DownloadData(output_folder, latlim, lonlim, parameter)
+        DownloadData(output_folder, latlim, lonlim, parameter,resolution)
 
     else:
         print "DEM HydroSHED already exists in output folder"

@@ -196,9 +196,9 @@ def Save_as_NC(Dir_Basin, DataCube, Simulation, Var,  Reference_data, info = '',
         # Set the data variable
         if Startdate is not '':
             for i in range(len(Dates)):
-                preco[i,:,:] = np.int_(np.flipud(DataCube[:,:,i]*1/Scaling_factor))
+                preco[i,:,:] = np.int_(DataCube[i,:,:]*1/Scaling_factor)
         else:
-            preco[:,:] = np.int_(np.flipud(DataCube[:,:]*1/Scaling_factor))
+            preco[:,:] = np.int_(DataCube[:,:]*1/Scaling_factor)
 		
         nco.close()				
     return(nameTot)				

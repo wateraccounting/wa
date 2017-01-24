@@ -207,7 +207,8 @@ def Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim):
     # Clip the ET data to the area of interest
     ET_data = np.zeros([int(np.round((latlim[1]-latlim[0]))/0.0025),int(np.round((lonlim[1]-lonlim[0])/0.0025))])				
     ET_data = Tot_dataset[IDy_min : IDy_max, IDx_min : IDx_max]
-    ET_data[ET_data>=9999] = np.nan			
-
+    ET_data[ET_data >= 9999] = np.nan			
+    ET_data[ET_data <= -9999] = np.nan	
+				
     return(ET_data)
 

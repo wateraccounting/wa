@@ -14,7 +14,7 @@ import sys
 # Water Accounting modules
 from wa.Collect.DEM.DataAccess import DownloadData
 
-def main(Dir, latlim, lonlim):
+def main(Dir, latlim, lonlim, resolution = '3s'):
     """
     Downloads HydroSHED flow direction data from http://www.hydrosheds.org/download/
 
@@ -32,13 +32,14 @@ def main(Dir, latlim, lonlim):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    # Define the output map and create this if not exists
-    nameEnd = os.path.join(Dir, 'HydroSHED', 'DIR', 'DIR_HydroShed_-.tif')
-    parameter = "dir"
+    # Define the output map and create this if not exists  # Define the output map and create this if not exists
+    nameEnd = os.path.join(Dir, 'HydroSHED', 'DIR', 'DIR_HydroShed_-_%s.tif' %resolution) 
+    parameter = "dir_%s" %resolution
+
     if not os.path.exists(nameEnd):
 
         # Download and process the data
-        DownloadData(output_folder, latlim, lonlim, parameter)
+        DownloadData(output_folder, latlim, lonlim, parameter, resolution)
 
     else:
         print "DIR HydroSHED already exists in output folder"
