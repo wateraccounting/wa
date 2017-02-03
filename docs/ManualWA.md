@@ -22,10 +22,48 @@ The WA+ python codes are made for python version 2.7 for Windows operating syste
 
 ![](figs/anaconda_install.png) 
 
+After downloading Anaconda you can run the installation of Anaconda. This package also includes Spyder, which is the IDE (Integrated Development Environment). This is a layout for writing and running python scripts.
+
+### <a name="How to install all the necessary modules"></a>How to install all the necessary modules
+
+Modules are tools that can be imported into your python code. They usually contain stand-alone functions, which can be used within your own python code.
+
+In order to import the Water Accounting Toolbox all the modules must be present. This can be checked by running the following line in Spyder:
+
+>import wa
+
+If you get no command everything is fine, else you will see:
+
+>ImportError: No module named ... module name ...
+
+Any missing modules can be installed by using one of the following four methods. 
+
+#### <a name="Method 1"></a>Method 1
+
+If a package is missing, you can search in the anaconda library by starting the command prompt and type:  
+
+>conda install ... module name ...
+
+This will only work if Anaconda is installed. Below is an example of a command to install the "gdal" module by using the Anaconda libary:
+
+![](figs/module_install1.png) 
+
+
+
+
 ---
 
-### <a name="Functions"></a>Functions
+## <a name="Functions"></a>Functions
 
 
+---
+
+## <a name="Troubleshoot"></a>Troubleshoot
+
+jpeg2000 library missing (gebruik niet de gdal functies in anaconda omdat deze library hierin mist)
+datum.csv  (gdal_data toevoegen)
+
+
+---
 
 >>>>>>> origin/master
