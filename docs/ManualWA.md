@@ -56,6 +56,13 @@ Edit the "Path" variable under the system variables box and add the paths of the
 
 ![](figs/edit_system_variables.png)
 
+### <a name="Set locations in WA_path.py"></a>Set locations in WA_path.py
+
+For gdal_translate.exe, gdalwarp.exe, and gdalbuildvrt.exe it is important that not the executables that are located inside Anaconda are used. Because those executables are not linked with a jpeg2000 library, resulting that some tools of the Water Accounting Toolbox will not run properly. To be sure that the right executables are used (the computer will run the first executable he can find, this is not always the correct one), you can define the path to the GDAL executables (within this directory the gdalwarp.exe, gdal_translate.exe, etc. are located) in the WA_path.py (located in the Water Accounting Toolbox). Also the path to the 7z.exe and curl.exe executables can be defined here, but this is not required, if the command prompt is already able to find those executables. If nothing is filled in than the path of the systems variable will be used.
+The path to the "Home" folder is required to fill in. Here you need to define the directory where the "wa" folder is located. See an example below of the WA_path.py:
+
+![](figs/wapath.png)
+
 ### <a name="How to install all the necessary Python modules"></a>How to install all the necessary Python modules
 
 Modules are tools that can be imported into your python code. They usually contain stand-alone functions, which can be used within your own python code.
