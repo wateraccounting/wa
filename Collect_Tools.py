@@ -33,8 +33,13 @@ def Newest():
     wa_folder_General = os.path.join(home_folder, 'wa','General') 
     wa_folder_Collect = os.path.join(home_folder, 'wa','Collect') 
     wa_folder_Product = os.path.join(home_folder, 'wa','Products') 
+    wa_folder_Generator = os.path.join(home_folder, 'wa','Generator') 
+    wa_folder_Functions = os.path.join(home_folder, 'wa','Functions') 
     wa_folder_Sheets = os.path.join(home_folder, 'wa','Sheets') 
 
+	
+    wa_master_folder_Generator = os.path.join(home_folder, 'wa-master','Generator') 
+    wa_master_folder_Function = os.path.join(home_folder, 'wa-master','Functions') 
     wa_master_folder_General = os.path.join(home_folder, 'wa-master','General') 
     wa_master_folder_Collect = os.path.join(home_folder, 'wa-master','Collect') 
     wa_master_folder_Product = os.path.join(home_folder, 'wa-master','Products') 
@@ -45,12 +50,16 @@ def Newest():
     shutil.rmtree(wa_folder_Collect)
     shutil.rmtree(wa_folder_Product)
     shutil.rmtree(wa_folder_Sheets)
-
+    shutil.rmtree(wa_folder_Generator)
+    shutil.rmtree(wa_folder_Functions)
+	
     shutil.copytree(wa_master_folder_General, wa_folder_General)
     shutil.copytree(wa_master_folder_Collect, wa_folder_Collect)
     shutil.copytree(wa_master_folder_Product, wa_folder_Product)
     shutil.copytree(wa_master_folder_Sheets, wa_folder_Sheets)
-
+    shutil.copytree(wa_master_folder_Generator, wa_folder_Generator)
+    shutil.copytree(wa_master_folder_Functions, wa_folder_Functions)
+	
     shutil.rmtree(wa_master_folder_Home)				
     os.remove(file_nametext)
 						

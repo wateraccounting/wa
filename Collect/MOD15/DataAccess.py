@@ -140,7 +140,7 @@ def RetrieveData(Date, args):
 				
     # Save the file as tiff 				
     FPARfileName = os.path.join(output_folder, '%s_MOD15_%s_8-daily_' %(dataset,unit) + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')	  
-    DC.Save_as_tiff(name=FPARfileName, data=data, geo=geo, projection='4326')
+    DC.Save_as_tiff(name=FPARfileName, data=data, geo=geo, projection='WGS84')
                    				
     # remove the side products       
     os.remove(os.path.join(output_folder, name_collect))

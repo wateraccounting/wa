@@ -77,7 +77,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
             ET_data = Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim)
 
             # Save this array as a tiff file
-            DC.Save_as_tiff(output_file, ET_data, geo_new, projection='4326')
+            DC.Save_as_tiff(output_file, ET_data, geo_new, projection='WGS84')
 
     # Remove all the raw dataset    
     for v_tile in range(Lat_tiles[0], Lat_tiles[1]+1):

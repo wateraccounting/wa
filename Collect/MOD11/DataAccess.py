@@ -133,7 +133,7 @@ def RetrieveData(Date, args):
                                 
     # Save results as Gtiff
     LSTfileName = os.path.join(output_folder, 'LST_MOD11A1_K_8-daily_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
-    DC.Save_as_tiff(name=LSTfileName, data=data, geo=geo, projection='4326')
+    DC.Save_as_tiff(name=LSTfileName, data=data, geo=geo, projection='WGS84')
  
     # remove the side products       
     os.remove(os.path.join(output_folder, name_collect))

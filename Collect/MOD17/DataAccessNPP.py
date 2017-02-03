@@ -133,7 +133,7 @@ def RetrieveData(Date, args):
                                 
     # Save results as Gtiff
     NPPfileName = os.path.join(output_folder, 'NPP_MOD17_kg_C_m^-2_yearly_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
-    DC.Save_as_tiff(name=NPPfileName, data=data, geo=geo, projection='4326')
+    DC.Save_as_tiff(name=NPPfileName, data=data, geo=geo, projection='WGS84')
  
     # remove the side products       
     os.remove(os.path.join(output_folder, name_collect))

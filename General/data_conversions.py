@@ -103,7 +103,10 @@ def Save_as_tiff(name='', data='', geo='', projection=''):
     dst_ds = driver.Create(name, int(data.shape[1]), int(data.shape[0]), 1,
                            gdal.GDT_Float32, ['COMPRESS=LZW'])
     srse = osr.SpatialReference()
-    srse.SetWellKnownGeogCS(projection)
+    if projection == '':
+        srse.SetWellKnownGeogCS("WGS84")
+    else:	
+        srse.SetWellKnownGeogCS(projection)
     dst_ds.SetProjection(srse.ExportToWkt())
     dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
     dst_ds.SetGeoTransform(geo)
@@ -111,30 +114,35 @@ def Save_as_tiff(name='', data='', geo='', projection=''):
     dst_ds = None
     return()						
 				
-def Save_as_NC(Dir_Basin, DataCube, Simulation, Var,  Reference_data, info = '', Startdate = '', Enddate = '', Time_steps = '', Scaling_factor = 1):
+def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Enddate = '', Time_steps = '', Scaling_factor = 1):
+    """
+    This function save the array as a netcdf file
 
+    Keyword arguments:
+    namenc -- string, complete path of the output file with .nc extension
+    DataCube -- [array], dataset of the nc file, can be a 2D or 3D array [time, lat, lon], must be same size as reference data
+    Var -- string, the name of the variable 
+    Reference_filename -- string, complete path to the reference file name
+    Startdate -- 'YYYY-mm-dd', needs to be filled when you want to save a 3D array,  defines the Start datum of the dataset
+    Enddate -- 'YYYY-mm-dd', needs to be filled when you want to save a 3D array, defines the End datum of the dataset
+    Time_steps -- 'monthly' or 'daily', needs to be filled when you want to save a 3D array, defines the timestep of the dataset
+    Scaling_factor -- number, scaling_factor of the dataset, default = 1		
+    """
     # Import modules
     import wa.General.raster_conversions as RC
     from netCDF4 import Dataset
 
-    # Create the output name					
-    nameOut=''.join(['_'.join([Var,'Simulation%d' % Simulation,'_'.join(info)]),'.nc'])
-    namePath = os.path.join(Dir_Basin,'Simulations')
-    if not os.path.exists(namePath):
-        os.makedirs(namePath)
-    nameTot=os.path.join(namePath,nameOut)
-
-    if not os.path.exists(nameTot):
+    if not os.path.exists(namenc):
 	
         # Get raster information 			
-        geo_out, proj, size_X, size_Y = RC.Open_array_info(Reference_data)				
+        geo_out, proj, size_X, size_Y = RC.Open_array_info(Reference_filename)				
 
         # Create the lat/lon rasters				
         lon = np.arange(size_X)*geo_out[1]+geo_out[0]
         lat = np.arange(size_Y)*geo_out[5]+geo_out[3]	
 
         # Create the nc file   
-        nco = Dataset(nameTot, 'w', format='NETCDF4_CLASSIC')
+        nco = Dataset(namenc, 'w', format='NETCDF4_CLASSIC')
         nco.description = '%s data' %Var
 
         # Create dimensions, variables and attributes:
@@ -201,5 +209,16 @@ def Save_as_NC(Dir_Basin, DataCube, Simulation, Var,  Reference_data, info = '',
             preco[:,:] = np.int_(DataCube[:,:]*1/Scaling_factor)
 		
         nco.close()				
-    return(nameTot)				
+    return()				
+
+def Create_NC_name(Var, Simulation, Dir_Basin, info = ''):
+	
+    # Create the output name					
+    nameOut=''.join(['_'.join([Var,'Simulation%d' % Simulation,'_'.join(info)]),'.nc'])
+    namePath = os.path.join(Dir_Basin,'Simulations')
+    if not os.path.exists(namePath):
+        os.makedirs(namePath)
+    nameTot=os.path.join(namePath,nameOut)
 				
+    return(nameTot)
+			

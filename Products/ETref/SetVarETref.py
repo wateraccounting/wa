@@ -69,9 +69,9 @@ def ETref(Date, args):
 
     # Load DEM 
     if not pixel_size:
-        DEMmap_str=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m.tif')
+        DEMmap_str=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m_3s.tif')
     else:
-        DEMmap_str=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m.tif')
+        DEMmap_str=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m_3s.tif')
         dest, ulx, lry, lrx, uly, epsg_to = RC.reproject_dataset_epsg(DEMmap_str, pixel_spacing = pixel_size, epsg_to=4326, method = 2)			
         DEMmap_str=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m_reshaped_for_ETref.tif')
         DEM_data = dest.GetRasterBand(1).ReadAsArray()

@@ -133,7 +133,7 @@ def RetrieveData(Date, args):
                                 
     # Save results as Gtiff
     NDVIfileName = os.path.join(output_folder, 'NDVI_MOD13Q1_-_16-daily_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
-    DC.Save_as_tiff(name=NDVIfileName, data=data, geo=geo, projection='4326')
+    DC.Save_as_tiff(name=NDVIfileName, data=data, geo=geo, projection='WGS84')
  
     # remove the side products       
     os.remove(os.path.join(output_folder, name_collect))

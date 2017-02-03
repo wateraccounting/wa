@@ -1,4 +1,3 @@
 WebAccounts.py
 *.pyc
-WebAccounts.py
-Products/ETref/CalcETref.py
+WA_Paths.py

@@ -117,7 +117,7 @@ def RetrieveData(Date, args):
     data, geo = RC.clip_data(name_reprojected, latlim, lonlim)
 				
     ETfileName = os.path.join(output_folder, 'ET_MOD16A2_mm-month-1_monthly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.01.tif')
-    DC.Save_as_tiff(name=ETfileName, data=data, geo=geo, projection='4326')
+    DC.Save_as_tiff(name=ETfileName, data=data, geo=geo, projection='WGS84')
                    				
     # remove the side products       
     os.remove(os.path.join(output_folder, name_collect))

@@ -40,6 +40,15 @@ def Open_tiff_array(filename='', band=''):
         Data = f.GetRasterBand(band).ReadAsArray()				
     return(Data)
 
+def Open_nc_array(NC_filename,Var):
+	
+    from netCDF4 import Dataset
+				
+    fh = Dataset(NC_filename, mode='r')
+    Data = fh.variables[Var][:]	
+				
+    return(Data)				
+				
 def clip_data(input_file, latlim, lonlim):
     """
     Clip the data to the defined extend of the user (latlim, lonlim) or to the
@@ -302,5 +311,54 @@ def Get3Darray_time_series_monthly(Dir_Basin, Data_Path, Startdate, Enddate, Exa
         dataTot[i,:,:]	 = Array_one_date						
         i += 1
 								
-    return(dataTot)								
+    return(dataTot)		
+
+def Vector_to_Raster(Dir, shapefile_name, reference_raster_data_name):
+
+    from osgeo import gdal, ogr
+
+    geo, proj, size_X, size_Y=Open_array_info(reference_raster_data_name)
+
+    x_min = geo[0]
+    x_max = geo[0] + size_X * geo[1]
+    y_min = geo[3] + size_Y * geo[5]
+    y_max = geo[3]
+    pixel_size = geo[1]				
+				
+    # Filename of the raster Tiff that will be created
+    Dir_Basin_Shape = os.path.join(Dir,'Basin')	
+    if not os.path.exists(Dir_Basin_Shape):
+        os.mkdir(Dir_Basin_Shape)					
+
+    Basename = os.path.basename(shapefile_name)
+    Dir_Raster_end = os.path.join(Dir_Basin_Shape, os.path.splitext(Basename)[0]+'.tif')				
+
+    # Open the data source and read in the extent
+    source_ds = ogr.Open(shapefile_name)
+    source_layer = source_ds.GetLayer()
+
+    # Create the destination data source
+    x_res = int(round((x_max - x_min) / pixel_size))
+    y_res = int(round((y_max - y_min) / pixel_size))
+
+    # Create tiff file
+    target_ds = gdal.GetDriverByName('GTiff').Create(Dir_Raster_end, x_res, y_res, 1, gdal.GDT_Float32, ['COMPRESS=LZW'])
+    target_ds.SetGeoTransform(geo)
+    srse = osr.SpatialReference()
+    srse.SetWellKnownGeogCS(proj)
+    target_ds.SetProjection(srse.ExportToWkt())
+    band = target_ds.GetRasterBand(1)
+    target_ds.GetRasterBand(1).SetNoDataValue(-9999)				
+    band.Fill(-9999)
+
+    # Rasterize the shape and save it as band in tiff file
+    gdal.RasterizeLayer(target_ds, [1], source_layer, None, None, [1], ['ALL_TOUCHED=TRUE'])
+    target_ds = None
+	
+    # Open array
+    Raster_Basin = Open_tiff_array(Dir_Raster_end)
+			
+    return(Raster_Basin)				
+
+						
 								
