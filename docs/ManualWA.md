@@ -16,13 +16,13 @@ There are several packages available, which include python. The WA+ team recomme
 
 ### <a name="Install Anaconda"></a>Install Anaconda
 
-Anaconda can be downloaded from: [http://continuum.io/downloads](http://continuum.io/downloads). It is recommended to download  the 64 bits version, because this will increase the calculation capacity enormously. However, be sure that your computer/laptop is a 64 bits computer/laptop.
+Anaconda can be downloaded from: [http://continuum.io/downloads](http://continuum.io/downloads). It is recommended to download  the 64 bits version, because this will increase the calculation capacity enormously. However, be sure that your computer/laptop is a 64 bits computer/laptop. 
 
 The WA+ python codes are made for python version 2.7 for Windows operating systems. It is therefore necessary to download this version of python for running WA+ tools. Major changes are made to the python codes and functions if you compare 2.7 with 3+ versions. It is therefore not possible to run WA+ code in python 3+ versions without making some changes to the code.
 
 ![](figs/anaconda_install.png) 
 
-After downloading Anaconda you can run the installation of Anaconda. This package also includes Spyder, which is the IDE (Integrated Development Environment). This is a layout for writing and running python scripts.
+After downloading Anaconda you can run the installation of Anaconda by double-click the executable file and follow the automatic installation steps. Choose a logical location for the installation, a logical location is a directory without spaces and preferably near the root folder (C: or D:). This package also includes Spyder, which is the IDE (Integrated Development Environment). This is a layout for writing and running python scripts.
 
 ### <a name="Where to install necessary executables"></a>Where to install necessary executables
 
@@ -30,6 +30,32 @@ In order to run all the Water Accounting Toolbox functions, there are some neces
 - **QGIS:** site: [http://www.qgis.org/en/site/forusers/download.html](http://www.qgis.org/en/site/forusers/download.html)
 - **7-zip:** site: [http://www.7-zip.org/download.html](http://www.7-zip.org/download.html) (choose: Type = .exe)
 - **ImageMagick:** site: [http://www.imagemagick.org/download/binaries/](http://www.imagemagick.org/download/binaries/) (Version: ImageMagick-6.9.7-6-Q8-x64-dll.exe)
+
+This will install the following required executables: 
+
+- **QGIS:** gdal_translate.exe, gdalwarp.exe, gdalbuildvrt.exe
+- **7-zip:** 7z.exe
+- **ImageMagick:** convert.exe
+
+They can be found in the file location from where the program is installed. Be sure that the executables can also be found by the computer. This can be checked by typing the name of the executable name without the extension (for QGIS: "gdalwarp", "gdal_translate", "gdalbuildvrt", for 7zip: "7z", for ImageMagick: "convert" ) in the command prompt as shown below:
+
+![](figs/check_exe_cmd.png)
+
+If the executable can not be found, the following message will be shown:
+
+>'..executable_name' is not recognized as an internal or external command. 
+>operable program or batch file.
+
+Then you need to manage environment variables of the computer. For an Windows 7 system go to: 
+Control panel > System and security > System > Advanced system settings > Advanced > Environment variables. 
+This will pops up the window as shown below.
+
+![](figs/environment_variables.png) 
+
+Edit the "path" variable under the system variables box and add the paths of the executables if they are not there yet. Make sure you do not remove the original paths in the "path" environment. You can separate the paths with a semi-colon (;) sign.
+
+![](figs/edit_system_variables.png)
+
 
 ### <a name="How to install all the necessary Python modules"></a>How to install all the necessary Python modules
 
