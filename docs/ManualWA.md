@@ -20,7 +20,7 @@ Anaconda can be downloaded from: [http://continuum.io/downloads](http://continuu
 
 The WA+ python codes are made for python version 2.7 for Windows operating systems. It is therefore necessary to download this version of python for running WA+ tools. Major changes are made to the python codes and functions if you compare 2.7 with 3+ versions. It is therefore not possible to run WA+ code in python 3+ versions without making some changes to the code.
 
-[](figs/anaconda_install.png) 
+![](figs/anaconda_install.png) 
 
 ---
 
