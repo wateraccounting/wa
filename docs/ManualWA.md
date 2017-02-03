@@ -24,12 +24,12 @@ The WA+ python codes are made for python version 2.7 for Windows operating syste
 
 After downloading Anaconda you can run the installation of Anaconda. This package also includes Spyder, which is the IDE (Integrated Development Environment). This is a layout for writing and running python scripts.
 
-### <a name="How to install necessary executables"></a>How to install necessary executables
+### <a name="Where to install necessary executables"></a>Where to install necessary executables
 
 In order to run all the Water Accounting Toolbox functions, there are some necessary executables for running the WA+ scripts properly. The necessary to install the following programs:
-- QGIS, can be installed here: [http://www.qgis.org/en/site/forusers/download.html](http://www.qgis.org/en/site/forusers/download.html)
-- 7-zip, can be installed here: [http://www.7-zip.org/download.html](http://www.7-zip.org/download.html)(choose: Type = .exe)
-- ImageMagick Version: ImageMagick-6.9.7-6-Q8-x64-dll.exe, can be installed here:[http://www.imagemagick.org/download/binaries/](http://www.imagemagick.org/download/binaries/)
+- **QGIS:** site: [http://www.qgis.org/en/site/forusers/download.html](http://www.qgis.org/en/site/forusers/download.html)
+- **7-zip:** site: [http://www.7-zip.org/download.html](http://www.7-zip.org/download.html) (choose: Type = .exe)
+- **ImageMagick:** site: [http://www.imagemagick.org/download/binaries/](http://www.imagemagick.org/download/binaries/) (Version: ImageMagick-6.9.7-6-Q8-x64-dll.exe)
 
 ### <a name="How to install all the necessary Python modules"></a>How to install all the necessary Python modules
 
