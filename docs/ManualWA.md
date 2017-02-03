@@ -52,10 +52,9 @@ This will pops up the window as shown below.
 
 ![](figs/environment_variables.png) 
 
-Edit the "path" variable under the system variables box and add the paths of the executables if they are not there yet. Make sure you do not remove the original paths in the "path" environment. You can separate the paths with a semi-colon (;) sign.
+Edit the "Path" variable under the system variables box and add the paths of the executables if they are not there yet. Make sure you do not remove the original paths in the "Path" environment. You can separate the paths with a semi-colon (;) sign.
 
 ![](figs/edit_system_variables.png)
-
 
 ### <a name="How to install all the necessary Python modules"></a>How to install all the necessary Python modules
 
