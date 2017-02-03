@@ -24,7 +24,7 @@ The WA+ python codes are made for python version 2.7 for Windows operating syste
 
 After downloading Anaconda you can run the installation of Anaconda by double-click the executable file and follow the automatic installation steps. Choose a logical location for the installation, a logical location is a directory without spaces and preferably near the root folder (C: or D:). This package also includes Spyder, which is the IDE (Integrated Development Environment). This is a layout for writing and running python scripts.
 
-### <a name="Where to install necessary executables"></a>Where to install necessary executables
+### <a name="Install necessary executables"></a>Install necessary executables
 
 In order to run all the Water Accounting Toolbox functions, there are some necessary executables for running the WA+ scripts properly. The necessary to install the following programs:
 - **QGIS:** site: [http://www.qgis.org/en/site/forusers/download.html](http://www.qgis.org/en/site/forusers/download.html)
@@ -58,8 +58,11 @@ Edit the "Path" variable under the system variables box and add the paths of the
 
 ### <a name="Set locations in WA_path.py"></a>Set locations in WA_path.py
 
-For gdal_translate.exe, gdalwarp.exe, and gdalbuildvrt.exe it is important that not the executables that are located inside Anaconda are used. Because those executables are not linked with a jpeg2000 library, resulting that some tools of the Water Accounting Toolbox will not run properly. To be sure that the right executables are used (the computer will run the first executable he can find, this is not always the correct one), you can define the path to the GDAL executables (within this directory the gdalwarp.exe, gdal_translate.exe, etc. are located) in the WA_path.py (located in the Water Accounting Toolbox). Also the path to the 7z.exe and curl.exe executables can be defined here, but this is not required, if the command prompt is already able to find those executables. If nothing is filled in than the path of the systems variable will be used.
-The path to the "Home" folder is required to fill in. Here you need to define the directory where the "wa" folder is located. See an example below of the WA_path.py:
+For gdal_translate.exe, gdalwarp.exe, and gdalbuildvrt.exe it is important that not the executables that are located inside Anaconda are used, because those executables are not linked with a jpeg2000 library resulting that some tools of the Water Accounting Toolbox will not run properly. The GDAL executables from QGIS must be used.
+
+To be sure that the right executables are used (the computer will run the first executable he can find, this is not always the correct one), you can define the path to the GDAL executables (within this directory the gdalwarp.exe, gdal_translate.exe, etc. are located) in the WA_path.py (located in the Water Accounting Toolbox). Also the path to the 7z.exe and curl.exe executables can be defined here, but this is not required, if the command prompt is already able to find those executables. If nothing is filled in than the path of the systems variable will be used.
+
+The path to the "Home" folder needs to be filled. Here you need to define the directory where the "wa" folder is located. See an example below of the WA_path.py:
 
 ![](figs/wapath.png)
 
