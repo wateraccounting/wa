@@ -39,7 +39,7 @@ def Newest():
 
 	
     wa_master_folder_Generator = os.path.join(home_folder, 'wa-master','Generator') 
-    wa_master_folder_Function = os.path.join(home_folder, 'wa-master','Functions') 
+    wa_master_folder_Functions = os.path.join(home_folder, 'wa-master','Functions') 
     wa_master_folder_General = os.path.join(home_folder, 'wa-master','General') 
     wa_master_folder_Collect = os.path.join(home_folder, 'wa-master','Collect') 
     wa_master_folder_Product = os.path.join(home_folder, 'wa-master','Products') 
