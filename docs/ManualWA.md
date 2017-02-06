@@ -71,7 +71,7 @@ Edit the "Path" variable under the system variables box and add the paths of the
 
 The path to the "Home" folder needs to be filled. Here you need to define the directory where the "wa" folder is located. See an example below of the WA_path.py:
 
-![](figs/wapath.png)
+![](figs/wa_path.png)
 
 For gdal_translate.exe, gdalwarp.exe, and gdalbuildvrt.exe it is important that not the executables that are located inside Anaconda are used, because those executables are not linked with a jpeg2000 library resulting that some tools of the Water Accounting Toolbox will not run properly. The GDAL executables from QGIS must be used.
 
