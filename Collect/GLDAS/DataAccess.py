@@ -188,7 +188,11 @@ def RetrieveData_three_hourly(Date, args):
                     url_GLDAS = url + '.ascii?%s[%s][%s:1:%s][%s:1:%s]' %(Var,zID,yID[0],yID[1],xID[0],xID[1])
 			
                     # open URL
-                    dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
+                    try:			
+                        dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True)
+                    except:
+                        dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
+
                     try:
                         get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True)	
                     except:
@@ -294,7 +298,10 @@ def RetrieveData_daily(Date, args):
                 try:																	
                     																	
                     # open URL
-                    dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
+                    try:
+                        dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True)
+                    except:
+                        dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
                     try:
                         get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True)	
                     except:
@@ -400,7 +407,10 @@ def RetrieveData_monthly(Date, args):
             try:																	
                     																	
                 # open URL
-                dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
+                try:
+                    dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True)
+                except:																																	
+                    dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
                 try:
                     get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True)	
                 except:

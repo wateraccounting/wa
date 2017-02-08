@@ -15,11 +15,13 @@ import pandas as pd
 import subprocess
 import osr
 import netCDF4
+import glob
+
 
 # import WA+ modules
 from wa.General import data_conversions as DC
 from wa.General import raster_conversions as RC
-from SlopeInfluence_ETref import SlopeInfluence	
+from wa.Products.ETref.SlopeInfluence_ETref import SlopeInfluence	
 from wa import WA_Paths
 
 def CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim):
@@ -48,7 +50,7 @@ def CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim):
         os.makedirs(SIDdir)
        
     ShortwaveBasin(SourceLANDSAF, Dir, latlim, lonlim, Dates=[Startdate,Enddate])
-    DEMmap_str=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m.tif') 
+    DEMmap_str=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m_3s.tif') 
     geo_out, proj, size_X, size_Y = RC.Open_array_info(DEMmap_str)	
 
     # Open DEM map 
@@ -63,7 +65,7 @@ def CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim):
 				
 				
     for date in Dates:
-                    # day of year
+        # day of year
         day=date.dayofyear
         Horizontal, Sloping, sinb, sinb_hor, fi, slope, ID  = SlopeInfluence(demmap,lat,lon,day)   
             
@@ -96,10 +98,10 @@ def CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim):
             os.makedirs(PathNet)
                 
         # name Shortwave Clear and Net
-        nameFileNet='ShortWave_Net_Daily_W-m2_' + date.strftime('%Y-%m-%d')
+        nameFileNet='ShortWave_Net_Daily_W-m2_' + date.strftime('%Y-%m-%d') + '.tif' 
         nameNet= os.path.join(PathNet,nameFileNet)
             
-        nameFileClear='ShortWave_Clear_Daily_W-m2_' + date.strftime('%Y-%m-%d')
+        nameFileClear='ShortWave_Clear_Daily_W-m2_' + date.strftime('%Y-%m-%d') + '.tif'
         nameClear= os.path.join(PathClear,nameFileClear)
             
         # Save net and clear short wave radiation
@@ -127,7 +129,7 @@ def ShortwaveBasin(SourceLANDSAF, Dir, latlim, lonlim, Dates = ['2000-01-01','20
     for Type in Types:
         for Date in Dates:
             
-            SAFdir = SourceLANDSAF + os.sep + Type + os.sep
+            SAFdir = os.path.join(SourceLANDSAF, Type)
             OutPath =  os.path.join(Dir, 'Landsaf_Clipped', Type, 'SAF_' + Type + '_EuropeAfrica_day_W-m2_' + Date.strftime('%Y-%m-%d') + '.tif')
             
             if os.path.exists(SAFdir) is False:
@@ -168,14 +170,11 @@ def Transform(SourceLANDSAF, OutPath, Type, Dates = ['2000-01-01','2013-12-31'])
     """
 			
 
-    path = SourceLANDSAF + os.sep + Type + os.sep
+    path = os.path.join(SourceLANDSAF,Type)
 
-    
+    os.chdir(path)
     Dates = pd.date_range(Dates[0],Dates[1],freq='D')
-    
-    geotransform = [-65.025,0.05,0,65.025,0,-0.05]
-    size = [2601,2601]
-   
+
     srs = osr.SpatialReference()
     srs.SetWellKnownGeogCS("WGS84")  
     projection = srs.ExportToWkt() 
@@ -183,25 +182,31 @@ def Transform(SourceLANDSAF, OutPath, Type, Dates = ['2000-01-01','2013-12-31'])
     
     
     for Date in Dates:
-        if Type == 'SIS':        
-            ZipFile = path + 'SISdm' + Date.strftime('%Y%m%d') + '0000002231000101MA.nc.gz'
-            File = path + 'SISdm' + Date.strftime('%Y%m%d') + '0000002231000101MA.nc'
+        if Type == 'SIS': 
+            ZipFile = glob.glob('SISdm%s*.nc.gz' % Date.strftime('%Y%m%d'))[0]		
+            File = os.path.splitext(ZipFile)[0] 
         elif Type == 'SID':
-            ZipFile = path + 'DNIdm' + Date.strftime('%Y%m%d') + '0000002231000101MA.nc.gz'
-            File = path + 'DNIdm' + Date.strftime('%Y%m%d') + '0000002231000101MA.nc'
+            ZipFile = glob.glob('*dm%s*.nc.gz' % Date.strftime('%Y%m%d'))[0]		
+            File = os.path.splitext(ZipFile)[0]
+        
+        # find path to the executable 
+        zip_path = WA_Paths.Paths(Type = '7z.exe') 
+         
+        if zip_path is '':		 
+            fullCmd = ''.join("7za x %s -o%s -aoa"  %(os.path.join(path,ZipFile),path))   
+        else:  
+            fullCmd = ("%s x %s -o%s -aoa" %(zip_path, os.path.join(path,ZipFile),path))     
 
-        # find path to the executable
-        zip_path = WA_Paths.Paths(Type = '7z.exe')
-        
-        if zip_path is '':		
-            os.system("7z x " + ZipFile + " -o" + path + ' -aoa')  
-        else: 
-            os.system("%s x " %(zip_path) + ZipFile + " -o" + path + ' -aoa')  
-        
+        process = subprocess.Popen(fullCmd)
+        process.wait()
+								
         NC = netCDF4.Dataset(File,'r+',format='NETCDF4')
         Data = NC[Type][0,:,:]
-       
-        dst_ds = driver.Create(OutPath, size[1], size[0],  1, gdal.GDT_Float32,  ['COMPRESS=DEFLATE'])
+        lon = NC.variables['lon'][:][0]	- 0.025	
+        lat = NC.variables['lat'][:][-1] + 0.025					
+        geotransform = [lon,0.05,0,lat,0,-0.05]								
+								
+        dst_ds = driver.Create(OutPath, int(np.size(Data,1)), int(np.size(Data,0)),  1, gdal.GDT_Float32,  ['COMPRESS=DEFLATE'])
         # set the reference info 
         dst_ds.SetProjection(projection)
         dst_ds.SetGeoTransform(geotransform)

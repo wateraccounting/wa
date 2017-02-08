@@ -51,7 +51,7 @@ def main(Dir, Startdate = '', Enddate = '',
 																
     # Process LANDSAF data if needed
     if LANDSAF == 1:
-        CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim) 	 # Not working!!
+        CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim) 	
 				
 
     # Set up the variables and calculates ETref hereafter																

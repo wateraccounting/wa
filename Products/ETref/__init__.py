@@ -17,14 +17,19 @@ and define the path to this data in the SoureLANDSAF parameter.
 LANDSAF:
 The LANDSAF data can be downloaded from CMSAF.eu. You need to have the following directories:
 ~LANDSAF/SIS/SISdm200501310000001190010801GL.nc.gz
+or
+~LANDSAF/SIS/SISdm20140903000000123MVMFG01ME.nc.gz
+and
 ~LANDSAF/SID/DNIdm200501010000002231000101MA.nc.gz
+or
+~LANDSAF/SID/SIDdm20140903000000123MVMFG01ME.nc.gz
 
 The ~LANDSAF is the path which you have to define as the SourceLANDSAF parameter
 
 ETref.monthly(Dir='C:/TempR/', Startdate='2012-09-01', Enddate='2012-09-02',
            latlim=[33, 35], lonlim=[35, 37], pixel_size=0.01)
-ETref.daily(Dir='C:/TempTestLANDSAF3/', Startdate='2005-01-02', Enddate='2005-01-04',
-           latlim=[33, 35], lonlim=[35, 37], LANDSAF=1, SourceLANDSAF =r'D:\LANDSAF')
+ETref.daily(Dir='C:/TempTestLANDSAF3/', Startdate='2014-09-01', Enddate='2014-09-03',
+           latlim=[27, 28], lonlim=[29, 30], pixel_size = 0.01, LANDSAF=1, SourceLANDSAF =r'C:\Users\tih\Documents\Water_Accounting\Landsaf')
 """
 
 from .daily import main as daily

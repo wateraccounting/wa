@@ -14,7 +14,6 @@ from joblib import Parallel, delayed
 # import WA+ modules
 from wa.General import raster_conversions as RC
 from wa.General import data_conversions as DC
-from wa.Products.ETref.SetPathETref import SetPaths
 from wa.Products.ETref.CalcETref import calc_ETref
 
 
@@ -61,10 +60,55 @@ def ETref(Date, args):
 	# unpack the arguments
     [Dir, lonlim, latlim, pixel_size, LANDSAF] = args
 
-    # Set path to all the input for ETref
-    tmin_str, tmax_str, humid_str, press_str, wind_str, input1_str, input2_str, input3_str = SetPaths(Dir, Date, LANDSAF)
-
-    # The day of year
+    # Set the paths
+    nameTmin='Tair-min_GLDAS-NOAH_C_daily_' + Date.strftime('%Y.%m.%d') + ".tif"
+    tmin_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','tair','min',nameTmin )
+        
+    nameTmax='Tair-max_GLDAS-NOAH_C_daily_' + Date.strftime('%Y.%m.%d') + ".tif"
+    tmax_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','tair','max',nameTmax )
+        
+    nameHumid='Hum_GLDAS-NOAH_kg-kg_daily_'+ Date.strftime('%Y.%m.%d') + ".tif"
+    humid_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','qair','mean',nameHumid )
+        
+    namePress='P_GLDAS-NOAH_kpa_daily_'+ Date.strftime('%Y.%m.%d') + ".tif"
+    press_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','psurf','mean',namePress )
+        
+    nameWind='W_GLDAS-NOAH_m-s-1_daily_'+ Date.strftime('%Y.%m.%d') + ".tif"
+    wind_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','wind','mean',nameWind )
+        
+    if LANDSAF==1:
+                
+        nameShortClearname = 'ShortWave_Clear_Daily_W-m2_' + Date.strftime('%Y-%m-%d') + '.tif'
+        input2_str=os.path.join(Dir,'Landsaf_Clipped','Shortwave_Clear_Sky',nameShortClearname)
+                
+        nameShortNetname = 'ShortWave_Net_Daily_W-m2_' + Date.strftime('%Y-%m-%d') + '.tif'
+        input1_str=os.path.join(Dir,'Landsaf_Clipped','Shortwave_Net',nameShortNetname)
+               
+        input3_str='not' 
+            
+    else:
+        if Date<pd.Timestamp(pd.datetime(2011, 4, 1)):
+           
+            nameDownLong='DLWR_CFSR_W-m2_' + Date.strftime('%Y.%m.%d') + ".tif"
+            input2_str=os.path.join(Dir,'Radiation','CFSR',nameDownLong)
+                    
+            nameDownShort='DSWR_CFSR_W-m2_' + Date.strftime('%Y.%m.%d') + ".tif"
+            input1_str=os.path.join(Dir,'Radiation','CFSR',nameDownShort)
+                
+            nameUpLong='ULWR_CFSR_W-m2_' + Date.strftime('%Y.%m.%d') + ".tif"
+            input3_str=os.path.join(Dir,'Radiation','CFSR',nameUpLong)
+                
+        else:         
+            nameDownLong='DLWR_CFSRv2_W-m2_' + Date.strftime('%Y.%m.%d') + ".tif"
+            input2_str=os.path.join(Dir,'Radiation','CFSRv2',nameDownLong)
+                    
+            nameDownShort='DSWR_CFSRv2_W-m2_' + Date.strftime('%Y.%m.%d') + ".tif"
+            input1_str=os.path.join(Dir,'Radiation','CFSRv2',nameDownShort)
+                
+            nameUpLong='ULWR_CFSRv2_W-m2_' + Date.strftime('%Y.%m.%d') + ".tif"
+            input3_str=os.path.join(Dir,'Radiation','CFSRv2',nameUpLong)  
+ 
+   # The day of year
     DOY=Date.dayofyear
 
     # Load DEM 

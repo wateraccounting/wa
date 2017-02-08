@@ -32,7 +32,7 @@ def Channel_Routing(Name_NC_DEM_Dir, Name_NC_Runoff, Name_NC_Basin, Reference_da
         import wa.Functions.Start.Area_converter as AC				
         # Convert area from degrees to m2									
         Areas_in_m2 = AC.Degrees_to_m2(Reference_data)
-        Runoff_in_km3_month = (Runoff*1000 * Areas_in_m2)/1e9
+        Runoff_in_km3_month = (Runoff * 1000 * Areas_in_m2)/1e9
 
     # Get properties of the raster
     size_X = np.size(Runoff,2)

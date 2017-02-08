@@ -14,7 +14,6 @@ import numpy as np
 # import WA+ modules
 from wa.Products.ETref.Interpolate_Meteo_ETref import process_GLDAS, lapse_rate, adjust_P, slope_correct
 import wa.General.raster_conversions as RC
-import wa.General.data_conversions as DC
 
 
 def calc_ETref(Dir, tmin_str, tmax_str, humid_str, press_str, wind_str, down_short_str, down_long_str, up_long_str, DEMmap_str, DOY):
@@ -52,7 +51,7 @@ def calc_ETref(Dir, tmin_str, tmax_str, humid_str, press_str, wind_str, down_sho
     wind_str_GF = RC.gap_filling(wind_str,-9999)
     down_short_str_GF = RC.gap_filling(down_short_str,np.nan)
     down_long_str_GF = RC.gap_filling(down_long_str,np.nan)
-    if up_long_str is not 2:				
+    if up_long_str is not 'not':				
         up_long_str_GF = RC.gap_filling(up_long_str,np.nan)
     else:
         up_long_str_GF = 'nan'							
@@ -89,25 +88,23 @@ def calc_ETref(Dir, tmin_str, tmax_str, humid_str, press_str, wind_str, down_sho
     es=input_array['es']
     delta=input_array['delta']
     
-    if up_long_str == 2:
+    if up_long_str == 'not':
         
-        #rename variables which are suitable for this option
-        Short_Net = down_short_str
-        Short_Clear = down_long_str
-        
-        #Open Arrays
-        Short_Net_gdal=gdal.Open(Short_Net)
-        Short_Net_data = Short_Net_gdal.GetRasterBand(1).ReadAsArray()
-        
-        Short_Clear_gdal=gdal.Open(Short_Clear)
-        Short_Clear_data = Short_Clear_gdal.GetRasterBand(1).ReadAsArray()
-        
+        #CORRECT WIND MAPS
+        dest = RC.reproject_dataset_example(down_short_str, DEMmap_str,method = 2)
+        Short_Net_data=dest.GetRasterBand(1).ReadAsArray()*0.75
+        dest = None    
+								
+        dest = RC.reproject_dataset_example(down_long_str, DEMmap_str,method = 2)
+        Short_Clear_data=dest.GetRasterBand(1).ReadAsArray()*0.75
+        dest = None    
+								
         # Calculate Long wave Net radiation
         Rnl = 4.903e-9 * (((tmin + 273.16)**4+(tmax + 273.16)**4)/2)*(0.34 - 0.14 * np.sqrt(ea)) * (1.35 * Short_Net_data/Short_Clear_data -0.35)
         
         # Calulate Net Radiation and converted to MJ*d-1*m-2
         net_radiation = (Short_Net_data * 0.77 + Rnl)*86400/10**6
-        
+               
        
     else:
         #OPEN DOWNWARD SHORTWAVE RADIATION

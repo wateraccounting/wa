@@ -173,5 +173,3 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Resolution, Simu
 
 
 
-
-
