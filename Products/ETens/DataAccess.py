@@ -78,7 +78,8 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
 
             # Save this array as a tiff file
             DC.Save_as_tiff(output_file, ET_data, geo_new, projection='WGS84')
-
+    return()														
+'''
     # Remove all the raw dataset    
     for v_tile in range(Lat_tiles[0], Lat_tiles[1]+1):
         for h_tile in range(Lon_tiles[0], Lon_tiles[1]+1):	
@@ -91,8 +92,8 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
     for f in os.listdir(output_folder):
         if re.search(".zip", f):
             os.remove(os.path.join(output_folder, f))
-				
-    return()				
+'''				
+		
 
 
 def Download_ETens_from_WA_FTP(output_folder, Lat_tiles, Lon_tiles):           
@@ -196,7 +197,7 @@ def Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim):
                 Tot_dataset[(v_tile - Lat_tiles[0]) * 4000 : (v_tile - Lat_tiles[0]) * 4000 + 4000,(h_tile - Lon_tiles[0]) * 4000 : (h_tile - Lon_tiles[0]) * 4000 + 4000 ] = ETensembleMonth 
 
             else:
-                Tot_dataset[(v_tile - Lat_tiles[0]) * 4000 : (v_tile - Lat_tiles[0]) * 4000 + 4000, (h_tile - Lon_tiles[0]) * 4000 : (h_tile - Lon_tiles[0]) * 4000 + 4000 ] = np.zeros([4000,4000])												
+                Tot_dataset[(v_tile - Lat_tiles[0]) * 4000 : (v_tile - Lat_tiles[0]) * 4000 + 4000, (h_tile - Lon_tiles[0]) * 4000 : (h_tile - Lon_tiles[0]) * 4000 + 4000 ] = np.ones([4000,4000]) * -9999												
 
     # Define the area of interest
     IDy_min = int(np.round(((100 - Lat_tiles[0] * 10) - latlim[1])/0.0025))
