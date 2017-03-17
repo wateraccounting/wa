@@ -89,7 +89,9 @@ For the WA Toolbox two environment variables needs to be created. This can be do
 ![](figs/environment_variables_new.png) 
 
 The environment variables that must be created are:
+
 WA_PATHS >> $HOME/Program Files/GDAL
+
 WA_HOME >> $HOME/Anaconda2/Lib/site-packages
 
 ### <a name="How to install all the necessary Python modules"></a>How to install all the necessary Python modules
