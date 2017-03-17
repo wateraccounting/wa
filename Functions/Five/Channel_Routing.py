@@ -32,7 +32,7 @@ def Channel_Routing(Name_NC_DEM_Dir, Name_NC_Runoff, Name_NC_Basin, Reference_da
         import wa.Functions.Start.Area_converter as AC				
         # Convert area from degrees to m2									
         Areas_in_m2 = AC.Degrees_to_m2(Reference_data)
-        Runoff_in_km3_month = (Runoff * 1000 * Areas_in_m2)/1e9
+        Runoff_in_m3_month = ((Runoff/1000) * Areas_in_m2)
 
     # Get properties of the raster
     size_X = np.size(Runoff,2)
@@ -40,25 +40,25 @@ def Channel_Routing(Name_NC_DEM_Dir, Name_NC_Runoff, Name_NC_Basin, Reference_da
 
     # input data test
     dataflow_in0 = np.ones([size_Y,size_X])
-    dataflow_in = np.zeros([int(np.size(Runoff_in_km3_month,0)+1),size_Y, size_X])
+    dataflow_in = np.zeros([int(np.size(Runoff_in_m3_month,0)+1),size_Y, size_X])
     dataflow_in[0,:,:] = dataflow_in0 * Basin
-    dataflow_in[1:,:,:] = Runoff_in_km3_month * Basin
+    dataflow_in[1:,:,:] = Runoff_in_m3_month * Basin
 
     # The flow directions parameters of HydroSHED
     Directions = [1, 2, 4, 8, 16, 32, 64, 128]
 
     # Route the data      								
     dataflow_next = dataflow_in[0,:,:]
-    data_flow_tot = np.zeros([int(np.size(Runoff_in_km3_month,0)+1),size_Y, size_X])
+    data_flow_tot = np.zeros([int(np.size(Runoff_in_m3_month,0)+1),size_Y, size_X])
     dataflow_previous = np.zeros([size_Y, size_X])
     while np.sum(dataflow_next) != np.sum(dataflow_previous):
-        data_flow_round = np.zeros([int(np.size(Runoff_in_km3_month,0)+1),size_Y, size_X])	
+        data_flow_round = np.zeros([int(np.size(Runoff_in_m3_month,0)+1),size_Y, size_X])	
         dataflow_previous = np.copy(dataflow_next)						
         for Direction in Directions:
 
-            data_dir = np.zeros([int(np.size(Runoff_in_km3_month,0)+1),size_Y, size_X])
+            data_dir = np.zeros([int(np.size(Runoff_in_m3_month,0)+1),size_Y, size_X])
             data_dir[:,np.logical_and(flow_directions == Direction,dataflow_next == 1)] = dataflow_in[:,np.logical_and(flow_directions == Direction,dataflow_next == 1)]
-            data_flow = np.zeros([int(np.size(Runoff_in_km3_month,0)+1), size_Y, size_X])
+            data_flow = np.zeros([int(np.size(Runoff_in_m3_month,0)+1), size_Y, size_X])
             			
             if Direction == 4:
                 data_flow[:,1:,:] = data_dir[:,:-1,:]
@@ -366,6 +366,7 @@ def Graph_DEM_Distance_Discharge(Name_NC_DEM, Name_NC_DEM_Dir, Name_NC_Acc_Pixel
 
         LineWidth = ((LineData - np.min(All_discharge_values)) / (np.max(All_discharge_values) - np.min(All_discharge_values)) * (9) + 1)
 
+        plt.figure(i)
         ax = plt.axes()
 
         minx = np.min(segs[:,:,0])

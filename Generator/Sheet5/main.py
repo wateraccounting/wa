@@ -114,10 +114,10 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Resolution, Simu
 
     info = ['monthly','pixels', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
     Name_NC_Acc_Pixels = DC.Create_NC_name('Acc_Pixels', Simulation, Dir_Basin)
-    info = ['monthly','km3', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
+    info = ['monthly','m3', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
     Name_NC_Routed_Discharge = DC.Create_NC_name('Routed_Discharge', Simulation, Dir_Basin, info)
 
-    if not (os.path.exists(Name_NC_Acc_Pixels) or os.path.exists(Name_NC_Routed_Discharge)):
+    if not (os.path.exists(Name_NC_Acc_Pixels) and os.path.exists(Name_NC_Routed_Discharge)):
         Accumulated_Pixels, Routed_Discharge = Five.Channel_Routing.Channel_Routing(Name_NC_DEM_Dir, Name_NC_Runoff, Name_NC_Basin, Example_dataset, Degrees = 1)
 
         # Save Results

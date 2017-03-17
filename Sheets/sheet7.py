@@ -9,7 +9,6 @@ Module: Sheets/sheet1
 
 import os
 import pandas as pd
-from wand.image import Image
 import xml.etree.ElementTree as ET
 
 
@@ -812,6 +811,7 @@ def create_sheet7(basin, period, units, data, output, template=False):
     svg_string = ET.tostring(root, encoding='UTF-8', method='xml')
 
     # Export svg to png
+    from wand.image import Image
     img_out = Image(blob=svg_string, resolution=300)
     img_out.format = 'jpg'
     img_out.save(filename=output)

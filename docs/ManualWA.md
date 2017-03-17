@@ -36,14 +36,14 @@ After downloading, subtract the data and change the name from "wa-master" into "
 ### <a name="Install necessary executables"></a>Install necessary executables
 
 In order to run all the Water Accounting Toolbox functions, there are some necessary executables for running the WA+ scripts properly. The necessary to install the following programs:
-- **QGIS:** site: [http://www.qgis.org/en/site/forusers/download.html](http://www.qgis.org/en/site/forusers/download.html)
+- **GDAL:** site: [http://www.gisinternals.com/release.php](http://www.gisinternals.com/release.php) (See also Install GDAL section of this document)
 - **7-zip:** site: [http://www.7-zip.org/download.html](http://www.7-zip.org/download.html) (choose: Type = .exe)
 - **ImageMagick:** site: [http://www.imagemagick.org/download/binaries/](http://www.imagemagick.org/download/binaries/) (Version: ImageMagick-6.9.7-6-Q8-x64-dll.exe)
 - **Curl:** site: [https://curl.haxx.se/download.html](https://curl.haxx.se/download.html) 
 
 This will install the following required executables: 
 
-- **QGIS:** gdal_translate.exe, gdalwarp.exe, gdalbuildvrt.exe
+- **GDAL:** gdal_translate.exe, gdalwarp.exe, gdalbuildvrt.exe, etc.
 - **7-zip:** 7z.exe
 - **ImageMagick:** convert.exe
 - **Curl:** curl.exe
@@ -57,7 +57,29 @@ If the executable can not be found, the following message will be shown:
 >'..executable_name' is not recognized as an internal or external command. 
 >operable program or batch file.
 
-Then you need to manage environment variables of the computer. For an Windows 7 system go to: 
+This means that you need to add a path to the environment variables. The way to do this is explained in the Add environment variables section of this manual.
+
+### <a name="Install GDAL"></a>Install GDAL
+
+Open python in your command prompt by typing "python" in order to find the used python version. The version in picture below is "MSC v.1500 64 bit (AMD64)"
+
+![](figs/find_python_version.png)
+
+If you know the version, go to [http://www.gisinternals.com/release.php]http://www.gisinternals.com/release.php and open the tab corresponding to your python version (for picture: release-1500-x64-gdal-2-1-3-mapserver-7-0-4). 
+
+Download the GDAL core components (gdal-201-1500-x64-core.msi) and the python bindings (GDAL-2.1.3.win-amd64-py2.7.msi). Install the core component first and hereafter the python bindings. Now you will find the GDAL folder in you Program Files.
+
+Set two environment variables:
+User variables:
+GDAL_DATA >> $HOME/Program Files/GDAL/gdal_data
+System variables:
+Path >> $HOME/Program Files/GDAL  (add this variable in front of all the other variables)
+
+To add an environment variable see next section.
+
+### <a name="Add environment variable"></a>Add environment variable
+
+To add an environment variable, you need to go to the environment variables manager of your computer. For an Windows 7 system go to: 
 Control panel > System and security > System > Advanced system settings > Advanced > Environment variables. 
 This will pops up the window as shown below.
 
@@ -73,7 +95,7 @@ The path to the "Home" folder needs to be filled. Here you need to define the di
 
 ![](figs/wa_path.png)
 
-For gdal_translate.exe, gdalwarp.exe, and gdalbuildvrt.exe it is important that not the executables that are located inside Anaconda are used, because those executables are not linked with a jpeg2000 library resulting that some tools of the Water Accounting Toolbox will not run properly. The GDAL executables from QGIS must be used.
+For gdal_translate.exe, gdalwarp.exe, and gdalbuildvrt.exe it is important that not the executables that are located inside Anaconda are used, because those executables are not linked with a jpeg2000 library resulting that some tools of the Water Accounting Toolbox will not run properly.
 
 To be sure that the right executables are used (the computer will run the first executable he can find, this is not always the correct one), you can define the path to the GDAL executables (within this directory the gdalwarp.exe, gdal_translate.exe, etc. are located) in the WA_path.py (located in the Water Accounting Toolbox). Also the path to the 7z.exe and curl.exe executables can be defined here, but this is not required when the command prompt is already able to find those executables. If the path is empty than the path found within the systems variable will be used.
 
