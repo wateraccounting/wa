@@ -99,7 +99,9 @@ The path to the "Home" folder needs to be filled. Here you need to define the di
 
 For gdal_translate.exe, gdalwarp.exe, and gdalbuildvrt.exe it is important that not the executables that are located inside Anaconda are used, because those executables are not linked with a jpeg2000 library resulting that some tools of the Water Accounting Toolbox will not run properly.
 
-To be sure that the right executables are used (the computer will run the first executable he can find, this is not always the correct one), you can define the path to the GDAL executables (within this directory the gdalwarp.exe, gdal_translate.exe, etc. are located) in the WA_path.py (located in the Water Accounting Toolbox). Also the path to the 7z.exe and curl.exe executables can be defined here, but this is not required when the command prompt is already able to find those executables. If the path is empty than the path found within the systems variable will be used.
+To be sure that the right executables are used (the computer will run the first executable he can find, this is not always the correct one), you can define the path to the GDAL executables (within this directory the gdalwarp.exe, gdal_translate.exe, etc. are located) in the WA_path.py (located in the Water Accounting Toolbox). The executables of GDAL are located in the $HOME/Program Files/GDAL folder. So you can add this folder as shown in the figure above.
+
+Also the path to the 7z.exe and curl.exe executables can be defined here, but this is not required when the command prompt is already able to find those executables. If the path is empty than the path found within the systems variable will be used.
 
 ### <a name="How to install all the necessary Python modules"></a>How to install all the necessary Python modules
 
