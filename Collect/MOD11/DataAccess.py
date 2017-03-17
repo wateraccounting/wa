@@ -25,7 +25,6 @@ from joblib import Parallel, delayed
 # Water Accounting modules
 import wa.General.raster_conversions as RC
 import wa.General.data_conversions as DC
-from wa import WA_Paths
 from wa import WebAccounts
 
 def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
@@ -261,12 +260,14 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
             
             # Download the MODIS NDVI data            
             url = 'https://e4ftl01.cr.usgs.gov/MOLT/MOD11A1.006/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
-            curl_path_exe = WA_Paths.Paths(Type = 'curl.exe')
-								
-            if curl_path_exe is '':
-                 f = os.popen("curl -l " + url, "r")	
-            else:														
-                 f = os.popen('"%s" -l ' %(curl_path_exe) + url,  "r")
+
+            # Get environmental variable
+            WA_env_paths = os.environ["WA_PATHS"].split(';')
+            GDAL_env_path = WA_env_paths[0]
+            CURL_PATH = os.path.join(GDAL_env_path, 'curl.exe')
+
+				# Read only the content of the http server																
+            f = os.popen('"%s" -l ' %(CURL_PATH) + url,  "r")				
 												
             # Sum all the files on the server												
             soup = BeautifulSoup(f, "lxml")

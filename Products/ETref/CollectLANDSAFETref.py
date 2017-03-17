@@ -17,12 +17,10 @@ import osr
 import netCDF4
 import glob
 
-
 # import WA+ modules
 from wa.General import data_conversions as DC
 from wa.General import raster_conversions as RC
 from wa.Products.ETref.SlopeInfluence_ETref import SlopeInfluence	
-from wa import WA_Paths
 
 def CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim):
     """
@@ -138,18 +136,18 @@ def ShortwaveBasin(SourceLANDSAF, Dir, latlim, lonlim, Dates = ['2000-01-01','20
             # Convert nc to tiff files
             Transform(SourceLANDSAF, OutPath, Type, Dates = [Date.strftime('%Y-%m-%d'),Date.strftime('%Y-%m-%d')])
 
-            # find path to the executable
-            path = WA_Paths.Paths(Type = 'GDAL')
+            # Get environmental variable
+            WA_env_paths = os.environ["WA_PATHS"].split(';')
+            GDAL_env_path = WA_env_paths[0]
+            GDAL_TRANSLATE_PATH = os.path.join(GDAL_env_path, 'gdal_translate.exe')
+            
+            # Define output name
             nameOut= os.path.join(Dir,'Landsaf_Clipped',Type,'SAF_' + Type + '_daily_W-m2_' + Date.strftime('%Y-%m-%d') + '.tif')
             
-			# clip data										
-            if path is '':
-                fullCmd = ' '.join(['gdal_translate -projwin %s %s %s %s' % (lonlim[0]-0.1, latlim[1]+0.1, lonlim[1]+0.1, latlim[0]-0.1), '-of GTiff', OutPath, nameOut])  # -r {nearest}
-            
-            else:
-                gdal_translate_path = os.path.join(path,'gdal_translate.exe')
-                fullCmd = ' '.join(['"%s" -projwin %s %s %s %s' % (gdal_translate_path, lonlim[0]-0.1, latlim[1]+0.1, lonlim[1]+0.1, latlim[0]-0.1), '-of GTiff', OutPath, nameOut])  # -r {nearest}
+            # Create command for cmd
+            fullCmd = ' '.join(['"%s" -projwin %s %s %s %s' % (GDAL_TRANSLATE_PATH, lonlim[0]-0.1, latlim[1]+0.1, lonlim[1]+0.1, latlim[0]-0.1), '-of GTiff', OutPath, nameOut])  # -r {nearest}
            
+            # Run command prompt in cmd
             process = subprocess.Popen(fullCmd)
             process.wait() 
             print 'Landsaf ' + Type + ' file for ' + Date.strftime('%Y-%m-%d') + ' created.'
@@ -169,7 +167,6 @@ def Transform(SourceLANDSAF, OutPath, Type, Dates = ['2000-01-01','2013-12-31'])
     Dates -- ['yyyy-mm-dd','yyyy-mm-dd']
     """
 			
-
     path = os.path.join(SourceLANDSAF,Type)
 
     os.chdir(path)
@@ -189,17 +186,11 @@ def Transform(SourceLANDSAF, OutPath, Type, Dates = ['2000-01-01','2013-12-31'])
             ZipFile = glob.glob('*dm%s*.nc.gz' % Date.strftime('%Y%m%d'))[0]		
             File = os.path.splitext(ZipFile)[0]
         
-        # find path to the executable 
-        zip_path = WA_Paths.Paths(Type = '7z.exe') 
-         
-        if zip_path is '':		 
-            fullCmd = ''.join("7za x %s -o%s -aoa"  %(os.path.join(path,ZipFile),path))   
-        else:  
-            fullCmd = ("%s x %s -o%s -aoa" %(zip_path, os.path.join(path,ZipFile),path))     
-
+        # find path to the executable 	 
+        fullCmd = ''.join("7z x %s -o%s -aoa"  %(os.path.join(path,ZipFile),path))   
         process = subprocess.Popen(fullCmd)
         process.wait()
-								
+	
         NC = netCDF4.Dataset(File,'r+',format='NETCDF4')
         Data = NC[Type][0,:,:]
         lon = NC.variables['lon'][:][0]	- 0.025	

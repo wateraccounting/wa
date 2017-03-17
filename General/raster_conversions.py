@@ -14,8 +14,6 @@ import subprocess
 from pyproj import Proj, transform
 import scipy.interpolate
 
-import wa.WA_Paths as WA_Paths
-
 def Open_array_info(filename=''):
 
     f = gdal.Open(r"%s" %filename)
@@ -187,18 +185,15 @@ def reproject_MODIS(input_name, epsg_to):
     '''                    
     # Define the output name
     name_out = ''.join(input_name.split(".")[:-1]) + '_reprojected.tif'
+    
+    # Get environmental variable
+    WA_env_paths = os.environ["WA_PATHS"].split(';')
+    GDAL_env_path = WA_env_paths[0]
+    GDALWARP_PATH = os.path.join(GDAL_env_path, 'gdalwarp.exe')
 
     # find path to the executable
-    path = WA_Paths.Paths(Type = 'GDAL')
-    if path is '':	
-        fullCmd = ' '.join(['gdalwarp -overwrite -s_srs "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs"', '-t_srs EPSG:%s -of GTiff' %(epsg_to), input_name, name_out])  # -r {nearest}
-    else:    
-        gdalwarp_path = os.path.join(path,'gdalwarp.exe')	
-	
-        # Apply the reprojection by using gdalwarp
-        fullCmd = ' '.join(["%s" %(gdalwarp_path), '-overwrite -s_srs "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs"', '-t_srs EPSG:%s -of GTiff' %(epsg_to), input_name, name_out])  # -r {nearest}
-
-    process = subprocess.Popen(fullCmd)
+    fullCmd = ' '.join(["%s" %(GDALWARP_PATH), '-overwrite -s_srs "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs"', '-t_srs EPSG:%s -of GTiff' %(epsg_to), input_name, name_out])   
+    process = subprocess(fullCmd)
     process.wait() 
 				
     return(name_out)  

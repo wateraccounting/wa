@@ -9,11 +9,12 @@ import numpy as np
 import shapefile
 import os
 
-from wa import WA_Paths as WA_Paths
-
 def Determine(Basin=''):
-		
-    Home_folder = WA_Paths.Paths(Type = 'Home')				
+    
+    # Get environmental variable for the Home folder
+    SEBAL_env_paths = os.environ["WA_HOME"].split(';')
+    Home_folder = SEBAL_env_paths[0]
+    			
     Shape_file_name_shp = os.path.join(Home_folder,'Basins', Basin + '.shp')
     if not os.path.exists(Shape_file_name_shp):
         print '%s is missing' %Shape_file_name_shp				

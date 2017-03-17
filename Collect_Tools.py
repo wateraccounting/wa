@@ -12,12 +12,12 @@ import os
 import zipfile
 import shutil
 
-# WA+ modules
-from wa import WA_Paths
-
 def Newest():
 
-    home_folder = WA_Paths.Paths(Type = 'Home')
+    # Get environmental variable
+    SEBAL_env_paths = os.environ["WA_HOME"].split(';')
+    home_folder = SEBAL_env_paths[0]
+
     file_nametext = os.path.join(home_folder, 'wa-master.zip') 
     nameDownloadtext = r"https://github.com/wateraccounting/wa/archive/master.zip"
 				

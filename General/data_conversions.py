@@ -12,20 +12,16 @@ import os
 import subprocess
 import pandas as pd
 import numpy as np
-from wa import WA_Paths
 
 def Convert_grb2_to_nc(input_wgrib, output_nc, band):
 	
-    # find path to the executable
-    path = WA_Paths.Paths(Type = 'GDAL')
-    if path is '':
-        fullCmd = ' '.join(['gdal_translate -of netcdf -b %d' %(band), input_wgrib, output_nc])  # -r {nearest}
-	
-    else: 				
-        gdal_translate_path = os.path.join(path,'gdal_translate.exe')
-				
-	    # converting			
-        fullCmd = ' '.join(['"%s" -of netcdf -b %d' %(gdal_translate_path, band), input_wgrib, output_nc])  # -r {nearest}
+    # Get environmental variable
+    WA_env_paths = os.environ["WA_PATHS"].split(';')
+    GDAL_env_path = WA_env_paths[0]
+    GDAL_TRANSLATE_PATH = os.path.join(GDAL_env_path, 'gdal_translate.exe')
+    
+    # Create command			
+    fullCmd = ' '.join(['"%s" -of netcdf -b %d' %(GDAL_TRANSLATE_PATH, band), input_wgrib, output_nc])  # -r {nearest}
 
     process = subprocess.Popen(fullCmd)
     process.wait()  
@@ -40,18 +36,15 @@ def Convert_adf_to_tiff(input_adf, output_tiff):
     output_tiff -- Name of the output tiff file
     """
 
-    # find path to the executable
-    path = WA_Paths.Paths(Type = 'GDAL')
-    if path is '':
-        command = ("gdal_translate -co COMPRESS=DEFLATE -co PREDICTOR=1 -co "
-                   "ZLEVEL=1 -of GTiff %s %s") % (input_adf, output_tiff)
-	
-    else:
-        gdal_translate_path = os.path.join(path,'gdal_translate.exe')	
-	
-        # convert data from ESRI GRID to GeoTIFF
-        command = ('"%s" -co COMPRESS=DEFLATE -co PREDICTOR=1 -co '
-                   'ZLEVEL=1 -of GTiff %s %s') % (gdal_translate_path, input_adf, output_tiff)
+    # Get environmental variable
+    WA_env_paths = os.environ["WA_PATHS"].split(';')
+    GDAL_env_path = WA_env_paths[0]
+    GDAL_TRANSLATE_PATH = os.path.join(GDAL_env_path, 'gdal_translate.exe')
+    
+    # convert data from ESRI GRID to GeoTIFF
+    command = ('"%s" -co COMPRESS=DEFLATE -co PREDICTOR=1 -co '
+                   'ZLEVEL=1 -of GTiff %s %s') % (GDAL_TRANSLATE_PATH, input_adf, output_tiff)
+    
     os.system(command)
     return(output_tiff)
 				

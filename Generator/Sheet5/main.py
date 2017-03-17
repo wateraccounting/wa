@@ -8,7 +8,6 @@ import os
 import gdal
 import numpy as np
 
-from wa import WA_Paths
 from wa.General import raster_conversions as RC
 from wa.General import data_conversions as DC
 import wa.Functions.Five as Five
@@ -18,8 +17,11 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Resolution, Simu
 
     ######################### Set General Parameters ##############################
 
+    # Get environmental variable for the Home folder
+    SEBAL_env_paths = os.environ["WA_HOME"].split(';')
+    Dir_Home = SEBAL_env_paths[0]
+	
     # Create the Basin folder
-    Dir_Home = WA_Paths.Paths(Type = 'Home')
     Dir_Basin = os.path.join(Dir_Home, Basin)
     if not os.path.exists(Dir_Basin):
         os.makedirs(Dir_Basin)	

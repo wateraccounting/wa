@@ -35,29 +35,23 @@ After downloading, subtract the data and change the name from "wa-master" into "
 
 ### <a name="Install necessary executables"></a>Install necessary executables
 
-In order to run all the Water Accounting Toolbox functions, there are some necessary executables for running the WA+ scripts properly. The necessary to install the following programs:
+In order to run all the Water Accounting Toolbox functions, there are some necessary executables for running the WA+ scripts properly. It is necessary to install the following programs:
 - **GDAL:** site: [http://www.gisinternals.com/release.php](http://www.gisinternals.com/release.php) (See also Install GDAL section of this document)
 - **7-zip:** site: [http://www.7-zip.org/download.html](http://www.7-zip.org/download.html) (choose: Type = .exe)
 - **ImageMagick:** site: [http://www.imagemagick.org/download/binaries/](http://www.imagemagick.org/download/binaries/) (Version: ImageMagick-6.9.7-6-Q8-x64-dll.exe)
-- **Curl:** site: [https://curl.haxx.se/download.html](https://curl.haxx.se/download.html) 
 
 This will install the following required executables: 
-
 - **GDAL:** gdal_translate.exe, gdalwarp.exe, gdalbuildvrt.exe, etc.
 - **7-zip:** 7z.exe
 - **ImageMagick:** convert.exe
-- **Curl:** curl.exe
 
-They can be found in the file location from where the program is installed. Be sure that the executables can also be found by the computer. This can be checked by typing the name of the executable name without the extension (for QGIS: "gdalwarp", "gdal_translate", "gdalbuildvrt", for 7zip: "7z", for ImageMagick: "convert" , for Curl: "curl") in the command prompt as shown below:
-
-![](figs/check_exe_cmd.png)
-
+Check if the 7z.exe can be found by the computer after installing. This can be done by typing "7z" in the command prompt.
 If the executable can not be found, the following message will be shown:
 
->'..executable_name' is not recognized as an internal or external command. 
+>'7z' is not recognized as an internal or external command. 
 >operable program or batch file.
 
-This means that you need to add a path to the environment variables. The way to do this is explained in the Add environment variables section of this manual.
+This means that you need to add the directory where the 7z.exe is located to the "Path" environment variables. The way to do this is explained in the Add environment variables section of this manual.
 
 ### <a name="Install GDAL"></a>Install GDAL
 
@@ -69,13 +63,10 @@ If you know the version, go to [http://www.gisinternals.com/release.php](http://
 
 Download the GDAL core components (gdal-201-1500-x64-core.msi) and the python bindings (GDAL-2.1.3.win-amd64-py2.7.msi). Install the core component first and hereafter the python bindings. Now you will find the GDAL folder in you Program Files.
 
-Set two environment variables:
+Set one environment variables:
 
 User variables:
 GDAL_DATA >> $HOME/Program Files/GDAL/gdal_data
-
-System variables:
-Path >> $HOME/Program Files/GDAL  (add this variable in front of all the other variables)
 
 To add an environment variable see next section.
 
@@ -87,21 +78,19 @@ This will pops up the window as shown below.
 
 ![](figs/environment_variables.png) 
 
-Edit the "Path" variable under the system variables box and add the paths of the executables if they are not there yet. Make sure you do not remove the original paths in the "Path" environment. You can separate the paths with a semi-colon (;) sign.
+If an executable cannot be found by the computer, you need to add a directory in the "Path" environment variable. This can be done by clicking on the "Edit" button when the "Path" variable under the system variables box was selected. Add the directory where the executables are located and make sure that you do not remove the original paths in the "Path" environment. You need to separate the paths with a semi-colon (;) sign.
 
 ![](figs/edit_system_variables.png)
 
-### <a name="Set locations in WA_path.py"></a>Set locations in WA_path.py
+### <a name="Create WA environment variable"></a>Create WA environment variable
 
-The path to the "Home" folder needs to be filled. Here you need to define the directory where the "wa" folder is located. See an example below of the WA_path.py:
+For the WA Toolbox two environment variables needs to be created. This can be done in the environment variables manager and click on "New.." (see figure below).
 
-![](figs/wa_path.png)
+![](figs/environment_variables_new.png) 
 
-For gdal_translate.exe, gdalwarp.exe, and gdalbuildvrt.exe it is important that not the executables that are located inside Anaconda are used, because those executables are not linked with a jpeg2000 library resulting that some tools of the Water Accounting Toolbox will not run properly.
-
-To be sure that the right executables are used (the computer will run the first executable he can find, this is not always the correct one), you can define the path to the GDAL executables (within this directory the gdalwarp.exe, gdal_translate.exe, etc. are located) in the WA_path.py (located in the Water Accounting Toolbox). The executables of GDAL are located in the $HOME/Program Files/GDAL folder. So you can add this folder as shown in the figure above.
-
-Also the path to the 7z.exe and curl.exe executables can be defined here, but this is not required when the command prompt is already able to find those executables. If the path is empty than the path found within the systems variable will be used.
+The environment variables that must be created are:
+WA_PATHS >> $HOME/Program Files/GDAL
+WA_HOME >> $HOME/Anaconda2/Lib/site-packages
 
 ### <a name="How to install all the necessary Python modules"></a>How to install all the necessary Python modules
 
