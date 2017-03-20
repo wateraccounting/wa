@@ -84,7 +84,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     for f in files:
         os.remove(os.path.join(output_folder, f))      
 													
-	return results		
+	return()	
 
 def RetrieveData(Date, args):
     """
@@ -121,7 +121,7 @@ def RetrieveData(Date, args):
     os.remove(os.path.join(output_folder, name_collect))
     os.remove(os.path.join(output_folder, name_reprojected))                
 
-    return True
+    return()
 
     
 def Tiles_to_download(tiletext2,lonlim1,latlim1):

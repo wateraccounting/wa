@@ -61,7 +61,7 @@ Open python in your command prompt by typing "python" in order to find the used 
 
 If you know the version, go to [http://www.gisinternals.com/release.php](http://www.gisinternals.com/release.php) and open the tab corresponding to your python version (for picture: release-1500-x64-gdal-2-1-3-mapserver-7-0-4). 
 
-Download the GDAL core components (gdal-201-1500-x64-core.msi) and the python bindings (GDAL-2.1.3.win-amd64-py2.7.msi). Install the core component first and hereafter the python bindings. Now you will find the GDAL folder in you Program Files.
+Download the GDAL core components (gdal-201-1500-x64-core.msi) and the python bindings (GDAL-2.1.3.win-amd64-py2.7.msi). Install the core component first and hereafter the python bindings. Now you will find the GDAL folder in your Program Files.
 
 Set one environment variables:
 

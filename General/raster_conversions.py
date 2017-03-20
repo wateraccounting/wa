@@ -193,7 +193,7 @@ def reproject_MODIS(input_name, epsg_to):
 
     # find path to the executable
     fullCmd = ' '.join(["%s" %(GDALWARP_PATH), '-overwrite -s_srs "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs"', '-t_srs EPSG:%s -of GTiff' %(epsg_to), input_name, name_out])   
-    process = subprocess(fullCmd)
+    process = subprocess.Popen(fullCmd)
     process.wait() 
 				
     return(name_out)  
