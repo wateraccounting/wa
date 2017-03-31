@@ -4,7 +4,7 @@ Authors: Gonzalo Espinoza
          UNESCO-IHE 2016
 Contact: g.espinoza@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
-Module: Sheets/sheet1
+Module: Sheets/sheet2
 """
 
 import os

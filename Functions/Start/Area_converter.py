@@ -1,14 +1,33 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan 23 10:06:53 2017
-
-@author: tih
+Authors: Tim Hessels
+         UNESCO-IHE 2017
+Contact: t.hessels@unesco-ihe.org
+Repository: https://github.com/wateraccounting/wa
+Module: Function/Start
 """
+# import general python modules
 import numpy as np
+
+# import WA modules
 from wa.General import raster_conversions as RC
 
 def Degrees_to_m2(Reference_data):
+    """
+    This functions calculated the area of each pixel in squared meter.
 
+    Parameters
+    ----------
+    Reference_data : str
+        Path to a tiff file of which the pixel area must be defined
+        
+    Returns
+    -------
+    area_in_m2 : array
+        Array containing the area of each pixel in squared meters
+
+    """ 
+    # Calculate the difference in latitude and longitude in meters
     dlat, dlon = Calc_dlat_dlon(Reference_data)  
 
     # Calculate the area in squared meters
@@ -17,7 +36,22 @@ def Degrees_to_m2(Reference_data):
     return(area_in_m2)
 
 def Calc_dlat_dlon(Reference_data):
+    """
+    This functions calculated the distance between each pixel in meter.
 
+    Parameters
+    ----------
+    Reference_data : str
+        Path to a tiff file of which the pixel area must be defined
+        
+    Returns
+    -------
+    dlat : array
+        Array containing the vertical distance between each pixel in meters
+    dlon : array
+        Array containing the horizontal distance between each pixel in meters
+    """ 
+ 
     # Get raster information 			
     geo_out, proj, size_X, size_Y = RC.Open_array_info(Reference_data)				
 
@@ -28,7 +62,6 @@ def Calc_dlat_dlon(Reference_data):
     dlat_2d = np.array([lat,]*int(np.size(lon,0))).transpose()
     dlon_2d =  np.array([lon,]*int(np.size(lat,0)))
 
-	
     # Radius of the earth in meters	  
     R_earth = 6371000
 

@@ -287,7 +287,7 @@ def Get3Darray_time_series_monthly(Dir_Basin, Data_Path, Startdate, Enddate, Exa
     os.chdir(os.path.join(Dir_Basin,Data_Path))
     i = 0
     for Date in Dates:
-        End_tiff_file_name = '%d.%02d.01.tif' %(Date.year, Date.month)					
+        End_tiff_file_name = 'monthly_%d.%02d.01.tif' %(Date.year, Date.month)					
         file_name = glob.glob('*%s' %End_tiff_file_name)
         file_name_path = os.path.join(Dir_Basin, Data_Path, file_name[0])								
         if Example_data is not None:

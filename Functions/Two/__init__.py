@@ -5,7 +5,7 @@ Authors: Tim Hessels and Gonzalo Espinoza
 Contact: t.hessels@unesco-ihe.org
          g.espinoza@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
-Module: wa/Functions/Start
+Module: wa/Functions/Two
 
 
 Description:
@@ -13,10 +13,8 @@ This module contains a compilation of scripts and functions used to calculate th
 This data is used within a water accounting framework.
 (http://www.wateraccounting.org/)
 """
+from wa.Functions.Two import Rainy_Days, Calc_NDM, SplitET
 
-
-from wa.Functions.Start import Area_converter, Boundaries, Download_Data, Eightdaily_to_monthly, Get_Dictionaries
-
-__all__ = ['Area_converter', 'Boundaries', 'Download_Data','Eightdaily_to_monthly', 'Get_Dictionaries']
+__all__ = ['Rainy_Days', 'Calc_NDM', 'SplitET']
 
 __version__ = '0.1'

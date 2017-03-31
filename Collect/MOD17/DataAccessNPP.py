@@ -64,7 +64,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
         
     # Make directory for the MODIS NPP data
     Dir = Dir.replace("/", os.sep)						
-    output_folder = os.path.join(Dir, 'NPP', 'MODIS')
+    output_folder = os.path.join(Dir, 'NPP', 'MOD17')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     

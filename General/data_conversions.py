@@ -179,10 +179,10 @@ def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Endda
 
         # Create the data variable			
         if Startdate is not '':			
-            preco = nco.createVariable('%s' %Var, 'f4',  ('time', 'lat', 'lon'),zlib=True, fill_value=-9999, least_significant_digit=3)
+            preco = nco.createVariable('%s' %Var, 'f8',  ('time', 'lat', 'lon'), zlib=True, least_significant_digit=1)
             timeo[:]=time_or	
         else:
-            preco = nco.createVariable('%s' %Var, 'f4',  ('lat', 'lon'),zlib=True, fill_value=-9999, least_significant_digit=3)
+            preco = nco.createVariable('%s' %Var, 'f8',  ('lat', 'lon'), zlib=True, least_significant_digit=1)
 
         # Set the data variable information
         preco.scale_factor = Scaling_factor
@@ -197,9 +197,9 @@ def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Endda
         # Set the data variable
         if Startdate is not '':
             for i in range(len(Dates)):
-                preco[i,:,:] = np.int_(DataCube[i,:,:]*1/Scaling_factor)
+                preco[i,:,:] = DataCube[i,:,:]*1./np.float(Scaling_factor)
         else:
-            preco[:,:] = np.int_(DataCube[:,:]*1/Scaling_factor)
+            preco[:,:] = DataCube[:,:] * 1./np.float(Scaling_factor)
 		
         nco.close()				
     return()				

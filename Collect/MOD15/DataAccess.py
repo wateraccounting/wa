@@ -71,7 +71,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, nameDownload):
         
     # Make directory for the MODIS FPAR data
     Dir = Dir.replace("/", os.sep)						
-    output_folder = os.path.join(Dir, dataset, 'MODIS')
+    output_folder = os.path.join(Dir, dataset, 'MOD15')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     

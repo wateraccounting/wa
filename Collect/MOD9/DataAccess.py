@@ -60,7 +60,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
         
     # Make directory for the MODIS NDVI data
     Dir = Dir.replace("/", os.sep)						
-    output_folder = os.path.join(Dir, 'Reflectance', 'MODIS')
+    output_folder = os.path.join(Dir, 'Reflectance', 'MOD9')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
