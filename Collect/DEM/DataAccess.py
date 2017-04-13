@@ -192,9 +192,7 @@ def DownloadData(output_folder, latlim, lonlim, parameter, resolution):
 
     if resolution =='15s':
         output_file_merged = os.path.join(output_folder_trash,'merged.tif') 
-        Merge_DEM_15s(output_folder_trash, output_file_merged,latlim, lonlim)            
-
-        datasetTot, geo_out = RC.clip_data(output_file_merged, latlim, lonlim)
+        datasetTot, geo_out = Merge_DEM_15s(output_folder_trash, output_file_merged,latlim, lonlim)            
 
     # name of the end result
     output_DEM_name = "%s_HydroShed_%s_%s.tif" %(para_name,unit,resolution)
@@ -204,10 +202,12 @@ def DownloadData(output_folder, latlim, lonlim, parameter, resolution):
     # Make geotiff file
     DC.Save_as_tiff(name=Save_name, data=datasetTot, geo=geo_out, projection="WGS84")
     os.chdir(output_folder)
+    
     # Delete the temporary folder
     shutil.rmtree(output_folder_trash)
 
 def Merge_DEM_15s(output_folder_trash,output_file_merged,latlim, lonlim):
+
     os.chdir(output_folder_trash)					
     tiff_files = glob.glob('*.tif') 
     resolution_geo = []
@@ -215,7 +215,13 @@ def Merge_DEM_15s(output_folder_trash,output_file_merged,latlim, lonlim):
     lonmax =  lonlim[1]
     latmin =  latlim[0]
     latmax =  latlim[1]
-    resolution_geo = 0.00416667						
+    resolution_geo = 0.00416667		
+
+    size_x_tot = int(np.round((lonmax-lonmin) / resolution_geo))      	
+    size_y_tot = int(np.round((latmax-latmin) / resolution_geo)) 
+
+    data_tot = np.ones([size_y_tot,size_x_tot]) * -9999.				
+
     for tiff_file in tiff_files:
         inFile=os.path.join(output_folder_trash,tiff_file)						
         geo, proj, size_X, size_Y = RC.Open_array_info(inFile)
@@ -227,39 +233,46 @@ def Merge_DEM_15s(output_folder_trash,output_file_merged,latlim, lonlim):
         latmax_one = geo[3]								
 																	
         if lonmin_one < lonmin:
-           lonmin = lonmin_one					
+           lonmin_clip = lonmin		
+        else:
+           lonmin_clip = lonmin_one	
+				
         if lonmax_one > lonmax:
-            lonmax = lonmax_one	
+            lonmax_clip = lonmax	
+        else:
+            lonmax_clip = lonmax_one
+           
         if latmin_one < latmin:
-            latmin = latmin_one	
+            latmin_clip = latmin
+        else:
+           latmin_clip = latmin_one	
+           
         if latmax_one > latmax:
-            latmax = latmax_one	
-         
-    size_x_merged = int((lonmax-lonmin) / resolution_geo)      	
-    size_y_merged = int((latmax-latmin) / resolution_geo) 
+            latmax_clip = latmax
+        else:
+           latmax_clip = latmax_one	    
 
-    data_merged = np.ones([size_y_merged,size_x_merged]) * -9999
-    for tiff_file in tiff_files:
+        size_x_clip = int(np.round((lonmax_clip-lonmin_clip) / resolution_geo))      	
+        size_y_clip = int(np.round((latmax_clip-latmin_clip) / resolution_geo)) 
+           
         inFile=os.path.join(output_folder_trash,tiff_file)						
         geo, proj, size_X, size_Y = RC.Open_array_info(inFile)
         Data = RC.Open_tiff_array(inFile)
-        lonmin_tiff = geo[0] 
+        lonmin_tiff = geo[0]
         latmax_tiff = geo[3] 
-        lon_tiff_position = int((lonmin_tiff - lonmin)/ resolution_geo)							
-        lat_tiff_position = int((latmax - latmax_tiff)/ resolution_geo)	
-        Data[Data<-9999] = -9999   
-        data_merged[lat_tiff_position:lat_tiff_position+size_Y,lon_tiff_position:lon_tiff_position+size_X][data_merged[lat_tiff_position:lat_tiff_position+size_Y,lon_tiff_position:lon_tiff_position+size_X]==-9999] = Data[data_merged[lat_tiff_position:lat_tiff_position+size_Y,lon_tiff_position:lon_tiff_position+size_X]==-9999]
-    try:   
-        geo_out = [lonmin, geo[1], 0.0, latmax, 0.0, geo[5]]
-        data_merged[data_merged<-9999] = -9999    							
-    except:
-        geo_out = [lonmin, resolution_geo, 0.0, latmax, 0.0, -1*resolution_geo]
-        proj = "WGS84"								
+        lon_tiff_position = int(np.round((lonmin_clip - lonmin_tiff)/ resolution_geo))							
+        lat_tiff_position = int(np.round((latmax_tiff - latmax_clip)/ resolution_geo))	
+        lon_data_tot_position = int(np.round((lonmin_clip - lonmin)/ resolution_geo))	
+        lat_data_tot_position = int(np.round((latmax - latmax_clip)/ resolution_geo))        
+        
+        Data[Data<-9999.] = -9999.   
+        data_tot[data_tot[lat_data_tot_position:lat_data_tot_position+size_y_clip,lon_data_tot_position:lon_data_tot_position+size_x_clip]==-9999] = Data[lat_tiff_position:lat_tiff_position+size_y_clip,lon_tiff_position:lon_tiff_position+size_x_clip][data_tot[lat_data_tot_position:lat_data_tot_position+size_y_clip,lon_data_tot_position:lon_data_tot_position+size_x_clip]==-9999]
+
+    geo_out = [lonmin, resolution_geo, 0.0, latmax, 0.0, -1 * resolution_geo] 
     geo_out = tuple(geo_out) 
-    data_merged[data_merged<-9999] = -9999     
-    DC.Save_as_tiff(name=output_file_merged, data=data_merged, geo=geo_out, projection=proj)
+    data_tot[data_tot<-9999.] = -9999.     
     	 			
-    return()								
+    return(data_tot, geo_out)								
 	
 def Merge_DEM(latlim, lonlim, nameResults, size_Y_tot, size_X_tot):
     """

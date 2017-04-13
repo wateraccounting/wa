@@ -94,7 +94,7 @@ def Calc_Rainy_Days(Dir_Basin, Data_Path_P, Startdate, Enddate):
             i += 1    
      
         # Define a rainy day
-        P_Daily[P_Daily > 0] = 1
+        P_Daily[P_Daily > 0.201] = 1
         P_Daily[P_Daily != 1] = 0
                
         # Sum the amount of rainy days       

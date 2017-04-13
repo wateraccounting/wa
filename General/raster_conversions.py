@@ -38,15 +38,50 @@ def Open_tiff_array(filename='', band=''):
         Data = f.GetRasterBand(band).ReadAsArray()				
     return(Data)
 
-def Open_nc_array(NC_filename,Var):
+
+def Open_nc_info(NC_filename):
+	
+    from netCDF4 import Dataset
+		
+    fh = Dataset(NC_filename, mode='r')
+    
+    Var = fh.variables.keys()[-1]
+    
+    data = fh.variables[Var][:]
+    
+    size_X, size_Y = np.int_(data.shape[-2:])
+    if len(data.shape) == 3:
+        size_Z = np.int_(data.shape[0])
+        Time = fh.variables['time'][:]
+    else:
+        size_Z = 1
+        Time = -9999
+    lats = fh.variables['lat'][:]
+    lons = fh.variables['lon'][:]
+    Geo1 = np.min(lats)				
+    Geo4 = np.max(lons)	
+    Geo2 = lats[0]-lats[1]
+    Geo6 = lons[0]-lons[1]
+    crso = fh.variables['crs']
+    proj = crso.projection
+    epsg = Get_epsg(proj, extension = 'GEOGCS')
+    geo_out = tuple([Geo1, Geo2, 0, Geo4, 0, Geo6])
+			
+    return(geo_out, epsg, size_X, size_Y, size_Z, Time)				
+				
+
+def Open_nc_array(NC_filename, Var = None):
 	
     from netCDF4 import Dataset
 				
     fh = Dataset(NC_filename, mode='r')
+    if Var == None:
+        Var = fh.variables.keys()[-1]
+        
     Data = fh.variables[Var][:]	
 				
     return(Data)				
-				
+			
 def clip_data(input_file, latlim, lonlim):
     """
     Clip the data to the defined extend of the user (latlim, lonlim) or to the
@@ -198,7 +233,7 @@ def reproject_MODIS(input_name, epsg_to):
 				
     return(name_out)  
 				
-def reproject_dataset_example(dataset, dataset_example,method=1):
+def reproject_dataset_example(dataset, dataset_example, method=1):
 
     # open dataset that must be transformed    
     g = gdal.Open(dataset)
@@ -235,13 +270,54 @@ def reproject_dataset_example(dataset, dataset_example,method=1):
     if method is 4:				
         gdal.ReprojectImage(g, dest1, wgs84.ExportToWkt(), osng.ExportToWkt(), gdal.GRA_Average)
     return(dest1)				
+
+def resize_array_example(Array_in, Array_example, method=1):
+
+    # Create old raster
+    Array_out_shape = np.int_(Array_in.shape)
+    Array_out_shape[-1] = Array_example.shape[-1]			
+    Array_out_shape[-2] = Array_example.shape[-2]
+
+    if method == 1:
+        interpolation_method='nearest'
+    if method == 2:
+        interpolation_method='bicubic'        
+    if method == 3:
+        interpolation_method='bilinear' 
+    if method == 4:
+        interpolation_method='cubic' 
+    if method == 5:
+        interpolation_method='lanczos' 
+        
+    if len(Array_out_shape) == 3:
+        Array_out = np.zeros(Array_out_shape)
+        
+        for i in range(0, Array_out_shape[0]):
+            Array_in_slice = Array_in[i,:,:]
+            size=tuple(Array_out_shape[1:])
+
+            Array_out_slice=scipy.misc.imresize(np.float_(Array_in_slice), size, interp=interpolation_method, mode='F')
+            Array_out[i,:,:] = Array_out_slice
+
+    elif len(Array_out_shape) == 2:
+
+        size=tuple(Array_out_shape)
+        Array_out=scipy.misc.imresize(np.float_(Array_in), size, interp=interpolation_method, mode='F')
+
+    else:
+        print('only 2D or 3D dimensions are supported')
+
+    return(Array_out)				
 				
-def Get_epsg(g):				
+def Get_epsg(g, extension = 'tiff'):				
 			
     try:
-        # Get info of the dataset that is used for transforming     
-        g_proj = g.GetProjection()
-        Projection=g_proj.split('EPSG","')
+        if extension == 'tiff':
+            # Get info of the dataset that is used for transforming     
+            g_proj = g.GetProjection()
+            Projection=g_proj.split('EPSG","')
+        if extension == 'GEOGCS':
+            Projection = g
         epsg_to=int((str(Projection[-1]).split(']')[0])[0:-1])				      
     except:
        epsg_to=4326	

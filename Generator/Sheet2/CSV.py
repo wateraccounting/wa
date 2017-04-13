@@ -195,7 +195,7 @@ def Create(Dir_Basin, Simulation, Basin, Startdate, Enddate, Name_NC_LU, DataCub
     for Date in Dates:
         
         # Create csv-file.
-        csv_filename = os.path.join(Data_Path_CSV, 'Sim%d_%s_%d_%02d.csv' %(Simulation, Basin, Date.year, Date.month))
+        csv_filename = os.path.join(Data_Path_CSV, 'Sheet2_Sim%d_%s_%d_%02d.csv' %(Simulation, Basin, Date.year, Date.month))
         csv_file = open(csv_filename, 'wb')
         writer = csv.writer(csv_file, delimiter=';')
         writer.writerow(first_row)

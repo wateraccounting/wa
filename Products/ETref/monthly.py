@@ -65,7 +65,7 @@ def main(Dir, Startdate = '', Enddate = '',
        
         for Day in Days[:-1]: 
             output_folder_day=os.path.join(Dir,'ETref','Daily')
-            DirDay=output_folder_day + '\ETref_mm-day_' + Date.strftime('%Y.%m.%d') + '.tif'
+            DirDay=output_folder_day + '\ETref_mm-day-1_daily_' + Date.strftime('%Y.%m.%d') + '.tif'
 
             dataDay=gdal.Open(DirDay)
             Dval=dataDay.GetRasterBand(1).ReadAsArray().astype(np.float32)    
@@ -77,7 +77,7 @@ def main(Dir, Startdate = '', Enddate = '',
         output_folder_month=os.path.join(Dir,'ETref','Monthly')
         if os.path.exists(output_folder_month)==False:       
             os.makedirs(output_folder_month)
-        DirMonth=os.path.join(output_folder_month,'ETref_mm-month_'+Date.strftime('%Y.%m.%d') + '.tif')
+        DirMonth=os.path.join(output_folder_month,'ETref_mm-month-1_monthly_'+Date.strftime('%Y.%m.%d') + '.tif')
        
         # Create the tiff file
         DC.Save_as_tiff(DirMonth,dataMonth, geo_ET, proj)

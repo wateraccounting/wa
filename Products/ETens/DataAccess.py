@@ -57,7 +57,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
     for Date in Dates:
 
         # Define the output name and folder
-        file_name = 'ET_ETensemble250m_mm-month_%d.%02d.01.tif' %(Date.year,Date.month)
+        file_name = 'ET_ETensemble250m_mm-month-1_monthly_%d.%02d.01.tif' %(Date.year,Date.month)
         output_file = os.path.join(output_folder, file_name)    
 
         # If output file not exists create this 

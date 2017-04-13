@@ -18,13 +18,14 @@ def main(Dir, latlim, lonlim, resolution = '3s'):
     """
     Downloads HydroSHED flow direction data from http://www.hydrosheds.org/download/
 
-    this data includes a Digital Elevation Model (DEM)
-    The spatial resolution is 90m
+    this data includes a Digital Elevation Model Flow Direction 
+    The spatial resolution is 90m (3s) or 450m (15s)
 
     The following keyword arguments are needed:
     Dir -- 'C:/file/to/path/'    
-    latlim -- [ymin, ymax] (values must be between -50 and 50)
-    lonlim -- [xmin, xmax] (values must be between -180 and 180)
+    latlim -- [ymin, ymax]
+    lonlim -- [xmin, xmax]
+    resolution -- '3s' (default) or '15s'
     """
 
     # Create directory if not exists for the output

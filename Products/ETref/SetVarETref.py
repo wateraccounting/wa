@@ -131,7 +131,7 @@ def ETref(Date, args):
         os.makedirs(output_folder)    
 
     # Create the output names        
-    NameETref='ETref_mm-day_'+Date.strftime('%Y.%m.%d') + '.tif'    
+    NameETref='ETref_mm-day-1_daily_'+Date.strftime('%Y.%m.%d') + '.tif'    
     NameEnd=os.path.join(output_folder,NameETref)
      
     # Collect geotiff information 					

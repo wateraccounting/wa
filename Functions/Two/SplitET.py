@@ -66,6 +66,7 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
     lulc_dict = GD.get_lulcs().keys()
     mask=np.logical_or.reduce([LU == value for value in lulc_dict[:-1]])    
     mask3d = mask * np.ones(len(Dates))[:,None,None]
+    mask3d_neg = (mask3d-1) * 9999          
     
     # Extract Evapotranspiration data from NetCDF file
     ET = RC.Open_nc_array(Name_NC_ET, Var = 'ET')
@@ -117,14 +118,15 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
     t = np.array([])
 
     # Change zero values in RD so we do not get errors
-    RD[RD==0] = 0.1
-
+    RD[RD==0] = 0.001
+    LAI[LAI==0] = 0.001
+    LAI[np.isnan(LAI)] = 0.1
+       
     # Calculate I
     I = LAI * (1 - np.power(1 + (P/RD) * (1 - np.exp(-0.5 * LAI)) * (1/LAI),-1)) * RD      
           
     # Set boundary
-    I[LAI == 0] = 0.
-    I[RD == 0] = 0.    
+    I[np.isnan(LAI)] = np.nan
      
     # Calculate T
     T = np.minimum((NDM/NDMmax_months),np.ones(np.shape(NDM))) * 0.95 * (ET - I)
@@ -133,7 +135,10 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
     ET = ET * mask3d
     T = T * mask3d
     I = I * mask3d
- 
+    ET[mask3d_neg<-1] = np.nan
+    T[mask3d_neg<-1] = np.nan    
+    I[mask3d_neg<-1] = np.nan
+      
     # Calculate E
     E = ET - T - I
     
@@ -151,7 +156,7 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
     ax.set_title('Average ET and E, T and I fractions')
     ax.set_ylabel('ET [mm/month]')
     ax.patch.set_visible(True)
-    ax.fill_between(Dates, et, color = '#a3db76', label = 'Evaporation')
+    ax.fill_between(Dates, et, color = '#a3db76', label = 'Evapotranspiration')
     ax.fill_between(Dates, i + t , color = '#6bb8cc', label = 'Transpiration')
     ax.fill_between(Dates, i , color = '#497e7c', label = 'Interception')
     ax.scatter(Dates, et, color = 'k')

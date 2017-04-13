@@ -13,6 +13,41 @@ import subprocess
 import pandas as pd
 import numpy as np
 
+def Convert_nc_to_tiff(input_nc, output_folder):
+    """
+    This function converts the nc file into tiff files
+
+    Keyword Arguments:
+    input_nc -- name, name of the adf file
+    output_folder -- Name of the output tiff file
+    """
+    from datetime import date
+    import wa.General.raster_conversions as RC
+    
+    All_Data= RC.Open_nc_array(input_nc)
+    geo_out, epsg, size_X, size_Y, size_Z, Time = RC.Open_nc_info(input_nc)  
+    
+    if epsg == '4326':
+        epsg = 'WGS84'
+    
+    for i in range(0,size_Z):
+        if not Time is -9999:
+            time_one = Time[i]
+            d = date.fromordinal(time_one)
+            name = os.path.splitext(os.path.basename(input_nc))[0]
+            nameparts = name.split('_')[0:-2]
+            name_out = os.path.join(output_folder, '_'.join(nameparts) + '_%d.%02d.%02d.tif' %(d.year, d.month, d.day))
+        else:
+            name=os.path.splitext(os.path.basename(input_nc))[0]
+            name_out = os.path.join(output_folder, name + '.tif')
+   
+
+        Data_one = All_Data[i,:,:]
+        Save_as_tiff(name_out, Data_one, geo_out, epsg)
+    
+    return()
+
+
 def Convert_grb2_to_nc(input_wgrib, output_nc, band):
 	
     # Get environmental variable
@@ -172,6 +207,7 @@ def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Endda
         crso = nco.createVariable('crs', 'i4')
         crso.long_name = 'Lon/Lat Coords in WGS84'
         crso.grid_mapping_name = 'latitude_longitude'
+        crso.projection = proj       
         crso.longitude_of_prime_meridian = 0.0
         crso.semi_major_axis = 6378137.0
         crso.inverse_flattening = 298.257223563
@@ -215,3 +251,6 @@ def Create_NC_name(Var, Simulation, Dir_Basin, info = ''):
 				
     return(nameTot)
 			
+
+
+    

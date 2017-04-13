@@ -18,13 +18,13 @@ def Channel_Routing(Name_NC_DEM_Dir, Name_NC_Runoff, Name_NC_Basin, Reference_da
     time1 = time.time()
 
     # Extract runoff data from NetCDF file
-    Runoff = RC.Open_nc_array(Name_NC_Runoff, Var = 'Runoff')
+    Runoff = RC.Open_nc_array(Name_NC_Runoff)
 
     # Extract flow direction data from NetCDF file
-    flow_directions = RC.Open_nc_array(Name_NC_DEM_Dir, Var = 'DEM_Dir')
+    flow_directions = RC.Open_nc_array(Name_NC_DEM_Dir)
     
     # Extract basin data from NetCDF file	
-    Basin = RC.Open_nc_array(Name_NC_Basin, Var = 'Basin')	 				
+    Basin = RC.Open_nc_array(Name_NC_Basin)	 				
 			
     if Degrees != 0:
 	   
@@ -97,19 +97,19 @@ def Create_dict_rivers(Name_NC_DEM, Name_NC_DEM_Dir, Name_NC_Acc_Pixels, Name_NC
     ############################### Open needed dataset ###########################
     
     # Extract discharge data from NetCDF file
-    Routed_Discharge = RC.Open_nc_array(Name_NC_Routed_Discharge, Var = 'Routed_Discharge')
+    Routed_Discharge = RC.Open_nc_array(Name_NC_Routed_Discharge)
     
     # Extract flow direction data from NetCDF file
-    flow_directions = RC.Open_nc_array(Name_NC_DEM_Dir, Var = 'DEM_Dir')
+    flow_directions = RC.Open_nc_array(Name_NC_DEM_Dir)
      
     # Extract Rivers data from NetCDF file
-    Rivers = RC.Open_nc_array(Name_NC_Rivers, Var = 'Rivers')
+    Rivers = RC.Open_nc_array(Name_NC_Rivers)
 
     # Extract DEM data from NetCDF file
-    DEM = RC.Open_nc_array(Name_NC_DEM, Var = 'DEM') 
+    DEM = RC.Open_nc_array(Name_NC_DEM) 
 
     # Extract Accumulated pixels data from NetCDF file
-    Accumulated_Pixels = RC.Open_nc_array(Name_NC_Acc_Pixels, Var = 'Acc_Pixels') 
+    Accumulated_Pixels = RC.Open_nc_array(Name_NC_Acc_Pixels) 
 			
     ############################### Create river tree #############################
         
@@ -183,7 +183,7 @@ def Create_dict_rivers(Name_NC_DEM, Name_NC_DEM_Dir, Name_NC_Acc_Pixels, Name_NC
     ######################## Define the starting point ############################
     
     # Define starting point
-    Max_Acc_Pix = np.nanmax(Accumulated_Pixels)
+    Max_Acc_Pix = np.nanmax(Accumulated_Pixels[ID_Matrix_bound[1:-1,1:-1]>0])
     ncol, nrow = np.argwhere(Accumulated_Pixels==Max_Acc_Pix)[0]  				
 
     # Add Bounds				
