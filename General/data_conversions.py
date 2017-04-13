@@ -27,7 +27,7 @@ def Convert_nc_to_tiff(input_nc, output_folder):
     All_Data= RC.Open_nc_array(input_nc)
     geo_out, epsg, size_X, size_Y, size_Z, Time = RC.Open_nc_info(input_nc)  
     
-    if epsg == '4326':
+    if epsg == 4326:
         epsg = 'WGS84'
     
     for i in range(0,size_Z):
