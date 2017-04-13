@@ -58,10 +58,10 @@ def Open_nc_info(NC_filename):
         Time = -9999
     lats = fh.variables['lat'][:]
     lons = fh.variables['lon'][:]
-    Geo1 = np.min(lats)				
-    Geo4 = np.max(lons)	
-    Geo2 = lats[0]-lats[1]
-    Geo6 = lons[0]-lons[1]
+    Geo4 = np.max(lats)				
+    Geo1 = np.min(lons)	
+    Geo6 = lats[1]-lats[0]
+    Geo2 = lons[1]-lons[0]
     crso = fh.variables['crs']
     proj = crso.projection
     epsg = Get_epsg(proj, extension = 'GEOGCS')
