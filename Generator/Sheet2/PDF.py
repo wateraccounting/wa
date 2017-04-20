@@ -43,8 +43,8 @@ def Create(Dir_Basin, Basin, Simulation, Dir_Basin_CSV):
         # split the name
         FileName_Splitted = File.split('_')
         
-        # If the splitted parts are 3 then it is a yearly sheet
-        if len(FileName_Splitted)==3:
+        # If the splitted parts are 4 then it is a yearly sheet
+        if len(FileName_Splitted)==4:
             # Define the output names
             units = 'km3/year'
             Year = str(FileName_Splitted[-1].split('.')[0])
@@ -53,8 +53,8 @@ def Create(Dir_Basin, Basin, Simulation, Dir_Basin_CSV):
             # create the sheet
             create_sheet2(basin=Basin, period = Year, units = units, data = os.path.join(Dir_Basin_CSV,File) , output = os.path.join(Dir_Basin_PDF, outFile),template=False, tolerance=1000)
  
-        # If the splitted parts are 4 then it is a monthly sheet
-        elif len(FileName_Splitted)==4:
+        # If the splitted parts are 5 then it is a monthly sheet
+        elif len(FileName_Splitted)==5:
             # Define the output names            
             MonthInLetters = {1:'January',2:'February',3:'March',4:'April',5:'May',6:'June',7:'July',8:'August',9:'September',10:'October',11:'November',12:'December'}
             units = 'km3/month'

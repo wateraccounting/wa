@@ -97,7 +97,7 @@ def NPP_GPP_Based(Dir_Basin, Data_Path_GPP, Data_Path_NPP, Startdate, Enddate):
         NDV = dest.GetRasterBand(1).GetNoDataValue()
         
         # Create a empty numpy array
-        Yearly_GPP = np.zeros([size_X, size_Y]) 
+        Yearly_GPP = np.zeros([size_Y, size_X]) 
         
         # Calculte the total yearly GPP
         for monthly_GPP_File in monthly_GPP_Files:
@@ -118,7 +118,7 @@ def NPP_GPP_Based(Dir_Basin, Data_Path_GPP, Data_Path_NPP, Startdate, Enddate):
             if Date.year == year:
                 
                 # Create empty GPP array
-                monthly_GPP = np.ones([size_X, size_Y]) * np.nan
+                monthly_GPP = np.ones([size_Y, size_X]) * np.nan
                 
                 # Get current month
                 month = Date.month
