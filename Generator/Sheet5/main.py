@@ -7,6 +7,7 @@ Created on Thu Jan 19 10:07:52 2017
 import os
 import gdal
 import numpy as np
+import pandas as pd
 
 from wa.General import raster_conversions as RC
 from wa.General import data_conversions as DC
@@ -18,8 +19,8 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Simulation):
     ######################### Set General Parameters ##############################
 
     # Get environmental variable for the Home folder
-    SEBAL_env_paths = os.environ["WA_HOME"].split(';')
-    Dir_Home = SEBAL_env_paths[0]
+    WA_env_paths = os.environ["WA_HOME"].split(';')
+    Dir_Home = WA_env_paths[0]
 	
     # Create the Basin folder
     Dir_Basin = os.path.join(Dir_Home, Basin)
@@ -40,8 +41,11 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Simulation):
     Data_Path_P = Start.Download_Data.Precipitation(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, P_Product) 
     Data_Path_ET = Start.Download_Data.Evapotranspiration(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, ET_Product)
     Data_Path_DEM = Start.Download_Data.DEM(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Resolution) 
+    if Resolution is not '3s':
+        Data_Path_DEM = Start.Download_Data.DEM(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Resolution) 
     Data_Path_DEM_Dir = Start.Download_Data.DEM_Dir(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Resolution) 
     Data_Path_ETref = Start.Download_Data.ETreference(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate) 
+    Data_Path_JRC_occurrence = Start.Download_Data.JRC_occurrence(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']]) 
 
     ###################### Save Data as netCDF files ##############################
 
@@ -110,7 +114,7 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Simulation):
     destLU = RC.reproject_dataset_example(LU_dataset, Example_dataset, method=1)
     DataCube_LU_CR = destLU.GetRasterBand(1).ReadAsArray() 	   
     
-    Raster_Basin_CR = np.zeros([Xsize_CR, Ysize_CR])
+    Raster_Basin_CR = np.zeros([Ysize_CR, Xsize_CR])
     Raster_Basin_CR[DataCube_LU_CR > 0] = 1
     Name_NC_Basin_CR = DC.Create_NC_name('Basin_CR', Simulation, Dir_Basin)
     if not os.path.exists(Name_NC_Basin_CR):
@@ -134,7 +138,27 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Simulation):
         DataCube_Runoff_CR = Five.Budyko.Calc_runoff(Name_NC_ETref_CR, Name_NC_Prec_CR)
         DC.Save_as_NC(Name_NC_Runoff_CR, DataCube_Runoff_CR, 'Runoff_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
         del DataCube_Runoff_CR
+        
+    '''  
+    ###################### Calculate Runoff with P min ET ###########################
+  
+    Name_NC_Runoff_CR = DC.Create_NC_name('Runoff_CR', Simulation, Dir_Basin, info)
+    if not os.path.exists(Name_NC_Runoff_CR):
 
+        ET = RC.Open_nc_array(Name_NC_ET_CR)
+        P = RC.Open_nc_array(Name_NC_Prec_CR) 
+        DataCube_Runoff_CR = P - ET
+        DataCube_Runoff_CR[:,:,:][DataCube_Runoff_CR<=0.1] = 0
+        DataCube_Runoff_CR[:,:,:][np.isnan(DataCube_Runoff_CR)] = 0                          
+        DC.Save_as_NC(Name_NC_Runoff_CR, DataCube_Runoff_CR, 'Runoff_CR', Example_dataset, Startdate, Enddate, 'monthly')
+        del DataCube_Runoff_CR
+
+     '''      
+    ############### Add inflow in basin by using textfile #########################       
+    
+    # tekst file in cubic meter per second dan reken ik het zelf om naar mm voor die ene pixel
+    # Deze pixel wordt later weer meegenomen in de channel routing
+    
     ######################### Apply Channel Routing ###############################
 
     info = ['monthly','pixels', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
@@ -149,7 +173,7 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Simulation):
         DC.Save_as_NC(Name_NC_Acc_Pixels_CR, Accumulated_Pixels_CR, 'Acc_Pixels_CR', Example_dataset)
         DC.Save_as_NC(Name_NC_Routed_Discharge_CR, Routed_Discharge_CR, 'Routed_Discharge_CR', Example_dataset, Startdate, Enddate, 'monthly')
 
-    #################### Calculate the river and river zones ######################
+    ################# Calculate the natural river and river zones #################
     
     Name_NC_Rivers_CR = DC.Create_NC_name('Rivers_CR', Simulation, Dir_Basin, info)
     if not os.path.exists(Name_NC_Rivers_CR):
@@ -169,6 +193,47 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Simulation):
 
         # Save the river file as netcdf file
         DC.Save_as_NC(Name_NC_Rivers_CR, Rivers, 'Rivers_CR', Example_dataset)
+
+    ########################## Create river directories ###########################  
+
+    Amount_months = len(pd.date_range(Startdate,Enddate,freq='MS'))
+    Amount_months_reservoirs = Amount_months + 1
+
+    # Get river and DEM dict
+    River_dict, DEM_dict, Distance_dict = Five.Create_Dict.Rivers_General(Name_NC_DEM_CR, Name_NC_DEM_Dir_CR, Name_NC_Acc_Pixels_CR, Name_NC_Rivers_CR, Example_dataset)
+
+    # Get discharge dict
+    Discharge_dict = Five.Create_Dict.Discharge(Name_NC_Routed_Discharge_CR, River_dict, Amount_months, Example_dataset)
+
+    ###################### Calculate surface water storage characteristics ######################  
+      
+    # define input tiffs for surface water calculations 
+    input_JRC = os.path.join(Dir_Basin, Data_Path_JRC_occurrence, 'JRC_Occurrence_percent.tif')
+    DEM_dataset = os.path.join(Dir_Basin, Data_Path_DEM, 'DEM_HydroShed_m_3s.tif')
+    
+    sensitivity = 700 # 900 is less sensitive 1 is very sensitive
+    Regions = Five.Reservoirs.Calc_Regions(Name_NC_Basin_CR, input_JRC, sensitivity, Boundaries)
+    
+    Diff_Water_Volume = np.zeros([len(Regions), Amount_months_reservoirs -1, 3])
+    reservoir=0
+    
+    for region in Regions:
+
+        popt = Five.Reservoirs.Find_Area_Volume_Relation(region, input_JRC, DEM_dataset)
+
+        Area_Reservoir_Values = Five.Reservoirs.GEE_calc_reservoir_area(region, Startdate, Enddate)
+        
+        Diff_Water_Volume[reservoir,:,:] = Five.Reservoirs.Calc_Diff_Storage(Area_Reservoir_Values, popt)
+        reservoir+=1
+
+    ################# Add storage reservoirs and change outflows ##################
+
+    Discharge_dict, River_dict = Five.Reservoirs.Add_Reservoirs(Name_NC_Rivers_CR, Name_NC_Acc_Pixels_CR, Diff_Water_Volume, River_dict, Discharge_dict, Regions, Example_dataset)       
+     
+    # Create array again
+
+
+
 
     ################################# Plot graph ##################################
 

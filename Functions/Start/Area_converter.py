@@ -18,42 +18,46 @@ def Degrees_to_m2(Reference_data):
 
     Parameters
     ----------
-    Reference_data : str
+    Reference_data: str
         Path to a tiff file of which the pixel area must be defined
         
     Returns
     -------
-    area_in_m2 : array
+    area_in_m2: array
         Array containing the area of each pixel in squared meters
 
     """ 
+    # Get raster information 
+    geo_out, proj, size_X, size_Y = RC.Open_array_info(Reference_data)	
+    
     # Calculate the difference in latitude and longitude in meters
-    dlat, dlon = Calc_dlat_dlon(Reference_data)  
+    dlat, dlon = Calc_dlat_dlon(geo_out, size_X, size_Y)  
 
     # Calculate the area in squared meters
     area_in_m2 =  dlat * dlon
 
     return(area_in_m2)
 
-def Calc_dlat_dlon(Reference_data):
+def Calc_dlat_dlon(geo_out, size_X, size_Y):
     """
     This functions calculated the distance between each pixel in meter.
 
     Parameters
     ----------
-    Reference_data : str
-        Path to a tiff file of which the pixel area must be defined
-        
+    geo_out: array
+        geo transform function of the array
+    size_X: int
+        size of the X axis
+    size_Y: int
+        size of the Y axis
+                 
     Returns
     -------
-    dlat : array
+    dlat: array
         Array containing the vertical distance between each pixel in meters
-    dlon : array
+    dlon: array
         Array containing the horizontal distance between each pixel in meters
     """ 
- 
-    # Get raster information 			
-    geo_out, proj, size_X, size_Y = RC.Open_array_info(Reference_data)				
 
     # Create the lat/lon rasters				
     lon = np.arange(size_X + 1)*geo_out[1]+geo_out[0] - 0.5 * geo_out[1]

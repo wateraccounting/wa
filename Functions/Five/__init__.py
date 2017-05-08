@@ -15,8 +15,8 @@ This data is used within a water accounting framework.
 """
 
 
-from wa.Functions.Five import Channel_Routing, Budyko
+from wa.Functions.Five import Channel_Routing, Budyko, Create_Dict, Reservoirs
 
-__all__ = ['Channel_Routing', 'Budyko']
+__all__ = ['Channel_Routing', 'Budyko', 'Create_Dict', 'Reservoirs']
 
 __version__ = '0.1'

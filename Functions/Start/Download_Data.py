@@ -374,7 +374,36 @@ def DEM_Dir(Dir, latlim, lonlim, Resolution):
     Data_Path = os.path.join('HydroSHED','DIR')		
 				
     return(Data_Path)		
-				
+    
+def JRC_occurrence(Dir, latlim, lonlim):
+    """
+    This functions check the water occurrence file from JRC that needs to be downloaded, and send the request to the collect functions.
+
+    Parameters
+    ----------
+    Dir : str
+        Path to all the output data of the Basin
+    latlim : array
+        Array containing the latitude limits [latmin, latmax]
+    lonlim : array
+        Array containing the longitude limits [lonmin, lonmax]
+        
+    Returns
+    -------
+    Data_Path : str
+        Path from the Dir to the downloaded data
+
+    """     
+    from wa.Collect import JRC
+    
+    # download data between startdate and enddate    
+    JRC.Occurrence(Dir, latlim, lonlim)
+    
+    # Define data path         
+    Data_Path = os.path.join('JRC','Occurrence')	
+					
+    return(Data_Path)			
+			
 def ETreference(Dir, latlim, lonlim, Startdate, Enddate):
     """
     This functions check the ET reference files that needs to be downloaded, and send the request to the product functions.

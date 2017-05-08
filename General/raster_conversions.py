@@ -92,23 +92,25 @@ def clip_data(input_file, latlim, lonlim):
     latlim -- [ymin, ymax]
     lonlim -- [xmin, xmax]
     """
-				
-    if input_file.split('.')[-1] == 'tif':
-        dest_in = gdal.Open(input_file)               					
-    else:
+    try:			
+        if input_file.split('.')[-1] == 'tif':
+            dest_in = gdal.Open(input_file)               					
+        else:
+            dest_in = input_file
+    except:
         dest_in = input_file
-	
+    
     # Open Array
     data_in = dest_in.GetRasterBand(1).ReadAsArray()	
 
     # Define the array that must remain
     Geo_in = dest_in.GetGeoTransform()
     Geo_in = list(Geo_in)			
-    Start_x = np.max([int(round(((lonlim[0] - Geo_in[1]) - Geo_in[0])/ Geo_in[1])),0])   				
-    End_x = np.min([int(round(((lonlim[1] + Geo_in[1]) - Geo_in[0])/ Geo_in[1])),int(dest_in.RasterXSize)])				
+    Start_x = np.max([int(np.ceil(((lonlim[0]) - Geo_in[0])/ Geo_in[1])),0])   				
+    End_x = np.min([int(np.floor(((lonlim[1]) - Geo_in[0])/ Geo_in[1])),int(dest_in.RasterXSize)])				
 				
-    Start_y = np.max([int(round((Geo_in[3] - (latlim[1] - Geo_in[5]))/ -Geo_in[5])),0])
-    End_y = np.min([int(round(((latlim[0] + Geo_in[5]) - Geo_in[3])/ Geo_in[5])), int(dest_in.RasterYSize)])	
+    Start_y = np.max([int(np.ceil((Geo_in[3] - latlim[1])/ -Geo_in[5])),0])
+    End_y = np.min([int(np.floor(((latlim[0]) - Geo_in[3])/Geo_in[5])), int(dest_in.RasterYSize)])	
 
     #Create new GeoTransform
     Geo_in[0] = Geo_in[0] + Start_x * Geo_in[1]
@@ -118,7 +120,8 @@ def clip_data(input_file, latlim, lonlim):
     data = np.zeros([End_y - Start_y, End_x - Start_x])				
 
     data = data_in[Start_y:End_y,Start_x:End_x] 
-
+    dest_in = None
+    
     return(data, Geo_out)
 				
 				
@@ -235,12 +238,24 @@ def reproject_MODIS(input_name, epsg_to):
 				
 def reproject_dataset_example(dataset, dataset_example, method=1):
 
-    # open dataset that must be transformed    
-    g = gdal.Open(dataset)
+    # open dataset that must be transformed 
+    try:
+        if dataset.split('.')[-1] == 'tif':
+            g = gdal.Open(dataset)               					
+        else:
+            g = dataset    
+    except:
+            g = dataset            
     epsg_from = Get_epsg(g)	   
 
     # open dataset that is used for transforming the dataset
-    gland=gdal.Open(dataset_example) 
+    try:
+        if dataset_example.split('.')[-1] == 'tif':
+            gland = gdal.Open(dataset_example)               					
+        else:
+            gland = dataset_example      
+    except:
+            gland = dataset_example              
     epsg_to = Get_epsg(gland)	
 
     # Set the EPSG codes

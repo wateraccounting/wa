@@ -141,6 +141,31 @@ def Save_as_tiff(name='', data='', geo='', projection=''):
     dst_ds.GetRasterBand(1).WriteArray(data)
     dst_ds = None
     return()						
+
+def Save_as_MEM(data='', geo='', projection=''):
+    """
+    This function save the array as a memory file
+
+    Keyword arguments:
+    data -- [array], dataset of the geotiff
+    geo -- [minimum lon, pixelsize, rotation, maximum lat, rotation,
+            pixelsize], (geospatial dataset)
+    projection -- interger, the EPSG code
+    """
+    # save as a geotiff
+    driver = gdal.GetDriverByName("MEM")
+    dst_ds = driver.Create('', int(data.shape[1]), int(data.shape[0]), 1,
+                           gdal.GDT_Float32, ['COMPRESS=LZW'])
+    srse = osr.SpatialReference()
+    if projection == '':
+        srse.SetWellKnownGeogCS("WGS84")
+    else:	
+        srse.SetWellKnownGeogCS(projection)
+    dst_ds.SetProjection(srse.ExportToWkt())
+    dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
+    dst_ds.SetGeoTransform(geo)
+    dst_ds.GetRasterBand(1).WriteArray(data)
+    return(dst_ds)		
 				
 def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Enddate = '', Time_steps = '', Scaling_factor = 1):
     """

@@ -108,11 +108,11 @@ def DownloadData(output_folder, latlim, lonlim, parameter, resolution):
         except:
 									
             if resolution == '3s':									
-                # If tile not excist create a replacing zero tile (sea tiles)
+                # If tile not exist create a replacing zero tile (sea tiles)
                 output = nameFile.split('.')[0] + "_trans_temporary.tif"
                 output_tiff = os.path.join(output_folder_trash, output)
                 file_name = nameFile
-                data = np.zeros((6000, 6000))
+                data = np.ones((6000, 6000)) * -9999
                 data = data.astype(np.float32)
             
                 # Create the latitude bound             												
@@ -173,8 +173,12 @@ def DownloadData(output_folder, latlim, lonlim, parameter, resolution):
                           projection="WGS84")
 
     if resolution =='3s':
-        size_X_end = int(size_X_tot/len(rangeLat)) 
-        size_Y_end = int(size_Y_tot/len(rangeLon)) 
+        size_X_end = int(size_X_tot) #!
+        size_Y_end = int(size_Y_tot) #!
+			
+	
+        #size_X_end = int(size_X_tot/len(rangeLat)) #!
+        #size_Y_end = int(size_Y_tot/len(rangeLon)) #!
 		
         # Define the georeference of the end matrix			
         geo_out = [Geo_x_end, Geo_data[1], 0, Geo_y_end, 0, Geo_data[5]]
@@ -287,7 +291,7 @@ def Merge_DEM(latlim, lonlim, nameResults, size_Y_tot, size_X_tot):
     size_X_tot -- integer, the length of the merged array
     """
     # Define total size of end dataset and create zero array
-    datasetTot = np.zeros([size_Y_tot, size_X_tot])
+    datasetTot = np.ones([size_Y_tot, size_X_tot])*-9999.
 				
     # Put all the files in the datasetTot (1 by 1)			
     for nameTot in nameResults:
