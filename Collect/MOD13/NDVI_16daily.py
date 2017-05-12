@@ -2,7 +2,7 @@ import sys
 from DataAccess import DownloadData
 
 
-def main(Dir, Startdate, Enddate, latlim, lonlim, cores=False):
+def main(Dir, Startdate, Enddate, latlim, lonlim, cores=False, Waitbar = 1):
     """
     This function downloads MOD13 16-daily data for the specified time
     interval, and spatial extent.
@@ -13,9 +13,11 @@ def main(Dir, Startdate, Enddate, latlim, lonlim, cores=False):
     Enddate -- 'yyyy-mm-dd'
     latlim -- [ymin, ymax]
     lonlim -- [xmin, xmax]
-	cores -- amount of cores used
+	 cores -- amount of cores used
+    Waitbar -- 1 (Default) will print a waitbar 
     """
-    DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores)
+    print '\nDownload 16-daily MODIS NDVI data for period %s till %s' %(Startdate, Enddate)
+    DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores)
 
 if __name__ == '__main__':
     main(sys.argv)

@@ -15,8 +15,7 @@ import pandas as pd
 from wa.Collect.CFSR.DataAccess_CFSR import CollectData
 
 
-def main(Dir, Vars, Startdate='', Enddate='',
-         latlim=[-90, 90], lonlim=[-180, 180], cores=False):
+def main(Dir, Vars, Startdate='', Enddate='', latlim=[-90, 90], lonlim=[-180, 180], cores=False, Waitbar = 1):
     """
     This function downloads daily CFSR data
 
@@ -30,7 +29,9 @@ def main(Dir, Vars, Startdate='', Enddate='',
     cores -- The number of cores used to run the routine.
              It can be 'False' to avoid using parallel computing
 			routines.
+    Waitbar = 1 if you want a waitbar
     """
+    
     # Define startdate and enddate
     if not Startdate:
         Startdate = pd.Timestamp('1979-01-01')
@@ -39,7 +40,10 @@ def main(Dir, Vars, Startdate='', Enddate='',
 
     # Loops over the wanted variables
     for Var in Vars:
-       	
+
+        if Waitbar == 1:
+            print '\nDownload daily CFSR %s data for the period %s till %s' %(Var, Startdate, Enddate)     
+        
         # Defines all the dates that will be calculated								
         Dates = pd.date_range(Startdate,Enddate,freq = 'D') 							
 
@@ -47,7 +51,7 @@ def main(Dir, Vars, Startdate='', Enddate='',
         if Dates[0]<pd.Timestamp(pd.datetime(2011, 4, 1)) and Dates[-1]<pd.Timestamp(pd.datetime(2011, 4, 1)):								
  
             # download CFSR data       
-            CollectData(Dir, Var, Startdate,Enddate,latlim,lonlim, cores, 1)
+            CollectData(Dir, Var, Startdate,Enddate,latlim,lonlim, Waitbar, cores, 1)
 
 		# If dates are older than April 2011 than download CFSR, for the other dates CFSRv2		 
         if Dates[0]<pd.Timestamp(pd.datetime(2011, 4, 1)) and Dates[-1]>=pd.Timestamp(pd.datetime(2011, 4, 1)):
@@ -57,16 +61,16 @@ def main(Dir, Vars, Startdate='', Enddate='',
             StartdateCFSRv2=pd.Timestamp(pd.datetime(2011, 4, 1))
                 
             # download CFSR data
-            CollectData(Dir, Var, Startdate,EnddateCFSR,latlim,lonlim, cores, 1)
+            CollectData(Dir, Var, Startdate,EnddateCFSR,latlim,lonlim, Waitbar, cores, 1)
             
             # download CFSRv2 data
-            CollectData(Dir, Var, StartdateCFSRv2,Enddate,latlim,lonlim, cores, 2)												
+            CollectData(Dir, Var, StartdateCFSRv2,Enddate,latlim,lonlim, Waitbar, cores, 2)												
 
 		# If dates are younger than April 2011 than download CFSRv2	      
         if Dates[0] >= pd.Timestamp(pd.datetime(2011, 4, 1)): 
-  
+            
             # download CFSRv2 data
-            CollectData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores, 2)												
+            CollectData(Dir, Var, Startdate, Enddate, latlim, lonlim, Waitbar, cores, 2)												
        
 if __name__ == '__main__':
     main(sys.argv)

@@ -23,7 +23,7 @@ Dir = 'C:\Test'
 latlim = [30.1, 50.1]
 lonlim = [-20.1, 20.1]
 '''
-def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
+def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, Waitbar, cores,
                  TimeCase, CaseParameters):    
     """
     This function downloads ECMWF six-hourly, daily or monthly data
@@ -92,8 +92,10 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
     string9 = 'ei' 				
     string10 = '%s/%s/%s/%s' %(latlim_corr[1], lonlim_corr[0], latlim_corr[0], lonlim_corr[1])   #N, W, S, E
     	
+                              
     # Download data by using the ECMWF API
     import wa.Collect.ECMWF.ECMWFdownload as Download	
+    print 'Use API ECMWF to collect the data, please wait'
     Download.API(Dir, DownloadType, string1, string2, string3, string4, string5, string6, string7, string8, string9, string10)
 
     # Open the downloaded data
@@ -116,7 +118,13 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
     Geo_four = np.nanmax(lats)
     Geo_one = np.nanmin(lons)    
     Geo_out = tuple([Geo_one, 0.125, 0.0, Geo_four, 0.0, -0.125])
-    
+
+    # Create Waitbar
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount = len(Dates)
+        amount = 0
+        WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)    
 
     for date in Dates:
         
@@ -155,6 +163,11 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
 								
         # Create Tiff files
         DC.Save_as_tiff(name_out, Data_end, Geo_out, "WGS84")
+        
+        if Waitbar == 1:
+            amount += 1
+            WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+      
         
     fh.close()
     

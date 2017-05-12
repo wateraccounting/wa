@@ -16,7 +16,7 @@ import shutil
 import wa.General.raster_conversions as RC
 import wa.General.data_conversions as DC
 
-def DownloadData(Dir,latlim, lonlim):
+def DownloadData(Dir,latlim, lonlim, Waitbar):
     """
     This function downloads JRC data
 
@@ -24,6 +24,7 @@ def DownloadData(Dir,latlim, lonlim):
     Dir -- 'C:/file/to/path/'
     latlim -- [ymin, ymax] (values must be between -90 and 90)
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
+    Waitbar -- 1 (Default) will print a waitbar
 
     """
 
@@ -47,13 +48,24 @@ def DownloadData(Dir,latlim, lonlim):
     
     if not os.path.exists(fileName_out):
         
+        # Create Waitbar
+        if Waitbar == 1:
+            import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+            total_amount = 1
+            amount = 0
+            WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+        
         # This function defines the name of dataset that needs to be collected
         Names_to_download = Tiles_to_download(lonlim,latlim)
             
         # Pass variables to parallel function and run
         args = [output_folder, Names_to_download, lonlim, latlim]
         RetrieveData(args)
-        
+
+        if Waitbar == 1:
+            amount = 1
+            WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
     else:
         print 'JRC water occurrence map already exists'
            						
@@ -168,16 +180,13 @@ def Collect_data(Names_to_download, output_folder):
             os.mkdir(output_Trash)  
         
         filename = os.path.join(output_Trash, Name_to_download)
-        if os.path.exists(filename):
-            print "%s already exists" %(Name_to_download)
-        else:
+        if not os.path.exists(filename):
            times = 0
            size = 0
            while times < 10 and size < 10000:
                url = "http://storage.googleapis.com/global-surface-water/downloads/occurrence/" + Name_to_download
                code = urllib.urlopen(url).getcode()
                if (code != 404):
-                  print "Downloading " + url
                   urllib.urlretrieve(url, filename)
                   times += 1
                   statinfo = os.stat(filename)																									

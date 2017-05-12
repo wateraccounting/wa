@@ -16,7 +16,7 @@ from wa.Products.ETref.CollectLANDSAFETref import CollectLANDSAF
 from wa.Products.ETref.SetVarETref import SetVariables
 
 def main(Dir, Startdate = '', Enddate = '',
-         latlim = [-60, 60], lonlim = [-180, 180], pixel_size = False, cores = False, LANDSAF =  0, SourceLANDSAF=  ''):
+         latlim = [-60, 60], lonlim = [-180, 180], pixel_size = False, cores = False, LANDSAF =  0, SourceLANDSAF=  '', Waitbar = 1):
     """
     This function creates ETref (daily) data based on Hydroshed, GLDAS, and (CFSR/LANDSAF)
 
@@ -31,9 +31,12 @@ def main(Dir, Startdate = '', Enddate = '',
              It can be 'False' to avoid using parallel computing
              routines.
     LANDSAF -- if LANDSAF data must be used it is 1
-    SourceLANDSAF -- the path to the LANDSAF files																									
-    """
-																
+    SourceLANDSAF -- the path to the LANDSAF files		
+    Waitbar -- 1 (Default) will print the waitbar																							
+    """ 
+    if Waitbar == 1:
+        print 'Create daily Reference ET data for the period %s till %s' %(Startdate, Enddate)			
+													
     # Correct latitude and longitude if needed																
     if latlim[0] < -60 or latlim[1] > 60:
         print ('Latitude above 60N or below 60S is not possible.'
@@ -52,10 +55,9 @@ def main(Dir, Startdate = '', Enddate = '',
     # Process LANDSAF data if needed
     if LANDSAF == 1:
         CollectLANDSAF(SourceLANDSAF, Dir, Startdate, Enddate, latlim, lonlim) 	
-				
 
     # Set up the variables and calculates ETref hereafter																
-    SetVariables(Dir, Startdate, Enddate, latlim, lonlim, pixel_size, cores, LANDSAF)															
+    SetVariables(Dir, Startdate, Enddate, latlim, lonlim, pixel_size, cores, LANDSAF, Waitbar)															
 																
 
 if __name__ == '__main__':

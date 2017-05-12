@@ -25,7 +25,7 @@ import wa.General.raster_conversions as RC
 import wa.General.data_conversions as DC
 from wa import WebAccounts
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
     """
     This function downloads MOD17 yearly NPP data
 
@@ -37,6 +37,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
     cores -- The number of cores used to run the routine. It can be 'False'
              to avoid using parallel computing routines.
+    Waitbar -- 1 (Default) will print a waitbar             
     """
  
     # Check start and end date and otherwise set the date to max
@@ -51,6 +52,13 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     Startdate_NPP='%s-01-01' % yearstart
     Enddate_NPP='%s-12-31'% yearend				
     Dates = pd.date_range(Startdate_NPP, Enddate_NPP, freq = 'AS')   
+
+    # Create Waitbar
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount = len(Dates)
+        amount = 0
+        WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
     
     # Check the latitude and longitude and otherwise set lat or lon on greatest extent
     if latlim[0] < -90 or latlim[1] > 90:
@@ -85,10 +93,13 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     if not cores:
         for Date in Dates:
             RetrieveData(Date, args)
+            if Waitbar == 1:
+                amount += 1
+                WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
         results = True
     else:
         results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
-                                                 for Date in Dates)
+                                         for Date in Dates)
      # Remove all .hdf files	
     os.chdir(output_folder)
     files = glob.glob("*.hdf")																																				
@@ -244,6 +255,9 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                                 try:																						
                                     y = requests.get(x.headers['location'], auth = (username, password))
                                 except:
+                                    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+                                    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+                        
                                     y = requests.get(x.headers['location'], auth = (username, password), verify = False)					     																							
                                 z = open(file_name, 'wb')
                                 z.write(y.content)

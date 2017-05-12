@@ -11,7 +11,7 @@ from wa.Collect.DEM.DataAccess import DownloadData
 import sys
 
 
-def main(Dir, latlim, lonlim, resolution = '3s'):
+def main(Dir, latlim, lonlim, resolution = '3s', Waitbar = 1):
     """
     Downloads HydroSHED data from http://www.hydrosheds.org/download/
 
@@ -22,7 +22,8 @@ def main(Dir, latlim, lonlim, resolution = '3s'):
     Dir -- 'C:/file/to/path/'    
     latlim -- [ymin, ymax]
     lonlim -- [xmin, xmax]
-    resolution -- '3s' (default) or '15s'
+    resolution -- '3s' (Default) or '15s'
+    Waitbar -- '1' if you want a waitbar (Default = 1)
     """
 
     # Create directory if not exists for the output
@@ -36,11 +37,24 @@ def main(Dir, latlim, lonlim, resolution = '3s'):
  
     if not os.path.exists(nameEnd):
 
+        # Create Waitbar
+        if Waitbar == 1:
+            print '\nDownload HydroSHED altitude map with a resolution of %s' %resolution
+            import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+            total_amount = 1
+            amount = 0
+            WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
         # Download and process the data
-        DownloadData(output_folder, latlim, lonlim, parameter,resolution)
+        DownloadData(output_folder, latlim, lonlim, parameter, resolution)
+
+        if Waitbar == 1:
+            amount = 1
+            WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
 
     else:
-        print "DEM HydroSHED already exists in output folder"
+        if Waitbar == 1:
+            print "\nHydroSHED altitude map (%s) already exists in output folder" %resolution
 
 if __name__ == '__main__':
     main(sys.argv)

@@ -24,12 +24,16 @@ def Convert_nc_to_tiff(input_nc, output_folder):
     from datetime import date
     import wa.General.raster_conversions as RC
     
-    All_Data= RC.Open_nc_array(input_nc)
+    All_Data = RC.Open_nc_array(input_nc)
     geo_out, epsg, size_X, size_Y, size_Z, Time = RC.Open_nc_info(input_nc)  
     
     if epsg == 4326:
         epsg = 'WGS84'
     
+    # Create output folder if needed
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+
     for i in range(0,size_Z):
         if not Time is -9999:
             time_one = Time[i]
@@ -41,7 +45,6 @@ def Convert_nc_to_tiff(input_nc, output_folder):
             name=os.path.splitext(os.path.basename(input_nc))[0]
             name_out = os.path.join(output_folder, name + '.tif')
    
-
         Data_one = All_Data[i,:,:]
         Save_as_tiff(name_out, Data_one, geo_out, epsg)
     

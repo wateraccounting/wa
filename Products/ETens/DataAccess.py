@@ -20,10 +20,17 @@ import shutil
 import wa.WebAccounts as WebAccounts
 from wa.General import data_conversions as DC
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar):
 
     # Create an array with the dates that will be calculated
     Dates = pd.date_range(Startdate, Enddate, freq = 'MS')
+
+   # Create Waitbar
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount = len(Dates)
+        amount = 0
+        WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
 
     # Define the minimum and maximum lat and long ETensemble Tile
     Min_lat_tile = int(np.floor((100 - latlim[1])/10))
@@ -78,6 +85,13 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
 
             # Save this array as a tiff file
             DC.Save_as_tiff(output_file, ET_data, geo_new, projection='WGS84')
+
+        # Create Waitbar
+        if Waitbar == 1:
+            amount += 1
+            WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
+
     return()														
 '''
     # Remove all the raw dataset    

@@ -12,7 +12,7 @@ from joblib import Parallel, delayed
 from wa import WebAccounts
 import wa.General.data_conversions as DC
 
-def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
+def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, Waitbar, cores,
                  TimeCase, CaseParameters):    
     """
     This function downloads GLDAS three-hourly, daily or monthly data
@@ -50,7 +50,7 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
 								
         # Define URL by using personal account								
         #url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025SUBP_3H' %(username,password)
-        url = 'https://hydro1.sci.gsfc.nasa.gov/dods/GLDAS_NOAH025SUBP_3H' #%(username,password)
+        url = 'https://hydro1.gesdisc.eosdis.nasa.gov/dods/GLDAS_NOAH025_3H.2.0' #%(username,password)
 								
         # Name the definition that will be used to obtain the data								
         RetrieveData_fcn = RetrieveData_three_hourly
@@ -83,7 +83,7 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
         
         # Define URL by using personal account	
         #url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025SUBP_3H' %(username,password)
-        url = 'https://hydro1.sci.gsfc.nasa.gov/dods/GLDAS_NOAH025SUBP_3H' #%(username,password)
+        url = 'https://hydro1.gesdisc.eosdis.nasa.gov/dods/GLDAS_NOAH025_3H.2.0' #%(username,password)
 										
         # Name the definition that will be used to obtain the data									
         RetrieveData_fcn = RetrieveData_daily
@@ -106,7 +106,7 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
 								
         # Define URL by using personal account							
         #url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025_M' %(username,password)
-        url = 'https://hydro1.sci.gsfc.nasa.gov/dods/GLDAS_NOAH025_M' #%(username,password)
+        url = 'https://hydro1.gesdisc.eosdis.nasa.gov/dods/GLDAS_NOAH025_M.2.0' #%(username,password)
 		
  								
         # Name the definition that will be used to obtain the data									
@@ -130,6 +130,13 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
 
     # Create all dates that will be calculated		
     Dates = pd.date_range(Startdate, Enddate, freq=TimeFreq)
+
+    # Create Waitbar
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount = len(Dates)
+        amount = 0
+        WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
 				
     # Define the variable string name    				
     VarStr = VarInfo.names[Var]
@@ -142,9 +149,13 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores,
     if not cores:
         for Date in Dates:
             RetrieveData_fcn(Date, args)
+            if Waitbar == 1:
+                amount += 1
+                WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
         results = True
     else:
-        results = Parallel(n_jobs = cores)(delayed(RetrieveData_fcn)(Date, args) for Date in Dates)
+        results = Parallel(n_jobs=cores)(delayed(RetrieveData_fcn)(Date, args)
+                                         for Date in Dates)
     return results
 
 
@@ -191,11 +202,15 @@ def RetrieveData_three_hourly(Date, args):
                     try:			
                         dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True)
                     except:
+                        from requests.packages.urllib3.exceptions import InsecureRequestWarning
+                        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
                         dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
 
                     try:
                         get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True)	
                     except:
+                        from requests.packages.urllib3.exceptions import InsecureRequestWarning
+                        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
                         get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True, verify = False)
 					
                     # download data (first save as text file)
@@ -242,8 +257,6 @@ def RetrieveData_three_hourly(Date, args):
             geo = [lonlimGLDAS,0.25,0,latlimGLDAS,0,-0.25]
             DC.Save_as_tiff(name=BasinDir, data=np.flipud(data[:,:]), geo=geo, projection="WGS84")
                											
-            print 'File for ' + Date.strftime('%Y-%m-%d') + ' created.'
-            
             # Delete data and text file												
             del data
             os.remove(pathtext)
@@ -301,10 +314,14 @@ def RetrieveData_daily(Date, args):
                     try:
                         dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True)
                     except:
+                        from requests.packages.urllib3.exceptions import InsecureRequestWarning
+                        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
                         dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
                     try:
                         get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True)	
                     except:
+                        from requests.packages.urllib3.exceptions import InsecureRequestWarning
+                        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)                        
                         get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True, verify = False)
 					
                     # download data (first save as text file)
@@ -409,11 +426,15 @@ def RetrieveData_monthly(Date, args):
                 # open URL
                 try:
                     dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True)
-                except:																																	
+                except:	
+                    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+                    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)																									
                     dataset = requests.get(url_GLDAS, allow_redirects=False,stream = True, verify = False)
                 try:
                     get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True)	
                 except:
+                    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+                    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
                     get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True, verify = False)
 					
                 # download data (first save as text file)
@@ -460,7 +481,6 @@ def RetrieveData_monthly(Date, args):
             geo = [lonlimGLDAS,0.25,0,latlimGLDAS,0,-0.25]
             DC.Save_as_tiff(name=BasinDir, data=np.flipud(data[:,:]), geo=geo, projection="WGS84")	
                 												
-            print 'File for ' + Date.strftime('%Y-%m-%d') + ' created.'
             
             # Delete data and text file												
             del data
@@ -472,212 +492,219 @@ class VariablesInfo:
     """
     This class contains the information about the GLDAS variables
     """
-    names = {'avgsurft': 'T',
-             'canopint': 'TotCanopyWaterStorage',
-             'evap': 'ET',
-             'lwdown': 'LWdown',
-             'lwnet': 'LWnet',
-             'psurf': 'P',
-             'qair': 'Hum',
-             'qg': 'G',
-             'qh': 'H',
-             'qle': 'LE',
-             'qs': 'Rsur',
-             'qsb': 'Rsubsur',
-             'qsm': 'SnowMelt',
-             'rainf': 'P',
-             'swe': 'SnowWaterEquivalent',
-             'swdown': 'SWdown',
-             'swnet': 'SWnet',
-             'snowf': 'Snow',
-             'soilm1': 'S1',
-             'soilm2': 'S2',
-             'soilm3': 'S3',
-             'soilm4': 'S4',
-             'tsoil1': 'Ts1',
-             'tsoil2': 'Ts2',
-             'tsoil3': 'Ts3',
-             'tsoil4': 'Ts4',
-             'tair': 'Tair',
-             'wind': 'W'}
-    descriptions = {'avgsurft': 'surface average surface temperature [k]',
-                    'canopint': 'surface plant canopy surface water [kg/m^2]',
-                    'evap': 'surface total evapotranspiration [kg/m^2/s]',
-                    'lwdown': ('surface surface incident longwave radiation'
+    names = {'avgsurft_inst': 'T',
+             'canopint_inst': 'TotCanopyWaterStorage',
+             'evap_tavg': 'ET',
+             'lwdown_f_tavg': 'LWdown',
+             'lwnet_tavg': 'LWnet',
+             'psurf_f_inst': 'P',
+             'qair_f_inst': 'Hum',
+             'qg_tavg': 'G',
+             'qh_tavg': 'H',
+             'qle_tavg': 'LE',
+             'qs_acc': 'Rsur',
+             'qsb_acc': 'Rsubsur',
+             'qsm_acc': 'SnowMelt',
+             'rainf_f_tavg': 'P',
+             'swe_inst': 'SnowWaterEquivalent',
+             'swdown_f_tavg': 'SWdown',
+             'swnet_tavg': 'SWnet',
+             'snowf_tavg': 'Snow',
+             'sm0_10cm_ins': 'S1',
+             'sm10_40cm_ins': 'S2',
+             'sm40_100cm_ins': 'S3',
+             'sm100_200cm_ins': 'S4',
+             'st0_10cm_ins': 'Ts1',
+             'st10_40cm_ins': 'Ts2',
+             'st40_100cm_ins': 'Ts3',
+             'st100_200cm_ins': 'Ts4',
+             'tair_f_inst': 'Tair',
+             'wind_f_inst': 'W',
+             'tveg_tavg' : 'Transpiration'}
+    descriptions = {'avgsurft_inst': 'surface average surface temperature [k]',
+                    'canopint_inst': 'surface plant canopy surface water [kg/m^2]',
+                    'evap_tavg': 'surface total evapotranspiration [kg/m^2/s]',
+                    'lwdown_f_tavg': ('surface surface incident longwave radiation'
                                ' [w/m^2]'),
-                    'lwnet': 'surface net longwave radiation [w/m^2]',
-                    'psurf': 'surface surface pressure [kPa]',
-                    'qair': 'surface near surface specific humidity [kg/kg]',
-                    'qg': 'surface ground heat flux [w/m^2]',
-                    'qh': 'surface sensible heat flux [w/m^2]',
-                    'qle': 'surface latent heat flux [w/m^2]',
-                    'qs': 'surface surface runoff [kg/m^2/s]',
-                    'qsb': 'surface subsurface runoff [kg/m^2/s]',
-                    'qsm': 'surface snowmelt [kg/m^2/s]',
-                    'rainf': 'surface rainfall rate [kg/m^2/s]',
-                    'swe': 'surface snow water equivalent [kg/m^2]',
-                    'swdown': ('surface surface incident shortwave radiation'
+                    'lwnet_tavg': 'surface net longwave radiation [w/m^2]',
+                    'psurf_f_inst': 'surface surface pressure [kPa]',
+                    'qair_f_inst': 'surface near surface specific humidity [kg/kg]',
+                    'qg_tavg': 'surface ground heat flux [w/m^2]',
+                    'qh_tavg': 'surface sensible heat flux [w/m^2]',
+                    'qle_tavg': 'surface latent heat flux [w/m^2]',
+                    'qs_acc': 'surface surface runoff [kg/m^2/s]',
+                    'qsb_acc': 'surface subsurface runoff [kg/m^2/s]',
+                    'qsm_acc': 'surface snowmelt [kg/m^2/s]',
+                    'rainf_f_tavg': 'surface rainfall rate [kg/m^2/s]',
+                    'swe_inst': 'surface snow water equivalent [kg/m^2]',
+                    'swdown_f_tavg': ('surface surface incident shortwave radiation'
                                ' [w/m^2]'),
-                    'swnet': 'surface net shortwave radiation [w/m^2]',
-                    'snowf': 'surface snowfall rate [kg/m^2/s]',
-                    'soilm1': ('0-10 cm underground soil moisture content'
+                    'swnet_tavg': 'surface net shortwave radiation [w/m^2]',
+                    'snowf_tavg': 'surface snowfall rate [kg/m^2/s]',
+                    'sm0_10cm_ins': ('0-10 cm underground soil moisture content'
                                ' [kg/m^2]'),
-                    'soilm2': ('10-40 cm underground soil moisture content'
+                    'sm10_40cm_ins': ('10-40 cm underground soil moisture content'
                                ' [kg/m^2]'),
-                    'soilm3': ('40-100 cm underground soil moisture content'
+                    'sm40_100cm_ins': ('40-100 cm underground soil moisture content'
                                ' [kg/m^2]'),
-                    'soilm4': ('100-200 cm underground soil moisture content'
+                    'sm100_200cm_ins': ('100-200 cm underground soil moisture content'
                                ' [kg/m^2]'),
-                    'tsoil1': '0-10 cm underground soil temperature [k]',
-                    'tsoil2': '10-40 cm underground soil temperature [k]',
-                    'tsoil3': '40-100 cm underground soil temperature [k]',
-                    'tsoil4': '100-200 cm underground soil temperature [k]',
-                    'tair': 'surface near surface air temperature [k]',
-                    'wind': 'surface near surface wind speed [m/s]'}
-    factors = {'avgsurft': -273.15,
-               'canopint': 1,
-               'evap': 86400,
-               'lwdown': 1,
-               'lwnet': 1,
-               'psurf': 0.001,
-               'qair': 1,
-               'qg': 1,
-               'qh': 1,
-               'qle': 1,
-               'qs': 86400,
-               'qsb': 86400,
-               'qsm': 86400,
-               'rainf': 86400,
-               'swe': 1,
-               'swdown': 1,
-               'swnet': 1,
-               'snowf': 1,
-               'soilm1': 1,
-               'soilm2': 1,
-               'soilm3': 1,
-               'soilm4': 1,
-               'tsoil1': -273.15,
-               'tsoil2': -273.15,
-               'tsoil3': -273.15,
-               'tsoil4': -273.15,
-               'tair': -273.15,
-               'wind': 0.75}
-    types = {'avgsurft': 'state',
-             'canopint': 'state',
-             'evap': 'flux',
-             'lwdown': 'state',
-             'lwnet': 'state',
-             'psurf': 'state',
-             'qair': 'state',
-             'qg': 'state',
-             'qh': 'state',
-             'qle': 'state',
-             'qs': 'flux',
-             'qsb': 'flux',
-             'qsm': 'flux',
-             'rainf': 'flux',
-             'swe': 'state',
-             'swdown': 'state',
-             'swnet': 'state',
-             'snowf': 'state',
-             'soilm1': 'state',
-             'soilm2': 'state',
-             'soilm3': 'state',
-             'soilm4': 'state',
-             'tsoil1': 'state',
-             'tsoil2': 'state',
-             'tsoil3': 'state',
-             'tsoil4': 'state',
-             'tair': 'state',
-             'wind': 'state'}
+                    'st0_10cm_ins': '0-10 cm underground soil temperature [k]',
+                    'st10_40cm_ins': '10-40 cm underground soil temperature [k]',
+                    'st40_100cm_ins': '40-100 cm underground soil temperature [k]',
+                    'st100_200cm_ins': '100-200 cm underground soil temperature [k]',
+                    'tair_f_inst': 'surface near surface air temperature [k]',
+                    'wind_f_inst': 'surface near surface wind speed [m/s]',
+                    'tveg_tavg' : 'transpiration [w/m^2]'}
+    factors = {'avgsurft_inst': -273.15,
+               'canopint_inst': 1,
+               'evap_tavg': 86400,
+               'lwdown_f_tavg': 1,
+               'lwnet_tavg': 1,
+               'psurf_f_inst': 0.001,
+               'qair_f_inst': 1,
+               'qg_tavg': 1,
+               'qh_tavg': 1,
+               'qle_tavg': 1,
+               'qs_acc': 86400,
+               'qsb_acc': 86400,
+               'qsm_acc': 86400,
+               'rainf_f_tavg': 86400,
+               'swe_inst': 1,
+               'swdown_f_tavg': 1,
+               'swnet_tavg': 1,
+               'snowf_tavg': 1,
+               'sm0_10cm_ins': 1,
+               'sm10_40cm_ins': 1,
+               'sm40_100cm_ins': 1,
+               'sm100_200cm_ins': 1,
+               'st0_10cm_ins': -273.15,
+               'st10_40cm_ins': -273.15,
+               'st40_100cm_ins': -273.15,
+               'st100_200cm_ins': -273.15,
+               'tair_f_inst': -273.15,
+               'wind_f_inst': 0.75,
+               'tveg_tavg' : 1}
+    types = {'avgsurft_inst': 'state',
+             'canopint_inst': 'state',
+             'evap_tavg': 'flux',
+             'lwdown_f_tavg': 'state',
+             'lwnet_tavg': 'state',
+             'psurf_f_inst': 'state',
+             'qair_f_inst': 'state',
+             'qg_tavg': 'state',
+             'qh_tavg': 'state',
+             'qle_tavg': 'state',
+             'qs_acc': 'flux',
+             'qsb_acc': 'flux',
+             'qsm_acc': 'flux',
+             'rainf_f_tavg': 'flux',
+             'swe_inst': 'state',
+             'swdown_f_tavg': 'state',
+             'swnet_tavg': 'state',
+             'snowf_tavg': 'state',
+             'sm0_10cm_ins': 'state',
+             'sm10_40cm_ins': 'state',
+             'sm40_100cm_ins': 'state',
+             'sm100_200cm_ins': 'state',
+             'st0_10cm_ins': 'state',
+             'st10_40cm_ins': 'state',
+             'st40_100cm_ins': 'state',
+             'st100_200cm_ins': 'state',
+             'tair_f_inst': 'state',
+             'wind_f_inst': 'state',
+             'tveg_tavg' : 'state'}
 
     def __init__(self, step):
         if step == 'three_hourly':
-            self.units = {'avgsurft': 'C',
-                          'canopint': 'mm',
-                          'evap': 'mm-day-1',
-                          'lwdown': 'W-m-2',
-                          'lwnet': 'W-m-2',
-                          'psurf': 'kpa',
-                          'qair': 'kg-kg',
-                          'qg': 'W-m-2',
-                          'qh': 'W-m-2',
-                          'qle': 'W-m-2',
-                          'qs': 'mm-3hour-1',
-                          'qsb': 'mm-3hour-1',
-                          'qsm': 'mm-3hour-1',
-                          'rainf': 'mm-3hour-1',
-                          'swe': 'mm',
-                          'swdown': 'W-m-2',
-                          'swnet': 'W-m-2',
-                          'snowf': 'mm',
-                          'soilm1': 'mm',
-                          'soilm2': 'mm',
-                          'soilm3': 'mm',
-                          'soilm4': 'mm',
-                          'tsoil1': 'C',
-                          'tsoil2': 'C',
-                          'tsoil3': 'C',
-                          'tsoil4': 'C',
-                          'tair': 'C',
-                          'wind': 'm-s-1'}
+            self.units = {'avgsurft_inst': 'C',
+                          'canopint_inst': 'mm',
+                          'evap_tavg': 'mm-day-1',
+                          'lwdown_f_tavg': 'W-m-2',
+                          'lwnet_tavg': 'W-m-2',
+                          'psurf_f_inst': 'kpa',
+                          'qair_f_inst': 'kg-kg',
+                          'qg_tavg': 'W-m-2',
+                          'qh_tavg': 'W-m-2',
+                          'qle_tavg': 'W-m-2',
+                          'qs_acc': 'mm-3hour-1',
+                          'qsb_acc': 'mm-3hour-1',
+                          'qsm_acc': 'mm-3hour-1',
+                          'rainf_f_tavg': 'mm-3hour-1',
+                          'swe_inst': 'mm',
+                          'swdown_f_tavg': 'W-m-2',
+                          'swnet_tavg': 'W-m-2',
+                          'snowf_tavg': 'mm',
+                          'sm0_10cm_ins': 'mm',
+                          'sm10_40cm_ins': 'mm',
+                          'sm40_100cm_ins': 'mm',
+                          'sm100_200cm_ins': 'mm',
+                          'st0_10cm_ins': 'C',
+                          'st10_40cm_ins': 'C',
+                          'st40_100cm_ins': 'C',
+                          'st100_200cm_ins': 'C',
+                          'tair_f_inst': 'C',
+                          'wind_f_inst': 'm-s-1',
+                          'tveg_tavg' : 'W-m-2'}
         elif step == 'daily':
-            self.units = {'avgsurft': 'C',
-                          'canopint': 'mm',
-                          'evap': 'mm-day-1',
-                          'lwdown': 'W-m-2',
-                          'lwnet': 'W-m-2',
-                          'psurf': 'kpa',
-                          'qair': 'kg-kg',
-                          'qg': 'W-m-2',
-                          'qh': 'W-m-2',
-                          'qle': 'W-m-2',
-                          'qs': 'mm-day-1',
-                          'qsb': 'mm-day-1',
-                          'qsm': 'mm-day-1',
-                          'rainf': 'mm-day-1',
-                          'swe': 'mm',
-                          'swdown': 'W-m-2',
-                          'swnet': 'W-m-2',
-                          'snowf': 'mm',
-                          'soilm1': 'mm',
-                          'soilm2': 'mm',
-                          'soilm3': 'mm',
-                          'soilm4': 'mm',
-                          'tsoil1': 'C',
-                          'tsoil2': 'C',
-                          'tsoil3': 'C',
-                          'tsoil4': 'C',
-                          'tair': 'C',
-                          'wind': 'm-s-1'}
+            self.units = {'avgsurft_inst': 'C',
+                          'canopint_inst': 'mm',
+                          'evap_tavg': 'mm-day-1',
+                          'lwdown_f_tavg': 'W-m-2',
+                          'lwnet_tavg': 'W-m-2',
+                          'psurf_f_inst': 'kpa',
+                          'qair_f_inst': 'kg-kg',
+                          'qg_tavg': 'W-m-2',
+                          'qh_tavg': 'W-m-2',
+                          'qle_tavg': 'W-m-2',
+                          'qs_acc': 'mm-day-1',
+                          'qsb_acc': 'mm-day-1',
+                          'qsm_acc': 'mm-day-1',
+                          'rainf_f_tavg': 'mm-day-1',
+                          'swe_inst': 'mm',
+                          'swdown_f_tavg': 'W-m-2',
+                          'swnet_tavg': 'W-m-2',
+                          'snowf_tavg': 'mm',
+                          'sm0_10cm_ins': 'mm',
+                          'sm10_40cm_ins': 'mm',
+                          'sm40_100cm_ins': 'mm',
+                          'sm100_200cm_ins': 'mm',
+                          'st0_10cm_ins': 'C',
+                          'st10_40cm_ins': 'C',
+                          'st40_100cm_ins': 'C',
+                          'st100_200cm_ins': 'C',
+                          'tair_f_inst': 'C',
+                          'wind_f_inst': 'm-s-1',
+                          'tveg_tavg' : 'W-m-2'}
         elif step == 'monthly':
-            self.units = {'avgsurft': 'C',
-                          'canopint': 'mm',
-                          'evap': 'mm-month-1',
-                          'lwdown': 'W-m-2',
-                          'lwnet': 'W-m-2',
-                          'psurf': 'kpa',
-                          'qair': 'kg-kg',
-                          'qg': 'W-m-2',
-                          'qh': 'W-m-2',
-                          'qle': 'W-m-2',
-                          'qs': 'mm-month-1',
-                          'qsb': 'mm-month-1',
-                          'qsm': 'mm-month-1',
-                          'rainf': 'mm-month-1',
-                          'swe': 'mm',
-                          'swdown': 'W-m-2',
-                          'swnet': 'W-m-2',
-                          'snowf': 'mm',
-                          'soilm1': 'mm',
-                          'soilm2': 'mm',
-                          'soilm3': 'mm',
-                          'soilm4': 'mm',
-                          'tsoil1': 'C',
-                          'tsoil2': 'C',
-                          'tsoil3': 'C',
-                          'tsoil4': 'C',
-                          'tair': 'C',
-                          'wind': 'm-s-1'}
+            self.units = {'avgsurft_inst': 'C',
+                          'canopint_inst': 'mm',
+                          'evap_tavg': 'mm-month-1',
+                          'lwdown_f_tavg': 'W-m-2',
+                          'lwnet_tavg': 'W-m-2',
+                          'psurf_f_inst': 'kpa',
+                          'qair_f_inst': 'kg-kg',
+                          'qg_tavg': 'W-m-2',
+                          'qh_tavg': 'W-m-2',
+                          'qle_tavg': 'W-m-2',
+                          'qs_acc': 'mm-month-1',
+                          'qsb_acc': 'mm-month-1',
+                          'qsm_acc': 'mm-month-1',
+                          'rainf_f_tavg': 'mm-month-1',
+                          'swe_inst': 'mm',
+                          'swdown_f_tavg': 'W-m-2',
+                          'swnet_tavg': 'W-m-2',
+                          'snowf_tavg': 'mm',
+                          'sm0_10cm_ins': 'mm',
+                          'sm10_40cm_ins': 'mm',
+                          'sm40_100cm_ins': 'mm',
+                          'sm100_200cm_ins': 'mm',
+                          'st0_10cm_ins': 'C',
+                          'st10_40cm_ins': 'C',
+                          'st40_100cm_ins': 'C',
+                          'st100_200cm_ins': 'C',
+                          'tair_f_inst': 'C',
+                          'wind_f_inst': 'm-s-1',
+                          'tveg_tavg' : 'W-m-2'}
         else:
             raise KeyError("The input time step is not supported")

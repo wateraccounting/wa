@@ -65,7 +65,7 @@ def DownloadData(output_folder, latlim, lonlim, parameter, resolution):
         name, rangeLon, rangeLat = Find_Document_Names(latlim, lonlim, parameter)
 
 				
-       	# Memory for the map x and y shape (starts with zero)			
+        # Memory for the map x and y shape (starts with zero)			
         size_X_tot = 0
         size_Y_tot = 0
  

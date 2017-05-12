@@ -5,7 +5,7 @@ Authors: Tim Hessels and Gonzalo Espinoza
 Contact: t.hessels@unesco-ihe.org
          g.espinoza@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
-Module: Collect/ETref
+Module: Collect/CHIRPS
 """
 
 # import general python modules
@@ -19,7 +19,7 @@ from joblib import Parallel, delayed
 import wa.General.raster_conversions as RC
 import wa.General.data_conversions as DC
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCase):
     """
     This function downloads CHIRPS daily or monthly data
 
@@ -29,6 +29,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
     Enddate -- 'yyyy-mm-dd'
     latlim -- [ymin, ymax] (values must be between -50 and 50)
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
+    Waitbar -- 1 (Default) will print a waitbar    
     cores -- The number of cores used to run the routine. It can be 'False'
              to avoid using parallel computing routines.
     TimeCase -- String equal to 'daily' or 'monthly'
@@ -49,6 +50,13 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
 								
     # Create days
     Dates = pd.date_range(Startdate, Enddate, freq=TimeFreq)
+    
+    # Create Waitbar
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount = len(Dates)
+        amount = 0
+        WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
 
     # Check space variables
     if latlim[0] < -50 or latlim[1] > 50:
@@ -78,6 +86,9 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
     if not cores:
         for Date in Dates:
             RetrieveData(Date, args)
+            if Waitbar == 1:
+                amount += 1
+                WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
         results = True
     else:
         results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)

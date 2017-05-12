@@ -26,19 +26,19 @@ def CollectData(Dir, Startdate, Enddate, latlim, lonlim, cores, LANDSAF):
     LANDSAF -- if 1 than LANDSAF data will be used instead of CFSR data				
     """
     # download DEM map (will only be done when it is not there yet)
-    DEM.HydroSHED(Dir, latlim, lonlim)
+    DEM.HydroSHED(Dir, latlim, lonlim, Waitbar = 0)
 	 
     if LANDSAF == 0:
         # download CFSR data (will only be done when it is not there yet)
-        CFSR.daily(Dir=Dir, Vars = ['dlwsfc','dswsfc','ulwsfc'], Startdate=Startdate, Enddate=Enddate, latlim=latlim, lonlim=lonlim) 
+        CFSR.daily(Dir=Dir, Vars = ['dlwsfc','dswsfc','ulwsfc'], Startdate=Startdate, Enddate=Enddate, latlim=latlim, lonlim=lonlim, Waitbar = 0) 
 
     # Make latlim and lonlim a bit larger for GLDAS
     latlimGLDAS = [latlim[0] - 0.25, latlim[1] + 0.25]
     lonlimGLDAS = [lonlim[0] - 0.25, lonlim[1] + 0.25]
 				
     # download GLDAS data (will only be done when it is not there yet)        				
-    GLDAS.daily(Dir=Dir, Vars = ['tair'], Startdate=Startdate, Enddate=Enddate, latlim=latlimGLDAS, lonlim=lonlimGLDAS, SumMean=0, Min=1, Max=1)
-    GLDAS.daily(Dir=Dir, Vars = ['psurf','wind','qair'], Startdate=Startdate, Enddate=Enddate, latlim=latlimGLDAS, lonlim=lonlimGLDAS, SumMean=1, Min=0, Max=0)
+    GLDAS.daily(Dir=Dir, Vars = ['tair_f_inst'], Startdate=Startdate, Enddate=Enddate, latlim=latlimGLDAS, lonlim=lonlimGLDAS, SumMean=0, Min=1, Max=1, Waitbar = 0)
+    GLDAS.daily(Dir=Dir, Vars = ['psurf_f_inst','wind_f_inst','qair_f_inst'], Startdate=Startdate, Enddate=Enddate, latlim=latlimGLDAS, lonlim=lonlimGLDAS, SumMean=1, Min=0, Max=0, Waitbar = 0)
     			
     return
 

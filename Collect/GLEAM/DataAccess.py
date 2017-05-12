@@ -22,9 +22,9 @@ from netCDF4 import Dataset
 import wa.General.data_conversions as DC
 from wa import WebAccounts
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCase):
     """
-    This function downloads MOD13 16-daily data
+    This function downloads GLEAM ET data
 
     Keyword arguments:
     Dir -- 'C:/file/to/path/'
@@ -34,6 +34,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
     cores -- The number of cores used to run the routine. It can be 'False'
              to avoid using parallel computing routines.
+    Waitbar -- 1 (Default) will print a waitbar             
     """
     # Check start and end date and otherwise set the date
     if not Startdate:
@@ -64,7 +65,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
         raise KeyError("The input time interval is not supported")
              
     Dates = pd.date_range(Startdate, Enddate, freq = TimeFreq)
-      
+   
     # Make directory for the MODIS ET data
     output_folder=os.path.join(Dir,'Evaporation',TimeCase,'GLEAM')
     if not os.path.exists(output_folder):
@@ -82,21 +83,32 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
         lonlim[0] = np.max(latlim[0], -180)
         lonlim[1] = np.min(lonlim[1], 180)
 
-    # Collect the data from the MODIS webpage and returns the data and lat and long in meters of those tiles
+    # Collect the data from the GLEAM webpage and returns the data and lat and long in meters of those tiles
     try:
-        Collect_data(FTPprefix,Years,output_folder)
+        Collect_data(FTPprefix, Years, output_folder, Waitbar)
     except:
         print "Was not able to download the file"  
+
+    # Create Waitbar
+    print '\nProcess the GLEAM data'
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount = len(Dates)
+        amount = 0
+        WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
 
     # Pass variables to parallel function and run
     args = [output_folder, latlim, lonlim, VarCode, TimeCase]
     if not cores:
         for Date in Dates:
             RetrieveData(Date, args)
-            results = True
+            if Waitbar == 1:
+                amount += 1
+                WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+        results = True
     else:
         results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
-                                                 for Date in Dates) 
+                                         for Date in Dates)
                                
     # Remove all .hdf files	
     os.chdir(output_folder)
@@ -108,8 +120,8 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
 
 def RetrieveData(Date, args):
     """
-    This function retrieves MOD16 ET data for a given date from the
-    ftp://ftp.ntsg.umt.edu/ server.
+    This function retrieves GLEAM ET data for a given date from the
+    www.gleam.eu server.
 
     Keyword arguments:
     Date -- 'yyyy-mm-dd'
@@ -186,7 +198,7 @@ def RetrieveData(Date, args):
     return True
 
     
-def Collect_data(FTPprefix,Years,output_folder):
+def Collect_data(FTPprefix,Years,output_folder, Waitbar):
     '''
     This function downloads all the needed GLEAM files from hydras.ugent.be as a nc file.
 
@@ -201,6 +213,15 @@ def Collect_data(FTPprefix,Years,output_folder):
 
     username, password = WebAccounts.Accounts(Type='GLEAM')
   
+    # Create Waitbar
+    print '\nDownload GLEAM data'
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount2 = len(Years)
+        amount2 = 0
+        WaitbarConsole.printWaitBar(amount2, total_amount2, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
+    
     for year in Years:
         directory = os.path.join(FTPprefix, '%d' %year)  
         ssh=paramiko.SSHClient()
@@ -214,9 +235,11 @@ def Collect_data(FTPprefix,Years,output_folder):
         
         if not os.path.exists(local_filename):
             ftp.get(filename, local_filename)
-            print "downloading ", local_filename   
-        else:
-            print "file ", local_filename, " already exists"
+            
+        if Waitbar == 1:       
+            amount2 += 1
+            WaitbarConsole.printWaitBar(amount2, total_amount2, prefix = 'Progress:', suffix = 'Complete', length = 50)
+    
     
     ftp.close()
     ssh.close()

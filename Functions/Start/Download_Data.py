@@ -50,7 +50,7 @@ def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
         
         # Get start and enddates     
         Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path, 'MS') 																								
-
+        
         i = 1
         # Loop over the startdates																
         for Startdate_Download in Startdates:	
@@ -61,7 +61,7 @@ def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
             # download data between startdate and enddate
             CHIRPS.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
             i += 1												
-
+        
         # daily
         Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path, 'D') 																								
 

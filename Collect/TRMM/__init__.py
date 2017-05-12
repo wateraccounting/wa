@@ -17,9 +17,9 @@ The TRMM data is available since 1998-01-01 till 2015-04-30
 Examples:
 from wa.Collect import TRMM
 TRMM.daily(Dir='C:/Temp/', Startdate='1999-02-01', Enddate='1999-02-28',
-           latlim=[-10, 30], lonlim=[-20, 120], cores=2)
+           latlim=[-10, 30], lonlim=[-20, 120])
 TRMM.monthly(Dir='C:/Temp/', Startdate='1999-02-01', Enddate='1999-02-28',
-             latlim=[-10, 30], lonlim=[-20, 120], cores=2)
+             latlim=[-10, 30], lonlim=[-20, 120])
 """
 
 from .daily import main as daily

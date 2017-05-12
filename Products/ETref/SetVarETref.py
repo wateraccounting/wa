@@ -17,7 +17,7 @@ from wa.General import data_conversions as DC
 from wa.Products.ETref.CalcETref import calc_ETref
 
 
-def SetVariables(Dir, Startdate, Enddate, latlim, lonlim, pixel_size, cores, LANDSAF):
+def SetVariables(Dir, Startdate, Enddate, latlim, lonlim, pixel_size, cores, LANDSAF, Waitbar):
     """
     This function starts to calculate ETref (daily) data based on Hydroshed, GLDAS, and (CFSR/LANDSAF) in parallel or single core
 
@@ -32,16 +32,27 @@ def SetVariables(Dir, Startdate, Enddate, latlim, lonlim, pixel_size, cores, LAN
              It can be 'False' to avoid using parallel computing
 			routines.
     LANDSAF -- if LANDSAF data must be used it is 1
-    SourceLANDSAF -- the path to the LANDSAF files																									
+    SourceLANDSAF -- the path to the LANDSAF files		
+    Waitbar -- 1 (Default) will print the waitbar																									
     """	
     # Make an array of the days of which the ET is taken
     Dates = pd.date_range(Startdate,Enddate,freq = 'D')
 	
+    # Create Waitbar
+    if Waitbar == 1:
+        import wa.Functions.Start.Waitbar as Waitbar
+        total_amount = len(Dates)
+        amount = 0
+        Waitbar.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+    
     # Pass variables to parallel function and run
     args = [Dir, lonlim, latlim, pixel_size, LANDSAF]
     if not cores:
         for Date in Dates:
             ETref(Date, args)
+            if Waitbar == 1:
+                amount += 1
+                Waitbar.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
         results = True
     else:
         results = Parallel(n_jobs=cores)(delayed(ETref)(Date, args)
@@ -62,19 +73,19 @@ def ETref(Date, args):
 
     # Set the paths
     nameTmin='Tair-min_GLDAS-NOAH_C_daily_' + Date.strftime('%Y.%m.%d') + ".tif"
-    tmin_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','tair','min',nameTmin )
+    tmin_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','tair_f_inst','min',nameTmin )
         
     nameTmax='Tair-max_GLDAS-NOAH_C_daily_' + Date.strftime('%Y.%m.%d') + ".tif"
-    tmax_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','tair','max',nameTmax )
+    tmax_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','tair_f_inst','max',nameTmax )
         
     nameHumid='Hum_GLDAS-NOAH_kg-kg_daily_'+ Date.strftime('%Y.%m.%d') + ".tif"
-    humid_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','qair','mean',nameHumid )
+    humid_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','qair_f_inst','mean',nameHumid )
         
     namePress='P_GLDAS-NOAH_kpa_daily_'+ Date.strftime('%Y.%m.%d') + ".tif"
-    press_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','psurf','mean',namePress )
+    press_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','psurf_f_inst','mean',namePress )
         
     nameWind='W_GLDAS-NOAH_m-s-1_daily_'+ Date.strftime('%Y.%m.%d') + ".tif"
-    wind_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','wind','mean',nameWind )
+    wind_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','wind_f_inst','mean',nameWind )
         
     if LANDSAF==1:
                 

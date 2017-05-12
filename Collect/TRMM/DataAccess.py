@@ -9,15 +9,13 @@ Module: Collect/TRMM
 
 import numpy as np
 import os
-import gdal
 import pandas as pd
-from ftplib import FTP
-from struct import unpack
+import requests
 from joblib import Parallel, delayed
 
 import wa.General.data_conversions as DC
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCase):
     """
     This function downloads TRMM daily or monthly data
 
@@ -30,11 +28,12 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
     cores -- The number of cores used to run the routine. It can be 'False'
              to avoid using parallel computing routines.
     TimeCase -- String equal to 'daily' or 'monthly'
+    Waitbar -- 1 (Default) will print a waitbar   
     """
     # String Parameters
     if TimeCase == 'daily':
         VarCode = 'P_TRMM3B42.V7_mm-day-1_daily_'
-        FTPprefix = 'data/TRMM/Gridded/Derived_Products/3B42_V7/Daily/'
+        FTPprefix = 'pub/merged/3B42RT/'
         TimeFreq = 'D'
         Const = [1, '%j', 1]
     elif TimeCase == 'monthly':
@@ -51,6 +50,14 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
     if not Enddate:
         Enddate = pd.Timestamp('Now')
     Dates = pd.date_range(Startdate,  Enddate, freq=TimeFreq)
+    
+    # Create Waitbar
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount = len(Dates)
+        amount = 0
+        WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)  
+    
     if latlim[0] < -50 or latlim[1] > 50:
         print ('Latitude above 50N or below 50S is not possible.'
                ' Value set to maximum')
@@ -79,10 +86,14 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores, TimeCase):
     if not cores:
         for Date in Dates:
             RetrieveData(Date, args)
+            if Waitbar == 1:
+                amount += 1
+                WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
         results = True
     else:
         results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
                                          for Date in Dates)
+        
     return results
 
 
@@ -98,78 +109,48 @@ def RetrieveData(Date, args):
     # Argument
     [output_folder, VarCode, FTPprefix, Const,
      TimeCase, xID, yID, lonlim, latlim] = args
-    # File name .Tiff (final result)
-    DirFile = output_folder + VarCode + \
-        Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + \
-        Date.strftime('%d') + '.tif'
-    # Open ftp server
-    ftp = FTP("disc2.nascom.nasa.gov", "", "")
-    ftp.login()
-    pathFTP = FTPprefix + Date.strftime('%Y') + '/'
-    # ftp.retrlines("LIST")
-    ftp.cwd(pathFTP)
-    listing = []
-    ftp.retrlines("LIST", listing.append)
-    words = listing[Const[0]*int(
-            Date.strftime(Const[1])) - Const[2]].split(None, 8)
-    filename = words[-1].lstrip()
 
-    # Download the file
-    try:
-        local_filename = os.path.join(output_folder, filename)
-        lf = open(local_filename, "wb")
-        ftp.retrbinary("RETR " + filename, lf.write, 8192)  # 8*1024
-        lf.close()
+    year = Date.year
+    month= Date.month
+    day = Date.day
+    
+    from wa import WebAccounts
+    username, password = WebAccounts.Accounts(Type = 'NASA')
 
-        # Open .bin file
-        if TimeCase == 'daily':
-            opendata = output_folder + '3B42_daily.' + \
-                Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + \
-                Date.strftime('%d') + '.7.bin'
-        elif TimeCase == 'monthly':
-            opendata = output_folder + '3B43.' + Date.strftime('%y') + \
-                Date.strftime('%m') + Date.strftime('%d') + \
-                '.7.precipitation.accum'
-        else:
-                raise KeyError("The input time interval is not supported")
-        f = open(opendata, "rb")
-        NumbytesFile = 576000
-        NumElementxRecord = -1440
-        dataset = np.zeros(shape=(1440, 400))
-        i = -1
-        for PositionByte in range(NumbytesFile, 0, NumElementxRecord):
-            i = i + 1
-            Record = ''
-            for c in range(PositionByte - 720, PositionByte, 1):
-                f.seek(c * 4)
-                DataElement = unpack('>f', f.read(4))
-                Record = Record + str("%.2f" % DataElement + ' ')
+    # Create https
+    if TimeCase == 'daily':
+        URL = 'https://disc2.nascom.nasa.gov/opendap/TRMM_L3/TRMM_3B42_Daily.7/%d/%02d/3B42_Daily.%d%02d%02d.7.nc4.ascii?precipitation[%d:1:%d][%d:1:%d]'  %(year, month, year, month, day, xID[0], xID[1], yID[0], yID[1])
+        DirFile = os.path.join(output_folder, "P_TRMM3B42.V7_mm-day-1_daily_%d.%02d.%02d.tif" %(year, month, day))
+        
+    if TimeCase == 'monthly': 
+        URL = 'https://disc2.nascom.nasa.gov/opendap/TRMM_L3/TRMM_3B43.7/%d/3B43.%d%02d01.7A.HDF.ascii?precipitation[%d:1:%d][%d:1:%d]'  %(year, year, month, xID[0], xID[1], yID[0], yID[1])
+        DirFile = os.path.join(output_folder, "P_TRMM3B43.V7_mm-month-1_monthly_%d.%02d.01.tif" %(year, month))
+    
+    if not os.path.isfile(DirFile):
+        dataset = requests.get(URL, allow_redirects=False,stream = True)
+        try:
+            get_dataset = requests.get(dataset.headers['location'], auth = (username,password),stream = True)	
+        except:
+            from requests.packages.urllib3.exceptions import InsecureRequestWarning
+            requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+            get_dataset  = requests.get(dataset.headers['location'], auth = (username, password), verify = False)			
 
-            for c in range(PositionByte - 1440, PositionByte - 720, 1):
-                f.seek(c * 4)
-                DataElement = unpack('>f', f.read(4))
-                Record = Record + str("%.2f" % DataElement + ' ')
+    # download data (first save as text file)
+    pathtext = os.path.join(output_folder,'temp.txt')
+    z = open(pathtext,'w')
+    z.write(get_dataset.content)
+    z.close()
+															
+    # Open text file and remove header and footer																				
+    data_start = np.genfromtxt(pathtext,dtype = float,skip_header = 1,skip_footer = 6,delimiter=',')
+    data = data_start[:,1:]
+    data[data < 0] = -9999 
 
-            datasetrow = np.fromstring(Record, dtype=float, sep=' ')
-            dataset[:, i] = datasetrow
+    # Delete .txt file
+    os.remove(pathtext)
 
-        # Delete .bin file
-        f.close()
-        os.remove(opendata)
+    # Make geotiff file
+    geo = [lonlim[0], 0.25, 0, latlim[1], 0, -0.25]
+    DC.Save_as_tiff(name=DirFile, data=data, geo=geo, projection="WGS84")
 
-        # Clip extend out of world data
-        dataset = np.transpose(dataset)
-        if TimeCase == 'monthly':
-                dataset2 = dataset[:, 0:720]
-                dataset3 = dataset[:, 720:1440]
-                dataset = np.hstack([dataset3, dataset2])
-        data = dataset[yID[0]:yID[1], xID[0]:xID[1]]
-        data[data < 0] = -9999
-
-        # Make geotiff file
-        geo = [lonlim[0], 0.25, 0, latlim[1], 0, -0.25]
-        DC.Save_as_tiff(name=DirFile, data=data, geo=geo, projection="WGS84")
-								
-    except:
-        print "file not exists"
     return True

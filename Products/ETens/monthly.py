@@ -14,9 +14,9 @@ import numpy as np
 # WA+ modules
 from DataAccess import DownloadData
 
-def main(Dir, Startdate, Enddate, latlim, lonlim):
+def main(Dir, Startdate, Enddate, latlim, lonlim, Waitbar = 1):
     """
-    This function downloads MOD17 8-daily GPP data for the specified time
+    This function downloads ETensemble data for the specified time
     interval, and spatial extent.
 
     Keyword arguments:
@@ -25,6 +25,7 @@ def main(Dir, Startdate, Enddate, latlim, lonlim):
     Enddate -- 'yyyy-mm-dd'
     latlim -- [ymin, ymax]
     lonlim -- [xmin, xmax]
+    Waitbar -- 1 (Default) Will print a waitbar
     """
  
 	# Check the start and enddate
@@ -43,8 +44,9 @@ def main(Dir, Startdate, Enddate, latlim, lonlim):
         lonlim[0] = np.max(lonlim[0],-180)
         lonlim[1] = np.min(lonlim[1],180)
 
+    print '/nCreate monthly ETensemble maps for period %s till %s' %(Startdate, Enddate)
     # Download and create the ET data
-    DownloadData(Dir, Startdate, Enddate, latlim, lonlim)
+    DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar)
 
 if __name__ == '__main__':
     main(sys.argv)

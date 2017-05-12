@@ -18,7 +18,7 @@ from joblib import Parallel, delayed
 from wa.Collect.CFSR.Download_data_CFSR import Download_data
 from wa.General import data_conversions as DC
 
-def CollectData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores, Version):    
+def CollectData(Dir, Var, Startdate, Enddate, latlim, lonlim, Waitbar, cores, Version):    
     """
     This function collects daily CFSR data in geotiff format
 
@@ -29,6 +29,7 @@ def CollectData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores, Version):
     Enddate -- 'yyyy-mm-dd'
     latlim -- [ymin, ymax] (values must be between -50 and 50)
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
+    Waitbar -- 1 (Default) will print a wait bar
     cores -- The number of cores used to run the routine.
              It can be 'False' to avoid using parallel computing
 		    routines.
@@ -38,6 +39,14 @@ def CollectData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores, Version):
 				
     # Creates an array of the days of which the ET is taken
     Dates = pd.date_range(Startdate,Enddate,freq = 'D') 
+
+    # Create Waitbar
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount = len(Dates)
+        amount = 0
+        WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
     
     # For collecting CFSR data				
     if Version == 1:			
@@ -79,10 +88,13 @@ def CollectData(Dir, Var, Startdate, Enddate, latlim, lonlim, cores, Version):
     if not cores:
         for Date in Dates:
             RetrieveData(Date, args)
+            if Waitbar == 1:
+                amount += 1
+                WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
         results = True
     else:
         results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
-                                         for Date in Dates)	
+                                         for Date in Dates)
     
     # Remove all .nc and .grb2 files
     for f in os.listdir(output_folder):
@@ -194,4 +206,4 @@ def RetrieveData(Date, args):
         geo = [lonlim[0],pixel_size,0,latlim[1],0,-pixel_size]  
         DC.Save_as_tiff(data = np.flipud(DatasetEnd), name = outputnamePath, geo = geo, projection = "WGS84") 	
 				
-    return True
+    return()

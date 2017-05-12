@@ -15,8 +15,8 @@ This data is used within a water accounting framework.
 """
 
 
-from wa.Functions.Start import Area_converter, Boundaries, Download_Data, Eightdaily_to_monthly, Get_Dictionaries
+from wa.Functions.Start import Area_converter, Boundaries, Download_Data, Eightdaily_to_monthly, Get_Dictionaries, WaitbarConsole
 
-__all__ = ['Area_converter', 'Boundaries', 'Download_Data','Eightdaily_to_monthly', 'Get_Dictionaries']
+__all__ = ['Area_converter', 'Boundaries', 'Download_Data','Eightdaily_to_monthly', 'Get_Dictionaries', 'WaitbarConsole']
 
 __version__ = '0.1'

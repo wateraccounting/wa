@@ -4,7 +4,7 @@ from DataAccess import DownloadData
 
 
 def main(Dir, Startdate='', Enddate='',
-         latlim=[-50, 50], lonlim=[-180, 180], cores=False):
+         latlim=[-50, 50], lonlim=[-180, 180], cores=False, Waitbar = 1):
                 """
                 This function downloads daily CHIRPS data
 
@@ -17,9 +17,12 @@ def main(Dir, Startdate='', Enddate='',
                 cores -- The number of cores used to run the routine.
                          It can be 'False' to avoid using parallel computing
                          routines.
+                Waitbar -- 1 (Default) will print a waitbar         
                 """
+                print '\nDownload daily CHIRPS rainfall data for the period %s till %s' %(Startdate, Enddate)
+				
                 # Download data
-                DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores,
+                DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores,
                              TimeCase='daily')
 
 if __name__ == '__main__':

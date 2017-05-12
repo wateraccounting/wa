@@ -14,7 +14,7 @@ import sys
 # Water Accounting modules
 from wa.Collect.DEM.DataAccess import DownloadData
 
-def main(Dir, latlim, lonlim, resolution = '3s'):
+def main(Dir, latlim, lonlim, resolution = '3s', Waitbar = 1):
     """
     Downloads HydroSHED flow direction data from http://www.hydrosheds.org/download/
 
@@ -38,12 +38,25 @@ def main(Dir, latlim, lonlim, resolution = '3s'):
     parameter = "dir_%s" %resolution
 
     if not os.path.exists(nameEnd):
+         
+        # Create Waitbar
+        if Waitbar == 1:
+            print '\nDownload HydroSHED Drainage Direction map with a resolution of %s' %resolution
+            import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+            total_amount = 1
+            amount = 0
+            WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
 
         # Download and process the data
         DownloadData(output_folder, latlim, lonlim, parameter, resolution)
 
+        if Waitbar == 1:
+            amount = 1
+            WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
     else:
-        print "DIR HydroSHED already exists in output folder"
+        if Waitbar == 1:
+            print "\nHydroSHED Drainage direction (%s) already exists in output folder" %resolution
 
 if __name__ == '__main__':
     main(sys.argv)

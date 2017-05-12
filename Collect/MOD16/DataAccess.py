@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 import wa.General.raster_conversions as RC
 import wa.General.data_conversions as DC
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
     """
     This function downloads MOD13 16-daily data
 
@@ -35,6 +35,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
     cores -- The number of cores used to run the routine. It can be 'False'
              to avoid using parallel computing routines.
+    Waitbar -- 1 (Default) will print a waitbar             
     """
 
     # Check start and end date and otherwise set the date
@@ -45,6 +46,13 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     
     # Make an array of the days of which the ET is taken
     Dates = pd.date_range(Startdate,Enddate,freq = 'M')    
+
+    # Create Waitbar
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount = len(Dates)
+        amount = 0
+        WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
     
     # Make directory for the MODIS ET data
     output_folder=os.path.join(Dir,'Evaporation','MOD16')
@@ -68,10 +76,13 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     if not cores:
         for Date in Dates:
             RetrieveData(Date, args)
-            results = True
+            if Waitbar == 1:
+                amount += 1
+                WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+        results = True
     else:
         results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
-                                                 for Date in Dates) 
+                                         for Date in Dates)
                                     
     # Remove all .hdf files	
     os.chdir(output_folder)
@@ -84,7 +95,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, cores):
     for f in files:
         os.remove(os.path.join(output_folder, f))      
 													
-	return()	
+	return results	
 
 def RetrieveData(Date, args):
     """
@@ -218,9 +229,7 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
     
                         HTTP_name = url + HDF_name
                         output_name = os.path.join(output_folder, HDF_name)
-                        if  os.path.isfile(output_name):
-                            print "file", output_name, "already exists"																
-                        else:
+                        if not os.path.isfile(output_name):
                             downloaded = 0																				
                             while downloaded == 0:																				
 																				
@@ -230,7 +239,7 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                                 # Say that download was succesfull		
                                 if int(statinfo.st_size) > 1000:																								
                                    downloaded = 1
-                                   print "downloaded ", HTTP_name    
+
              
                         # Open .hdf only band with ET and collect all tiles to one array
                         dataset=gdal.Open(output_name)

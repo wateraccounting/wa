@@ -20,7 +20,7 @@ from wa.General import data_conversions as DC
 from wa.Products.ETref import daily
 
 def main(Dir, Startdate = '', Enddate = '',
-         latlim = [-60, 60], lonlim = [-180, 180], pixel_size = False, cores = False, LANDSAF =  0, SourceLANDSAF=  ''):
+         latlim = [-60, 60], lonlim = [-180, 180], pixel_size = False, cores = False, LANDSAF =  0, SourceLANDSAF=  '', Waitbar = 1):
     """
     This function downloads TRMM3B43 V7 (monthly) data
 
@@ -33,10 +33,20 @@ def main(Dir, Startdate = '', Enddate = '',
     cores -- The number of cores used to run the routine.
              It can be 'False' to avoid using parallel computing
              routines.
+    Waitbar -- 1 (Default) will print the waitbar	             
     """
-				
+    
+    print 'Create monthly Reference ET data for period %s till %s' %(Startdate, Enddate)	
+		
     # An array of monthly dates which will be calculated            
     Dates = pd.date_range(Startdate,Enddate,freq = 'MS') 												
+
+    # Create Waitbar
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount = len(Dates)
+        amount = 0
+        WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
 
 	# Calculate the ETref day by day for every month														
     for Date in Dates:
@@ -50,7 +60,7 @@ def main(Dir, Startdate = '', Enddate = '',
         EndTime=Date.strftime('%Y')+'-'+Date.strftime('%m')+'-'+str(Mday)
                    
         # Get ETref on daily basis
-        daily(Dir=Dir, Startdate=StartTime,Enddate=EndTime,latlim=latlim, lonlim=lonlim, pixel_size = pixel_size, cores=cores, LANDSAF=LANDSAF, SourceLANDSAF=SourceLANDSAF)
+        daily(Dir=Dir, Startdate=StartTime,Enddate=EndTime,latlim=latlim, lonlim=lonlim, pixel_size = pixel_size, cores=cores, LANDSAF=LANDSAF, SourceLANDSAF=SourceLANDSAF, Waitbar = 0)
 
         # Load DEM 
         if not pixel_size:
@@ -81,6 +91,12 @@ def main(Dir, Startdate = '', Enddate = '',
        
         # Create the tiff file
         DC.Save_as_tiff(DirMonth,dataMonth, geo_ET, proj)
+
+        # Create Waitbar
+        if Waitbar == 1:
+            amount += 1
+            WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
 
 if __name__ == '__main__':
     main(sys.argv)

@@ -14,7 +14,7 @@ from wa.General import data_conversions as DC
 import wa.Functions.Five as Five
 import wa.Functions.Start as Start
 
-def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Simulation):
+def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddate, Simulation):
 
     ######################### Set General Parameters ##############################
 
@@ -133,6 +133,7 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Simulation):
     ###################### Calculate Runoff with Budyko ###########################
 
     Name_NC_Runoff_CR = DC.Create_NC_name('Runoff_CR', Simulation, Dir_Basin, info)
+    Name_NC_Runoff_for_Routing_CR = Name_NC_Runoff_CR
     if not os.path.exists(Name_NC_Runoff_CR):
 
         DataCube_Runoff_CR = Five.Budyko.Calc_runoff(Name_NC_ETref_CR, Name_NC_Prec_CR)
@@ -156,9 +157,15 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Simulation):
      '''      
     ############### Add inflow in basin by using textfile #########################       
     
-    # tekst file in cubic meter per second dan reken ik het zelf om naar mm voor die ene pixel
-    # Deze pixel wordt later weer meegenomen in de channel routing
-    
+    if len(Inflow_Text_Files) > 0:
+        Name_NC_Runoff_with_Inlets_CR = DC.Create_NC_name('Runoff_with_Inlets_CR', Simulation, Dir_Basin, info)
+        Name_NC_Runoff_for_Routing_CR = Name_NC_Runoff_with_Inlets_CR
+
+        if not os.path.exists(Name_NC_Runoff_with_Inlets_CR):       
+            DataCube_Runoff_with_Inlets_CR = Five.Inlets.Add_Inlets(Name_NC_Runoff_CR, Inflow_Text_Files)
+            DC.Save_as_NC(Name_NC_Runoff_with_Inlets_CR, DataCube_Runoff_with_Inlets_CR, 'Runoff_with_Inlets_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
+            del DataCube_Runoff_with_Inlets_CR
+
     ######################### Apply Channel Routing ###############################
 
     info = ['monthly','pixels', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
@@ -167,7 +174,7 @@ def Calculate(Basin, P_Product, ET_Product, Startdate, Enddate, Simulation):
     Name_NC_Routed_Discharge_CR = DC.Create_NC_name('Routed_Discharge_CR', Simulation, Dir_Basin, info)
 
     if not (os.path.exists(Name_NC_Acc_Pixels_CR) and os.path.exists(Name_NC_Routed_Discharge_CR)):
-        Accumulated_Pixels_CR, Routed_Discharge_CR = Five.Channel_Routing.Channel_Routing(Name_NC_DEM_Dir_CR, Name_NC_Runoff_CR, Name_NC_Basin_CR, Example_dataset, Degrees = 1)
+        Accumulated_Pixels_CR, Routed_Discharge_CR = Five.Channel_Routing.Channel_Routing(Name_NC_DEM_Dir_CR, Name_NC_Runoff_for_Routing_CR, Name_NC_Basin_CR, Example_dataset, Degrees = 1)
 
         # Save Results
         DC.Save_as_NC(Name_NC_Acc_Pixels_CR, Accumulated_Pixels_CR, 'Acc_Pixels_CR', Example_dataset)

@@ -195,8 +195,6 @@ def slope_correct(down_short_hor, pressure, ea, DEMmap, DOY):
     
     Rs_equiv = Rs / np.cos(slope)
 
-    print('bias: '+str(np.nansum(Rs_hor)/np.nansum(Rs_equiv)))
-
     bias = np.nansum(Rs_hor)/np.nansum(Rs_equiv)
 
     return Rs_equiv, tau, bias				
