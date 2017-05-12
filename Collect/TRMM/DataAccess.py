@@ -32,15 +32,9 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCa
     """
     # String Parameters
     if TimeCase == 'daily':
-        VarCode = 'P_TRMM3B42.V7_mm-day-1_daily_'
-        FTPprefix = 'pub/merged/3B42RT/'
         TimeFreq = 'D'
-        Const = [1, '%j', 1]
     elif TimeCase == 'monthly':
-        VarCode = 'P_TRMM3B42.V7_mm-month-1_monthly_'
-        FTPprefix = 'data/TRMM/Gridded/3B43_V7/'
         TimeFreq = 'MS'
-        Const = [4, '%m', 3]
     else:
         raise KeyError("The input time interval is not supported")
    
@@ -81,8 +75,8 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCa
                              np.ceil((lonlim[1])*4)]) + 720)
 
     # Pass variables to parallel function and run
-    args = [output_folder, VarCode, FTPprefix, Const,
-            TimeCase, xID, yID, lonlim, latlim]
+    args = [output_folder, TimeCase, xID, yID, lonlim, latlim]
+    
     if not cores:
         for Date in Dates:
             RetrieveData(Date, args)
@@ -107,8 +101,7 @@ def RetrieveData(Date, args):
     args -- A list of parameters defined in the DownloadData function.
     """
     # Argument
-    [output_folder, VarCode, FTPprefix, Const,
-     TimeCase, xID, yID, lonlim, latlim] = args
+    [output_folder, TimeCase, xID, yID, lonlim, latlim] = args
 
     year = Date.year
     month= Date.month
@@ -119,11 +112,11 @@ def RetrieveData(Date, args):
 
     # Create https
     if TimeCase == 'daily':
-        URL = 'https://disc2.nascom.nasa.gov/opendap/TRMM_L3/TRMM_3B42_Daily.7/%d/%02d/3B42_Daily.%d%02d%02d.7.nc4.ascii?precipitation[%d:1:%d][%d:1:%d]'  %(year, month, year, month, day, xID[0], xID[1], yID[0], yID[1])
+        URL = 'https://disc2.nascom.nasa.gov/opendap/TRMM_L3/TRMM_3B42_Daily.7/%d/%02d/3B42_Daily.%d%02d%02d.7.nc4.ascii?precipitation[%d:1:%d][%d:1:%d]'  %(year, month, year, month, day, xID[0], xID[1]-1, yID[0], yID[1]-1)
         DirFile = os.path.join(output_folder, "P_TRMM3B42.V7_mm-day-1_daily_%d.%02d.%02d.tif" %(year, month, day))
         
     if TimeCase == 'monthly': 
-        URL = 'https://disc2.nascom.nasa.gov/opendap/TRMM_L3/TRMM_3B43.7/%d/3B43.%d%02d01.7A.HDF.ascii?precipitation[%d:1:%d][%d:1:%d]'  %(year, year, month, xID[0], xID[1], yID[0], yID[1])
+        URL = 'https://disc2.nascom.nasa.gov/opendap/TRMM_L3/TRMM_3B43.7/%d/3B43.%d%02d01.7A.HDF.ascii?precipitation[%d:1:%d][%d:1:%d]'  %(year, year, month, xID[0], xID[1]-1, yID[0], yID[1]-1)
         DirFile = os.path.join(output_folder, "P_TRMM3B43.V7_mm-month-1_monthly_%d.%02d.01.tif" %(year, month))
     
     if not os.path.isfile(DirFile):
@@ -135,22 +128,24 @@ def RetrieveData(Date, args):
             requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
             get_dataset  = requests.get(dataset.headers['location'], auth = (username, password), verify = False)			
 
-    # download data (first save as text file)
-    pathtext = os.path.join(output_folder,'temp.txt')
-    z = open(pathtext,'w')
-    z.write(get_dataset.content)
-    z.close()
-															
-    # Open text file and remove header and footer																				
-    data_start = np.genfromtxt(pathtext,dtype = float,skip_header = 1,skip_footer = 6,delimiter=',')
-    data = data_start[:,1:]
-    data[data < 0] = -9999 
+        # download data (first save as text file)
+        pathtext = os.path.join(output_folder,'temp.txt')
+        z = open(pathtext,'w')
+        z.write(get_dataset.content)
+        z.close()
+	 														
+        # Open text file and remove header and footer																				
+        data_start = np.genfromtxt(pathtext,dtype = float,skip_header = 1,delimiter=',')
+        data = data_start[:,1:]
+        data[data < 0] = -9999 
+        data = data.transpose()
+        data = np.flipud(data)
+ 
+        # Delete .txt file
+        os.remove(pathtext)
 
-    # Delete .txt file
-    os.remove(pathtext)
-
-    # Make geotiff file
-    geo = [lonlim[0], 0.25, 0, latlim[1], 0, -0.25]
-    DC.Save_as_tiff(name=DirFile, data=data, geo=geo, projection="WGS84")
+        # Make geotiff file
+        geo = [lonlim[0], 0.25, 0, latlim[1], 0, -0.25]
+        DC.Save_as_tiff(name=DirFile, data=data, geo=geo, projection="WGS84")
 
     return True
