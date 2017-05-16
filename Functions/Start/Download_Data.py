@@ -172,6 +172,25 @@ def Evapotranspiration(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD16
             # download data between startdate and enddate            
             MOD16.ET_monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
             i += 1
+
+    if Product is 'GLEAM':
+        from wa.Collect import GLEAM
+        
+        # Define data path             
+        Data_Path = os.path.join('Evaporation','monthly','GLEAM')	
+        
+        # Get start and enddates             
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																							
+
+        i = 1																
+        for Startdate_Download in Startdates:
+
+            # Define enddate																	
+            Enddate_download = Enddates[-i]
+            
+            # download data between startdate and enddate            
+            GLEAM.ET_monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
+            i += 1
 	   							
     return(Data_Path)		
 
