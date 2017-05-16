@@ -8,6 +8,7 @@ import os
 import gdal
 import numpy as np
 import pandas as pd
+import copy
 
 from wa.General import raster_conversions as RC
 from wa.General import data_conversions as DC
@@ -34,6 +35,10 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     
     # Define resolution of SRTM
     Resolution = '15s'
+    
+    # Get the amount of months
+    Amount_months = len(pd.date_range(Startdate,Enddate,freq='MS'))
+    Amount_months_reservoirs = Amount_months + 1
 
     ############################# Download Data ###################################
 
@@ -166,19 +171,27 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
             DC.Save_as_NC(Name_NC_Runoff_with_Inlets_CR, DataCube_Runoff_with_Inlets_CR, 'Runoff_with_Inlets_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
             del DataCube_Runoff_with_Inlets_CR
 
+    ######################### Now the surface water is calculated #################
+
+    # Names for dicionaries and nc files
+    # CR1 = Natural_flow with only green water
+    # CR2 = Natural_flow with only green water and reservoirs
+    # CR3 = Flow with green, bleu and reservoirs
+
     ######################### Apply Channel Routing ###############################
 
     info = ['monthly','pixels', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
     Name_NC_Acc_Pixels_CR = DC.Create_NC_name('Acc_Pixels_CR', Simulation, Dir_Basin)
     info = ['monthly','m3', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
-    Name_NC_Routed_Discharge_CR = DC.Create_NC_name('Routed_Discharge_CR', Simulation, Dir_Basin, info)
+    Name_NC_Discharge_CR1 = DC.Create_NC_name('Discharge_CR1', Simulation, Dir_Basin, info)
 
-    if not (os.path.exists(Name_NC_Acc_Pixels_CR) and os.path.exists(Name_NC_Routed_Discharge_CR)):
-        Accumulated_Pixels_CR, Routed_Discharge_CR = Five.Channel_Routing.Channel_Routing(Name_NC_DEM_Dir_CR, Name_NC_Runoff_for_Routing_CR, Name_NC_Basin_CR, Example_dataset, Degrees = 1)
+    if not (os.path.exists(Name_NC_Acc_Pixels_CR) and os.path.exists(Name_NC_Discharge_CR1)):
+
+        Accumulated_Pixels_CR, Discharge_CR1 = Five.Channel_Routing.Channel_Routing(Name_NC_DEM_Dir_CR, Name_NC_Runoff_for_Routing_CR, Name_NC_Basin_CR, Example_dataset, Degrees = 1)
 
         # Save Results
         DC.Save_as_NC(Name_NC_Acc_Pixels_CR, Accumulated_Pixels_CR, 'Acc_Pixels_CR', Example_dataset)
-        DC.Save_as_NC(Name_NC_Routed_Discharge_CR, Routed_Discharge_CR, 'Routed_Discharge_CR', Example_dataset, Startdate, Enddate, 'monthly')
+        DC.Save_as_NC(Name_NC_Discharge_CR1, Discharge_CR1, 'Discharge_CR1', Example_dataset, Startdate, Enddate, 'monthly')
 
     ################# Calculate the natural river and river zones #################
     
@@ -186,11 +199,14 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     if not os.path.exists(Name_NC_Rivers_CR):
 
         # Open routed discharge array
-        Routed_Discharge_CR = RC.Open_nc_array(Name_NC_Routed_Discharge_CR)
+        Discharge_CR1 = RC.Open_nc_array(Name_NC_Discharge_CR1)
         Raster_Basin = RC.Open_nc_array(Name_NC_Basin_CR)
 
         # Calculate mean average over the period
-        Routed_Discharge_Ave = np.nanmean(Routed_Discharge_CR, axis=0)
+        if len(np.shape(Discharge_CR1))>2:
+            Routed_Discharge_Ave = np.nanmean(Discharge_CR1, axis=0)
+        else:
+            Routed_Discharge_Ave = Discharge_CR1
 
         # Define the 2% highest pixels as rivers
         Rivers = np.zeros([np.size(Routed_Discharge_Ave,0),np.size(Routed_Discharge_Ave,1)])
@@ -202,52 +218,131 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
         DC.Save_as_NC(Name_NC_Rivers_CR, Rivers, 'Rivers_CR', Example_dataset)
 
     ########################## Create river directories ###########################  
-
-    Amount_months = len(pd.date_range(Startdate,Enddate,freq='MS'))
-    Amount_months_reservoirs = Amount_months + 1
-
-    # Get river and DEM dict
-    River_dict, DEM_dict, Distance_dict = Five.Create_Dict.Rivers_General(Name_NC_DEM_CR, Name_NC_DEM_Dir_CR, Name_NC_Acc_Pixels_CR, Name_NC_Rivers_CR, Example_dataset)
-
-    # Get discharge dict
-    Discharge_dict = Five.Create_Dict.Discharge(Name_NC_Routed_Discharge_CR, River_dict, Amount_months, Example_dataset)
-
-    ###################### Calculate surface water storage characteristics ######################  
-      
-    # define input tiffs for surface water calculations 
-    input_JRC = os.path.join(Dir_Basin, Data_Path_JRC_occurrence, 'JRC_Occurrence_percent.tif')
-    DEM_dataset = os.path.join(Dir_Basin, Data_Path_DEM, 'DEM_HydroShed_m_3s.tif')
     
-    sensitivity = 700 # 900 is less sensitive 1 is very sensitive
-    Regions = Five.Reservoirs.Calc_Regions(Name_NC_Basin_CR, input_JRC, sensitivity, Boundaries)
-    
-    Diff_Water_Volume = np.zeros([len(Regions), Amount_months_reservoirs -1, 3])
-    reservoir=0
-    
-    for region in Regions:
+    Name_py_River_dict_CR1 = os.path.join(Dir_Basin,'Simulations','River_dict_CR1_simulation%d.npy' %(Simulation)) 
+    Name_py_DEM_dict_CR1 = os.path.join(Dir_Basin,'Simulations','DEM_dict_CR1_simulation%d.npy' %(Simulation))    
+    Name_py_Distance_dict_CR1 = os.path.join(Dir_Basin,'Simulations','Distance_dict_CR1_simulation%d.npy' %(Simulation))
 
-        popt = Five.Reservoirs.Find_Area_Volume_Relation(region, input_JRC, DEM_dataset)
+    if not (os.path.exists(Name_py_River_dict_CR1) or os.path.exists(Name_py_DEM_dict_CR1) or os.path.exists(Name_py_Distance_dict_CR1)):
 
-        Area_Reservoir_Values = Five.Reservoirs.GEE_calc_reservoir_area(region, Startdate, Enddate)
+        # Get river and DEM dict
+        River_dict_CR1, DEM_dict_CR1, Distance_dict_CR1 = Five.Create_Dict.Rivers_General(Name_NC_DEM_CR, Name_NC_DEM_Dir_CR, Name_NC_Acc_Pixels_CR, Name_NC_Rivers_CR, Example_dataset)
+        np.save(Name_py_River_dict_CR1, River_dict_CR1) 
+        np.save(Name_py_DEM_dict_CR1, DEM_dict_CR1) 
+        np.save(Name_py_Distance_dict_CR1, Distance_dict_CR1) 
+    else:
+        # Load
+        River_dict_CR1 = np.load(Name_py_River_dict_CR1).item()         
+        DEM_dict_CR1 = np.load(Name_py_DEM_dict_CR1).item()  
+        Distance_dict_CR1 = np.load(Name_py_Distance_dict_CR1).item()  
         
-        Diff_Water_Volume[reservoir,:,:] = Five.Reservoirs.Calc_Diff_Storage(Area_Reservoir_Values, popt)
-        reservoir+=1
+    Name_py_Discharge_dict_CR1 = os.path.join(Dir_Basin,'Simulations','Discharge_dict_CR1_simulation%d.npy' %(Simulation))
 
-    ################# Add storage reservoirs and change outflows ##################
+    if not os.path.exists(Name_py_Discharge_dict_CR1):
+        # Get discharge dict
+        Discharge_dict_CR1 = Five.Create_Dict.Discharge(Name_NC_Discharge_CR1, River_dict_CR1, Amount_months, Example_dataset)
+        np.save(Name_py_Discharge_dict_CR1, Discharge_dict_CR1) 
+    else:
+        # Load
+        Discharge_dict_CR1 = np.load(Name_py_Discharge_dict_CR1).item() 
+    
+    
+    ###################### Calculate surface water storage characteristics ######################  
 
-    Discharge_dict, River_dict = Five.Reservoirs.Add_Reservoirs(Name_NC_Rivers_CR, Name_NC_Acc_Pixels_CR, Diff_Water_Volume, River_dict, Discharge_dict, Regions, Example_dataset)       
-     
-    # Create array again
+    Name_py_Discharge_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Discharge_dict_CR2_simulation%d.npy' %(Simulation))    
+    Name_py_River_dict_CR2 = os.path.join(Dir_Basin,'Simulations','River_dict_CR2_simulation%d.npy' %(Simulation))
+    Name_py_DEM_dict_CR2 = os.path.join(Dir_Basin,'Simulations','DEM_dict_CR2_simulation%d.npy' %(Simulation))    
+    Name_py_Distance_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Distance_dict_CR2_simulation%d.npy' %(Simulation))
+    
+    if not (os.path.exists(Name_py_Discharge_dict_CR2) or os.path.exists(Name_py_River_dict_CR2) or os.path.exists(Name_py_DEM_dict_CR2) or os.path.exists(Name_py_Distance_dict_CR2)):      
 
+        # Copy dicts as starting adding reservoir 
+        Discharge_dict_CR2 = copy.deepcopy(Discharge_dict_CR1)
+        River_dict_CR2 = copy.deepcopy(River_dict_CR1)
+        DEM_dict_CR2 = copy.deepcopy(DEM_dict_CR1)
+        Distance_dict_CR2 = copy.deepcopy(Distance_dict_CR1)
+        
+        # define input tiffs for surface water calculations 
+        input_JRC = os.path.join(Dir_Basin, Data_Path_JRC_occurrence, 'JRC_Occurrence_percent.tif')
+        DEM_dataset = os.path.join(Dir_Basin, Data_Path_DEM, 'DEM_HydroShed_m_3s.tif')
+    
+        sensitivity = 700 # 900 is less sensitive 1 is very sensitive
+        Regions = Five.Reservoirs.Calc_Regions(Name_NC_Basin_CR, input_JRC, sensitivity, Boundaries)
+    
+        Diff_Water_Volume = np.zeros([len(Regions), Amount_months_reservoirs -1, 3])
+        reservoir=0
+    
+        for region in Regions:
 
+            popt = Five.Reservoirs.Find_Area_Volume_Relation(region, input_JRC, DEM_dataset)
 
+            Area_Reservoir_Values = Five.Reservoirs.GEE_calc_reservoir_area(region, Startdate, Enddate)
+        
+            Diff_Water_Volume[reservoir,:,:] = Five.Reservoirs.Calc_Diff_Storage(Area_Reservoir_Values, popt)
+            reservoir+=1
 
+        ################# Add storage reservoirs and change outflows ##################
+        Discharge_dict_CR2, River_dict_CR2, DEM_dict_CR2, Distance_dict_CR2 = Five.Reservoirs.Add_Reservoirs(Name_NC_Rivers_CR, Name_NC_Acc_Pixels_CR, Diff_Water_Volume, River_dict_CR2, Discharge_dict_CR2, DEM_dict_CR2, Distance_dict_CR2, Regions, Example_dataset)       
+    
+        np.save(Name_py_Discharge_dict_CR2, Discharge_dict_CR2)
+        np.save(Name_py_River_dict_CR2, River_dict_CR2)
+        np.save(Name_py_DEM_dict_CR2, DEM_dict_CR2)
+        np.save(Name_py_Distance_dict_CR2, Distance_dict_CR2)
+        
+    else:
+        # Load
+        Discharge_dict_CR2 = np.load(Name_py_Discharge_dict_CR2).item() 
+        River_dict_CR2 = np.load(Name_py_River_dict_CR2).item() 
+        DEM_dict_CR2 = np.load(Name_py_DEM_dict_CR2).item() 
+        Distance_dict_CR2 = np.load(Name_py_Distance_dict_CR2).item() 
+        
+    ####################### Add surface water Withdrawals ############################# 
+   
+    Name_py_Discharge_dict_CR3 = os.path.join(Dir_Basin,'Simulations','Discharge_dict_CR3_simulation%d.npy' %(Simulation))    
+
+    if not os.path.exists(Name_py_Discharge_dict_CR3):
+
+        Discharge_dict_CR3 = Five.Irrigation.Add_irrigation(Discharge_dict_CR2, River_dict_CR2, Name_NC_Rivers_CR, Name_NC_ET_CR, Name_NC_ETref_CR, Name_NC_Prec_CR, Example_dataset)
+        np.save(Name_py_Discharge_dict_CR3, Discharge_dict_CR3)
+        
+    else:
+        Discharge_dict_CR3 = np.load(Name_py_Discharge_dict_CR3).item() 
+                                       
     ################################# Plot graph ##################################
 
     # Draw graph
-    Five.Channel_Routing.Graph_DEM_Distance_Discharge(Name_NC_DEM_CR, Name_NC_DEM_Dir_CR, Name_NC_Acc_Pixels_CR, Name_NC_Rivers_CR, Name_NC_Routed_Discharge_CR, Startdate, Enddate, Example_dataset)
+    Five.Channel_Routing.Graph_DEM_Distance_Discharge(Discharge_dict_CR3, Distance_dict_CR2, DEM_dict_CR2, River_dict_CR2, Startdate, Enddate, Example_dataset)
 
     ######################## Change data to fit the LU data #######################
+
+    # Discharge
+    # Define info for the nc files
+    info = ['monthly','m3-month-1', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
+
+    Name_NC_Discharge = DC.Create_NC_name('Discharge', Simulation, Dir_Basin, info)
+    if not os.path.exists(Name_NC_Discharge):
+
+        # Get the data of Reference Evapotranspiration and save as nc
+        DataCube_Discharge_CR = DC.Convert_dict_to_array(River_dict_CR2, Discharge_dict_CR3, Example_dataset)
+        DC.Save_as_NC(Name_NC_Discharge, DataCube_Discharge_CR, 'Discharge', Example_dataset, Startdate, Enddate, 'monthly')
+        del DataCube_Discharge_CR       
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # DEM
     Name_NC_DEM = DC.Create_NC_name('DEM', Simulation, Dir_Basin)
@@ -317,7 +412,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     if not os.path.exists(Name_NC_Routed_Discharge):
 
         # Get the data of Reference Evapotranspiration and save as nc
-        Routed_Discharge_CR = RC.Open_nc_array(Name_NC_Routed_Discharge_CR)
+        Routed_Discharge_CR = RC.Open_nc_array(Name_NC_Natural_Discharge_CR)
         DataCube_Routed_Discharge = RC.resize_array_example(Routed_Discharge_CR, LU_data)
         DC.Save_as_NC(Name_NC_Routed_Discharge, DataCube_Routed_Discharge, 'Routed_Discharge', LU_dataset, Startdate, Enddate, 'monthly')
         del DataCube_Routed_Discharge, Routed_Discharge_CR        

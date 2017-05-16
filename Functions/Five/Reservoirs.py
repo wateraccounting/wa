@@ -407,7 +407,7 @@ def Calc_Diff_Storage(Area_Reservoir_Values, popt):
     return(Diff_Water_Volume)
          
 
-def Add_Reservoirs(Name_NC_Rivers ,Name_NC_Acc_Pixels, Diff_Water_Volume, River_dict, Discharge_dict,  Regions, Example_dataset):
+def Add_Reservoirs(Name_NC_Rivers ,Name_NC_Acc_Pixels, Diff_Water_Volume, River_dict, Discharge_dict, DEM_dict, Distance_dict, Regions, Example_dataset):
  
     import numpy as np
     
@@ -457,8 +457,6 @@ def Add_Reservoirs(Name_NC_Rivers ,Name_NC_Acc_Pixels, Diff_Water_Volume, River_
         y_pix_res,x_pix_res = np.argwhere(Rivers_Acc_Pixels_reservoir==Value_Reservoir)[0]
         ID_reservoir = Rivers_ID_reservoir[y_pix_res,x_pix_res]
 
-
-
         # Find exact reservoir area in river directory
         for River_part in River_dict.iteritems():
             if len(np.argwhere(River_part[1] == ID_reservoir)) > 0:
@@ -496,16 +494,26 @@ def Add_Reservoirs(Name_NC_Rivers ,Name_NC_Acc_Pixels, Diff_Water_Volume, River_
             River_dict[i]=River_dict[int(Reservoir_is_in_River[row_reservoir,1])][int(Reservoir_is_in_River[row_reservoir,0]):]
             River_dict[int(Reservoir_is_in_River[row_reservoir,1])] = River_dict[int(Reservoir_is_in_River[row_reservoir,1])][:int(Reservoir_is_in_River[row_reservoir,0])+1]
 
+            DEM_dict[i]=DEM_dict[int(Reservoir_is_in_River[row_reservoir,1])][int(Reservoir_is_in_River[row_reservoir,0]):]
+            DEM_dict[int(Reservoir_is_in_River[row_reservoir,1])] = DEM_dict[int(Reservoir_is_in_River[row_reservoir,1])][:int(Reservoir_is_in_River[row_reservoir,0])+1]
+
+            Distance_dict[i]=Distance_dict[int(Reservoir_is_in_River[row_reservoir,1])][int(Reservoir_is_in_River[row_reservoir,0]):]
+            Distance_dict[int(Reservoir_is_in_River[row_reservoir,1])] = Distance_dict[int(Reservoir_is_in_River[row_reservoir,1])][:int(Reservoir_is_in_River[row_reservoir,0])+1]
+
             Discharge_dict[i]=Discharge_dict[int(Reservoir_is_in_River[row_reservoir,1])][:,int(Reservoir_is_in_River[row_reservoir,0]):]
-            Discharge_dict[int(Reservoir_is_in_River[row_reservoir,1])] = Discharge_dict[int(Reservoir_is_in_River[row_reservoir,1])][:,:int(Reservoir_is_in_River[row_reservoir,0])+1] - Change_outflow_m3[:,None]
+            Discharge_dict[int(Reservoir_is_in_River[row_reservoir,1])] = Discharge_dict[int(Reservoir_is_in_River[row_reservoir,1])][:,:int(Reservoir_is_in_River[row_reservoir,0])+1]      
+            Discharge_dict[int(Reservoir_is_in_River[row_reservoir,1])][:,1:int(Reservoir_is_in_River[row_reservoir,0])+1] = Discharge_dict[int(Reservoir_is_in_River[row_reservoir,1])][:,1:int(Reservoir_is_in_River[row_reservoir,0])+1] - Change_outflow_m3[:,None]
             Next_ID = River_dict[int(Reservoir_is_in_River[row_reservoir,1])][0]
-              
-            while int(Next_ID) != int(River_dict[0][0]):
-                for River_part in River_dict.iteritems():
-                    if River_part[-1][-1] == Next_ID:
-                        Next_ID = River_part[-1][0] 
-                        item = River_part[0]
-                        Discharge_dict[item][:] = Discharge_dict[item][:,:] - Change_outflow_m3[:,None]
-                        print(item)
-  
-    return(Discharge_dict, River_dict)    
+            
+            times = 0
+            while len(River_dict) > times:
+               for River_part in River_dict.iteritems():
+                   if River_part[-1][-1] == Next_ID:
+                       Next_ID = River_part[-1][0] 
+                       item = River_part[0]
+                       Discharge_dict[item][:,1:] = Discharge_dict[item][:,1:] - Change_outflow_m3[:,None]
+                       print(item)
+                       times = 0
+                   times += 1    
+                                    
+    return(Discharge_dict, River_dict, DEM_dict, Distance_dict)    

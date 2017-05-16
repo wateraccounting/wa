@@ -61,7 +61,7 @@ def Create(Dir_Basin, Basin, Simulation, Dir_Basin_CSV):
             Year = str(FileName_Splitted[2])
             Month = str(FileName_Splitted[-1].split('.')[0])
             NameTime = '%s_%02s' %(Year, Month)
-            NameTimeSpace = '%s %02s' %(Year, MonthInLetters[int(Month)])
+            NameTimeSpace = '%s %s' %(Year, MonthInLetters[int(Month)])
             outFile = 'Sheet2_Sim%s_%s_%s.pdf' %(Simulation, Basin, NameTime)
 
             # create the sheet

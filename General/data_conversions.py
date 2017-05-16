@@ -279,6 +279,32 @@ def Create_NC_name(Var, Simulation, Dir_Basin, info = ''):
 				
     return(nameTot)
 			
+def Convert_dict_to_array(River_dict, Array_dict, Reference_data):
 
+    import numpy as np
+    
+    import wa.General.raster_conversions as RC
+    
+    # Get raster information 
+    geo_out, proj, size_X, size_Y = RC.Open_array_info(Reference_data)
+    
+    # Create ID Matrix
+    y,x = np.indices((size_Y, size_X))
+    ID_Matrix = np.int32(np.ravel_multi_index(np.vstack((y.ravel(),x.ravel())),(size_Y,size_X),mode='clip').reshape(x.shape)) + 1
+
+    # Get tiff array time dimension:
+    time_dimension = int(np.shape(Array_dict[0])[0])
+    
+    # create an empty array
+    DataCube = np.zeros([time_dimension, size_Y, size_X])
+ 
+    for river_part in range(0,len(River_dict)):
+        for river_pixel in range(1,len(River_dict[river_part])):
+            river_pixel_ID = River_dict[river_part][river_pixel]
+            if len(np.argwhere(ID_Matrix == river_pixel_ID))>0:
+                row, col = np.argwhere(ID_Matrix == river_pixel_ID)[0][:] 
+                DataCube[:,row,col] = Array_dict[river_part][:,river_pixel]
+
+    return(DataCube)
 
     

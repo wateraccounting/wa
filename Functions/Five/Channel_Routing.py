@@ -31,6 +31,8 @@ def Channel_Routing(Name_NC_DEM_Dir, Name_NC_Runoff, Name_NC_Basin, Reference_da
         # Convert area from degrees to m2									
         Areas_in_m2 = AC.Degrees_to_m2(Reference_data)
         Runoff_in_m3_month = ((Runoff/1000) * Areas_in_m2)
+    else:
+        Runoff_in_m3_month = Runoff
 
     # Get properties of the raster
     size_X = np.size(Runoff,2)
@@ -91,7 +93,7 @@ def Channel_Routing(Name_NC_DEM_Dir, Name_NC_Runoff, Name_NC_Basin, Reference_da
 			
     return(Accumulated_Pixels, Routed_Array)
 
-def Graph_DEM_Distance_Discharge(Name_NC_DEM, Name_NC_DEM_Dir, Name_NC_Acc_Pixels, Name_NC_Rivers, Name_NC_Routed_Discharge, Startdate, Enddate, Reference_data):
+def Graph_DEM_Distance_Discharge(Discharge_dict, Distance_dict, DEM_dict, River_dict, Startdate, Enddate, Reference_data):
 
     import matplotlib.pyplot as plt
     from matplotlib.collections import LineCollection 
@@ -105,12 +107,13 @@ def Graph_DEM_Distance_Discharge(Name_NC_DEM, Name_NC_DEM_Dir, Name_NC_Acc_Pixel
 				
     for timestep in range(0, len(Dates)):
     
-        River_dict, DEM_dict, Discharge_dict, Distance_dict = Create_dict_rivers(Name_NC_DEM, Name_NC_DEM_Dir, Name_NC_Acc_Pixels, Name_NC_Rivers, Name_NC_Routed_Discharge, timestep, Reference_data)
-
         River_dict_tot[timestep] = River_dict
-        DEM_dict_tot[timestep] = DEM_dict 
-        Discharge_dict_tot[timestep] = Discharge_dict
-        Distance_dict_tot[timestep] = Distance_dict 
+        DEM_dict_tot[timestep] = DEM_dict
+        Discharge_dict_one = dict()
+        for river_part in Discharge_dict.iteritems():
+            Discharge_dict_one[river_part[0]]= Discharge_dict[river_part[0]][timestep,:]
+        Discharge_dict_tot[timestep] = Discharge_dict_one   
+        Distance_dict_tot[timestep] = Distance_dict
 
     All_discharge_values = []
     for o in range(0,len(Dates)):

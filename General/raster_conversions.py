@@ -349,9 +349,18 @@ def gap_filling(dataset,NoDataValue):
     """
     import wa.General.data_conversions as DC	
 	
-    # Open the numpy array
-    data = Open_tiff_array(dataset)
-
+    try:
+        if dataset.split('.')[-1] == 'tif':
+            # Open the numpy array
+            data = Open_tiff_array(dataset)
+            Save_as_tiff = 1
+        else:
+            data = dataset
+            Save_as_tiff = 0
+    except:
+        data = dataset
+        Save_as_tiff = 0
+        
     # fill the no data values
     if NoDataValue is np.nan:
         mask = ~(np.isnan(data))
@@ -362,14 +371,19 @@ def gap_filling(dataset,NoDataValue):
     data0 = np.ravel( data[:,:][mask] )
     interp0 = scipy.interpolate.NearestNDInterpolator( xym, data0 )
     data_end = interp0(np.ravel(xx), np.ravel(yy)).reshape( xx.shape )
-    EndProduct=dataset[:-4] + '_GF.tif'	
 		
-    # collect the geoinformation			
-    geo_out, proj, size_X, size_Y = Open_array_info(dataset)
+    if Save_as_tiff == 1:
+        EndProduct=dataset[:-4] + '_GF.tif'	
+                      
+        # collect the geoinformation			
+        geo_out, proj, size_X, size_Y = Open_array_info(dataset)
 				
-    # Save the filled array as geotiff		
-    DC.Save_as_tiff(name=EndProduct, data=data_end, geo=geo_out, projection=proj)			
-				
+        # Save the filled array as geotiff		
+        DC.Save_as_tiff(name=EndProduct, data=data_end, geo=geo_out, projection=proj)			
+		
+    else:
+        EndProduct = data_end
+		
     return (EndProduct)
 
 def Get3Darray_time_series_monthly(Dir_Basin, Data_Path, Startdate, Enddate, Example_data = None):	
