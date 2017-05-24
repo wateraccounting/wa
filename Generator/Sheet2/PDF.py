@@ -35,7 +35,7 @@ def Create(Dir_Basin, Basin, Simulation, Dir_Basin_CSV):
 
     # find all the CSV's     
     os.chdir(Dir_Basin_CSV)     
-    files = glob.glob('*.csv')
+    files = glob.glob('*Sim%d*.csv' %Simulation)
 
     # loop over CSV's files
     for File in files:

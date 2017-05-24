@@ -15,8 +15,7 @@ import shutil
 def Newest():
 
     # Get environmental variable
-    SEBAL_env_paths = os.environ["WA_HOME"].split(';')
-    home_folder = SEBAL_env_paths[0]
+    home_folder = os.path.dirname(os.path.abspath(__file__))
 
     file_nametext = os.path.join(home_folder, 'wa-master.zip') 
     nameDownloadtext = r"https://github.com/wateraccounting/wa/archive/master.zip"
@@ -30,12 +29,12 @@ def Newest():
     zip_ref.close()
 
     print 'Install newest Water Accounting Plus tools'	
-    wa_folder_General = os.path.join(home_folder, 'wa','General') 
-    wa_folder_Collect = os.path.join(home_folder, 'wa','Collect') 
-    wa_folder_Product = os.path.join(home_folder, 'wa','Products') 
-    wa_folder_Generator = os.path.join(home_folder, 'wa','Generator') 
-    wa_folder_Functions = os.path.join(home_folder, 'wa','Functions') 
-    wa_folder_Sheets = os.path.join(home_folder, 'wa','Sheets') 
+    wa_folder_General = os.path.join(home_folder,'General') 
+    wa_folder_Collect = os.path.join(home_folder,'Collect') 
+    wa_folder_Product = os.path.join(home_folder,'Products') 
+    wa_folder_Generator = os.path.join(home_folder,'Generator') 
+    wa_folder_Functions = os.path.join(home_folder,'Functions') 
+    wa_folder_Sheets = os.path.join(home_folder,'Sheets') 
 
 	
     wa_master_folder_Generator = os.path.join(home_folder, 'wa-master','Generator') 
