@@ -339,9 +339,9 @@ def RetrieveData_daily(Date, args):
 																				
                     # Add the VarFactor	
                     if VarInfo.factors[Var] < 0:
-                        data_end = data_end + VarInfo.factors[Var]
+                        data_end[data_end != -9999] = data_end[data_end != -9999] + VarInfo.factors[Var]
                     else:
-                        data_end = data_end * VarInfo.factors[Var]
+                        data_end[data_end != -9999] = data_end[data_end != -9999] * VarInfo.factors[Var]
                     data_end[data_end < -9999] = -9999
 
                     # define geo		

@@ -173,12 +173,11 @@ def DownloadData(output_folder, latlim, lonlim, parameter, resolution):
                           projection="WGS84")
 
     if resolution =='3s':
-        size_X_end = int(size_X_tot) #!
-        size_Y_end = int(size_Y_tot) #!
+        #size_X_end = int(size_X_tot) #!
+        #size_Y_end = int(size_Y_tot) #!
 			
-	
-        #size_X_end = int(size_X_tot/len(rangeLat)) #!
-        #size_Y_end = int(size_Y_tot/len(rangeLon)) #!
+        size_X_end = int(size_X_tot/len(rangeLat)) #!
+        size_Y_end = int(size_Y_tot/len(rangeLon)) #!
 		
         # Define the georeference of the end matrix			
         geo_out = [Geo_x_end, Geo_data[1], 0, Geo_y_end, 0, Geo_data[5]]

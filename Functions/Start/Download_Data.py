@@ -47,9 +47,10 @@ def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
         
         # Define data path 
         Data_Path = os.path.join('Precipitation','CHIRPS')
+        Data_Path_Monthly = os.path.join('Precipitation','CHIRPS', 'Monthly')
         
         # Get start and enddates     
-        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path, 'MS') 																								
+        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Monthly, 'MS') 																								
         
         i = 1
         # Loop over the startdates																
@@ -63,7 +64,8 @@ def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
             i += 1												
         
         # daily
-        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path, 'D') 																								
+        Data_Path_Daily = os.path.join('Precipitation','CHIRPS', 'Daily')
+        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
 
         i = 1																
         for Startdate_Download in Startdates:	
@@ -80,9 +82,10 @@ def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
         
         # Define data path        
         Data_Path = os.path.join('Precipitation','TRMM')	
+        Data_Path_Monthly = os.path.join('Precipitation','TRMM', 'Monthly')	
         
         # Get start and enddates        
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path_Monthly, 'MS') 																
 
         i = 1																
         for Startdate_Download in Startdates:	
@@ -95,7 +98,8 @@ def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
             i += 1	
 
         # daily
-        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path, 'D') 																								
+        Data_Path_Daily = os.path.join('Precipitation','TRMM', 'Daily')	        
+        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
 
         i = 1																
         for Startdate_Download in Startdates:
@@ -105,6 +109,40 @@ def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
             
             # Download the daily data            
             TRMM.daily(Dir, Startdate_Download, Enddate_download, latlim, lonlim)	
+            i += 1	
+
+    if Product is 'RFE':
+        from wa.Collect import RFE
+        
+        # Define data path        
+        Data_Path = os.path.join('Precipitation','RFE')	
+        Data_Path_Monthly = os.path.join('Precipitation','RFE', 'Monthly')	
+        
+        # Get start and enddates        
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path_Monthly, 'MS') 																
+
+        i = 1																
+        for Startdate_Download in Startdates:	
+
+            # Define enddate																	
+            Enddate_download = Enddates[-i]
+            
+            # Download the daily data            
+            RFE.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1	
+
+        # daily
+        Data_Path_Daily = os.path.join('Precipitation','RFE', 'Daily')	        
+        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
+
+        i = 1																
+        for Startdate_Download in Startdates:
+
+            # Define enddate																	
+            Enddate_download = Enddates[-i]
+            
+            # Download the daily data            
+            RFE.daily(Dir, Startdate_Download, Enddate_download, latlim, lonlim)	
             i += 1	
 							
     return(Data_Path)	
@@ -177,7 +215,7 @@ def Evapotranspiration(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD16
         from wa.Collect import GLEAM
         
         # Define data path             
-        Data_Path = os.path.join('Evaporation','monthly','GLEAM')	
+        Data_Path = os.path.join('Evaporation','GLEAM','Monthly')	
         
         # Get start and enddates             
         Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																							

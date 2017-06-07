@@ -70,7 +70,7 @@ def Open_nc_info(NC_filename):
     return(geo_out, epsg, size_X, size_Y, size_Z, Time)				
 				
 
-def Open_nc_array(NC_filename, Var = None):
+def Open_nc_array(NC_filename, Var = None, Startdate = '', Enddate = ''):
 	
     from netCDF4 import Dataset
 				
@@ -78,7 +78,35 @@ def Open_nc_array(NC_filename, Var = None):
     if Var == None:
         Var = fh.variables.keys()[-1]
         
-    Data = fh.variables[Var][:]	
+    if Startdate is not '':
+        Time = fh.variables['time'][:]
+        Array_check_start = np.ones(np.shape(Time))
+        Date = pd.Timestamp(Startdate)
+        Startdate_ord = Date.toordinal()
+        Array_check_start[Time >= Startdate_ord] = 0
+        Start = np.sum(Array_check_start)                           
+    else:
+        Start = 0
+
+    if Enddate is not '':
+        Time = fh.variables['time'][:]
+        Array_check_end = np.zeros(np.shape(Time))
+        Date = pd.Timestamp(Enddate)
+        Enddate_ord = Date.toordinal()
+        Array_check_end[Enddate_ord >= Time] = 1
+        End = np.sum(Array_check_end) 
+    else:
+        try:
+            Time = fh.variables['time'][:]
+            End = len(Time)   
+        except:
+            End = ''
+
+    if Enddate is not '' or Startdate is not '':        
+        Data = fh.variables[Var][int(Start):int(End), :, :]	
+        
+    else:
+        Data = fh.variables[Var][:]	
 				
     return(Data)				
 			
@@ -460,5 +488,20 @@ def Vector_to_Raster(Dir, shapefile_name, reference_raster_data_name):
 			
     return(Raster_Basin)				
 
-						
+def Moving_average(dataset, Moving_front, Moving_back):
+    """
+    This function applies the moving averages over a 3D matrix called dataset.
+    
+    Keyword Arguments:
+    dataset -- 3D matrix [time, ysize, xsize]
+    Moving_front -- Amount of time steps that must be considered in the front of the current month
+    Moving_back -- Amount of time steps that must be considered in the back of the current month
+    """
+    
+    dataset_out = np.zeros((int(np.shape(dataset)[0]) - Moving_back - Moving_front, int(np.shape(dataset)[1]), int(np.shape(dataset)[2])))
+
+    for i in range(Moving_back, (int(np.shape(dataset)[0]) - Moving_front)):
+        dataset_out[i - Moving_back,:,:] = np.nanmean(dataset[i - Moving_back : i + 1 + Moving_front, :,:], 0)		
+        
+    return(dataset_out)					
 								

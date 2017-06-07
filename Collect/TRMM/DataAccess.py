@@ -33,11 +33,17 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCa
     # String Parameters
     if TimeCase == 'daily':
         TimeFreq = 'D'
+        output_folder = os.path.join(Dir, 'Precipitation', 'TRMM', 'Daily')
     elif TimeCase == 'monthly':
         TimeFreq = 'MS'
+        output_folder = os.path.join(Dir, 'Precipitation', 'TRMM', 'Monthly')        
     else:
         raise KeyError("The input time interval is not supported")
-   
+ 
+	# Make directory
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)    
+    
 	# Check variables
     if not Startdate:
         Startdate = pd.Timestamp('1998-01-01')
@@ -63,11 +69,6 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCa
         lonlim[0] = np.max(latlim[0], -180)
         lonlim[1] = np.min(lonlim[1], 180)
     
-	# Make directory
-    output_folder = os.path.join(Dir, 'Precipitation', 'TRMM/')
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-
     # Define IDs
     yID = 400 - np.int16(np.array([np.ceil((latlim[1] + 50)*4),
                                    np.floor((latlim[0] + 50)*4)]))

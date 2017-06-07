@@ -40,18 +40,23 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     Amount_months = len(pd.date_range(Startdate,Enddate,freq='MS'))
     Amount_months_reservoirs = Amount_months + 1
 
+    # Startdate for moving window Budyko
+    Startdate_2months_Timestamp = pd.Timestamp(Startdate) - pd.DateOffset(months=2)
+    Startdate_2months = Startdate_2months_Timestamp.strftime('%Y-%m-%d')
+    
     ############################# Download Data ###################################
 
     # Download data
-    Data_Path_P = Start.Download_Data.Precipitation(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, P_Product) 
-    Data_Path_ET = Start.Download_Data.Evapotranspiration(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, ET_Product)
+    Data_Path_P = Start.Download_Data.Precipitation(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate, P_Product) 
+    Data_Path_ET = Start.Download_Data.Evapotranspiration(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate, ET_Product)
     Data_Path_DEM = Start.Download_Data.DEM(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Resolution) 
     if Resolution is not '3s':
         Data_Path_DEM = Start.Download_Data.DEM(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Resolution) 
     Data_Path_DEM_Dir = Start.Download_Data.DEM_Dir(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Resolution) 
-    Data_Path_ETref = Start.Download_Data.ETreference(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate) 
+    Data_Path_ETref = Start.Download_Data.ETreference(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate) 
     Data_Path_JRC_occurrence = Start.Download_Data.JRC_occurrence(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']]) 
-
+    Data_Path_P_Monthly = os.path.join(Data_Path_P, 'Monthly')
+    
     ###################### Save Data as netCDF files ##############################
 
     #_____________________________________DEM__________________________________
@@ -62,7 +67,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     Ysize_CR = int(DEMdest.RasterYSize)  
     DataCube_DEM_CR = DEMdest.GetRasterBand(1).ReadAsArray()
 
-    Name_NC_DEM_CR = DC.Create_NC_name('DEM_CR', Simulation, Dir_Basin)
+    Name_NC_DEM_CR = DC.Create_NC_name('DEM_CR', Simulation, Dir_Basin, 5)
     if not os.path.exists(Name_NC_DEM_CR):
         DC.Save_as_NC(Name_NC_DEM_CR, DataCube_DEM_CR, 'DEM_CR', Example_dataset)
     DEMdest = None
@@ -74,7 +79,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     DEMDirdest = gdal.Open(Dir_dataset)
     DataCube_DEM_Dir_CR = DEMDirdest.GetRasterBand(1).ReadAsArray()
 
-    Name_NC_DEM_Dir_CR = DC.Create_NC_name('DEM_Dir_CR', Simulation, Dir_Basin)
+    Name_NC_DEM_Dir_CR = DC.Create_NC_name('DEM_Dir_CR', Simulation, Dir_Basin, 5)
     if not os.path.exists(Name_NC_DEM_Dir_CR):
         DC.Save_as_NC(Name_NC_DEM_Dir_CR, DataCube_DEM_Dir_CR, 'DEM_Dir_CR', Example_dataset)
     DEMDirdest = None
@@ -82,35 +87,35 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
 
     #______________________________ Precipitation______________________________
     # Define info for the nc files
-    info = ['monthly','mm', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
+    info = ['monthly','mm', ''.join([Startdate_2months[5:7], Startdate_2months[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
 
     # Precipitation data
-    Name_NC_Prec_CR = DC.Create_NC_name('Prec_CR', Simulation, Dir_Basin, info)
+    Name_NC_Prec_CR = DC.Create_NC_name('Prec_CR', Simulation, Dir_Basin, 5, info)
     if not os.path.exists(Name_NC_Prec_CR):
 	
         # Get the data of Precipitation and save as nc
-        DataCube_Prec_CR = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_P, Startdate, Enddate, Example_data = Example_dataset)
-        DC.Save_as_NC(Name_NC_Prec_CR, DataCube_Prec_CR, 'Prec_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
+        DataCube_Prec_CR = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_P_Monthly, Startdate_2months, Enddate, Example_data = Example_dataset)
+        DC.Save_as_NC(Name_NC_Prec_CR, DataCube_Prec_CR, 'Prec_CR', Example_dataset, Startdate_2months, Enddate, 'monthly', 0.01)
         del DataCube_Prec_CR
 
     #____________________________ Evapotranspiration___________________________
     # Evapotranspiration data
-    Name_NC_ET_CR = DC.Create_NC_name('ET_CR', Simulation, Dir_Basin, info)
+    Name_NC_ET_CR = DC.Create_NC_name('ET_CR', Simulation, Dir_Basin, 5, info)
     if not os.path.exists(Name_NC_ET_CR):
 
         # Get the data of Evaporation and save as nc
-        DataCube_ET_CR = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_ET, Startdate, Enddate, Example_data = Example_dataset)
-        DC.Save_as_NC(Name_NC_ET_CR, DataCube_ET_CR, 'ET_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
+        DataCube_ET_CR = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_ET, Startdate_2months, Enddate, Example_data = Example_dataset)
+        DC.Save_as_NC(Name_NC_ET_CR, DataCube_ET_CR, 'ET_CR', Example_dataset, Startdate_2months, Enddate, 'monthly', 0.01)
         del DataCube_ET_CR
 
     #_______________________Reference Evapotranspiration_______________________
     # Reference Evapotranspiration data
-    Name_NC_ETref_CR = DC.Create_NC_name('ETref_CR', Simulation, Dir_Basin, info)
+    Name_NC_ETref_CR = DC.Create_NC_name('ETref_CR', Simulation, Dir_Basin, 5, info)
     if not os.path.exists(Name_NC_ETref_CR):
 
         # Get the data of Reference Evapotranspiration and save as nc
-        DataCube_ETref_CR = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_ETref, Startdate, Enddate, Example_data = Example_dataset)
-        DC.Save_as_NC(Name_NC_ETref_CR, DataCube_ETref_CR, 'ETref_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
+        DataCube_ETref_CR = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_ETref, Startdate_2months, Enddate, Example_data = Example_dataset)
+        DC.Save_as_NC(Name_NC_ETref_CR, DataCube_ETref_CR, 'ETref_CR', Example_dataset, Startdate_2months, Enddate, 'monthly', 0.01)
         del DataCube_ETref_CR
 
     ##################### Rasterize the basin shapefile ###########################
@@ -121,13 +126,13 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     
     Raster_Basin_CR = np.zeros([Ysize_CR, Xsize_CR])
     Raster_Basin_CR[DataCube_LU_CR > 0] = 1
-    Name_NC_Basin_CR = DC.Create_NC_name('Basin_CR', Simulation, Dir_Basin)
+    Name_NC_Basin_CR = DC.Create_NC_name('Basin_CR', Simulation, Dir_Basin, 5)
     if not os.path.exists(Name_NC_Basin_CR):
         DC.Save_as_NC(Name_NC_Basin_CR, Raster_Basin_CR, 'Basin_CR', Example_dataset)
         #del Raster_Basin
 
     '''
-    Name_NC_Basin = DC.Create_NC_name('Basin_CR', Simulation, Dir_Basin)
+    Name_NC_Basin = DC.Create_NC_name('Basin_CR', Simulation, Dir_Basin, 5)
     if not os.path.exists(Name_NC_Basin):
 
         Raster_Basin = RC.Vector_to_Raster(Dir_Basin, Shape_file_name_shp, Example_dataset)
@@ -136,8 +141,11 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
         #del Raster_Basin
     '''
     ###################### Calculate Runoff with Budyko ###########################
+    # Define info for the nc files
+    info = ['monthly','mm', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
 
-    Name_NC_Runoff_CR = DC.Create_NC_name('Runoff_CR', Simulation, Dir_Basin, info)
+
+    Name_NC_Runoff_CR = DC.Create_NC_name('Runoff_CR', Simulation, Dir_Basin, 5, info)
     Name_NC_Runoff_for_Routing_CR = Name_NC_Runoff_CR
     if not os.path.exists(Name_NC_Runoff_CR):
 
@@ -148,7 +156,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     '''  
     ###################### Calculate Runoff with P min ET ###########################
   
-    Name_NC_Runoff_CR = DC.Create_NC_name('Runoff_CR', Simulation, Dir_Basin, info)
+    Name_NC_Runoff_CR = DC.Create_NC_name('Runoff_CR', Simulation, Dir_Basin, 5, info)
     if not os.path.exists(Name_NC_Runoff_CR):
 
         ET = RC.Open_nc_array(Name_NC_ET_CR)
@@ -163,7 +171,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     ############### Add inflow in basin by using textfile #########################       
     
     if len(Inflow_Text_Files) > 0:
-        Name_NC_Runoff_with_Inlets_CR = DC.Create_NC_name('Runoff_with_Inlets_CR', Simulation, Dir_Basin, info)
+        Name_NC_Runoff_with_Inlets_CR = DC.Create_NC_name('Runoff_with_Inlets_CR', Simulation, Dir_Basin, 5, info)
         Name_NC_Runoff_for_Routing_CR = Name_NC_Runoff_with_Inlets_CR
 
         if not os.path.exists(Name_NC_Runoff_with_Inlets_CR):       
@@ -181,9 +189,9 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     ######################### Apply Channel Routing ###############################
 
     info = ['monthly','pixels', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
-    Name_NC_Acc_Pixels_CR = DC.Create_NC_name('Acc_Pixels_CR', Simulation, Dir_Basin)
+    Name_NC_Acc_Pixels_CR = DC.Create_NC_name('Acc_Pixels_CR', Simulation, Dir_Basin, 5)
     info = ['monthly','m3', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
-    Name_NC_Discharge_CR1 = DC.Create_NC_name('Discharge_CR1', Simulation, Dir_Basin, info)
+    Name_NC_Discharge_CR1 = DC.Create_NC_name('Discharge_CR1', Simulation, Dir_Basin, 5, info)
 
     if not (os.path.exists(Name_NC_Acc_Pixels_CR) and os.path.exists(Name_NC_Discharge_CR1)):
 
@@ -195,7 +203,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
 
     ################# Calculate the natural river and river zones #################
     
-    Name_NC_Rivers_CR = DC.Create_NC_name('Rivers_CR', Simulation, Dir_Basin, info)
+    Name_NC_Rivers_CR = DC.Create_NC_name('Rivers_CR', Simulation, Dir_Basin, 5, info)
     if not os.path.exists(Name_NC_Rivers_CR):
 
         # Open routed discharge array
@@ -219,9 +227,9 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
 
     ########################## Create river directories ###########################  
     
-    Name_py_River_dict_CR1 = os.path.join(Dir_Basin,'Simulations','River_dict_CR1_simulation%d.npy' %(Simulation)) 
-    Name_py_DEM_dict_CR1 = os.path.join(Dir_Basin,'Simulations','DEM_dict_CR1_simulation%d.npy' %(Simulation))    
-    Name_py_Distance_dict_CR1 = os.path.join(Dir_Basin,'Simulations','Distance_dict_CR1_simulation%d.npy' %(Simulation))
+    Name_py_River_dict_CR1 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','River_dict_CR1_simulation%d.npy' %(Simulation)) 
+    Name_py_DEM_dict_CR1 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','DEM_dict_CR1_simulation%d.npy' %(Simulation))    
+    Name_py_Distance_dict_CR1 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','Distance_dict_CR1_simulation%d.npy' %(Simulation))
 
     if not (os.path.exists(Name_py_River_dict_CR1) or os.path.exists(Name_py_DEM_dict_CR1) or os.path.exists(Name_py_Distance_dict_CR1)):
 
@@ -236,7 +244,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
         DEM_dict_CR1 = np.load(Name_py_DEM_dict_CR1).item()  
         Distance_dict_CR1 = np.load(Name_py_Distance_dict_CR1).item()  
         
-    Name_py_Discharge_dict_CR1 = os.path.join(Dir_Basin,'Simulations','Discharge_dict_CR1_simulation%d.npy' %(Simulation))
+    Name_py_Discharge_dict_CR1 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','Discharge_dict_CR1_simulation%d.npy' %(Simulation))
 
     if not os.path.exists(Name_py_Discharge_dict_CR1):
         # Get discharge dict
@@ -249,10 +257,10 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     
     ###################### Calculate surface water storage characteristics ######################  
 
-    Name_py_Discharge_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Discharge_dict_CR2_simulation%d.npy' %(Simulation))    
-    Name_py_River_dict_CR2 = os.path.join(Dir_Basin,'Simulations','River_dict_CR2_simulation%d.npy' %(Simulation))
-    Name_py_DEM_dict_CR2 = os.path.join(Dir_Basin,'Simulations','DEM_dict_CR2_simulation%d.npy' %(Simulation))    
-    Name_py_Distance_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Distance_dict_CR2_simulation%d.npy' %(Simulation))
+    Name_py_Discharge_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5', 'Discharge_dict_CR2_simulation%d.npy' %(Simulation))    
+    Name_py_River_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','River_dict_CR2_simulation%d.npy' %(Simulation))
+    Name_py_DEM_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','DEM_dict_CR2_simulation%d.npy' %(Simulation))    
+    Name_py_Distance_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','Distance_dict_CR2_simulation%d.npy' %(Simulation))
     
     if not (os.path.exists(Name_py_Discharge_dict_CR2) or os.path.exists(Name_py_River_dict_CR2) or os.path.exists(Name_py_DEM_dict_CR2) or os.path.exists(Name_py_Distance_dict_CR2)):      
 
@@ -298,13 +306,18 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
         
     ####################### Add surface water Withdrawals ############################# 
    
-    Name_py_Discharge_dict_CR3 = os.path.join(Dir_Basin,'Simulations','Discharge_dict_CR3_simulation%d.npy' %(Simulation))    
+    Name_py_Discharge_dict_CR3 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','Discharge_dict_CR3_simulation%d.npy' %(Simulation))    
 
     if not os.path.exists(Name_py_Discharge_dict_CR3):
 
-        Discharge_dict_CR3 = Five.Irrigation.Add_irrigation(Discharge_dict_CR2, River_dict_CR2, Name_NC_Rivers_CR, Name_NC_ET_CR, Name_NC_ETref_CR, Name_NC_Prec_CR, Example_dataset)
+        Discharge_dict_CR3, DataCube_ETblue_m3 = Five.Irrigation.Add_irrigation(Discharge_dict_CR2, River_dict_CR2, Name_NC_Rivers_CR, Name_NC_ET_CR, Name_NC_ETref_CR, Name_NC_Prec_CR, Startdate, Enddate, Example_dataset)
         np.save(Name_py_Discharge_dict_CR3, Discharge_dict_CR3)
-        
+
+        # save ETblue as nc
+        info = ['monthly','m3-month-1', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
+        Name_NC_ETblue = DC.Create_NC_name('ETblue', Simulation, Dir_Basin, 5, info)
+        DC.Save_as_NC(Name_NC_ETblue, DataCube_ETblue_m3, 'ETblue', Example_dataset, Startdate, Enddate, 'monthly')
+
     else:
         Discharge_dict_CR3 = np.load(Name_py_Discharge_dict_CR3).item() 
                                        
@@ -319,7 +332,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     # Define info for the nc files
     info = ['monthly','m3-month-1', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
 
-    Name_NC_Discharge = DC.Create_NC_name('Discharge', Simulation, Dir_Basin, info)
+    Name_NC_Discharge = DC.Create_NC_name('Discharge', Simulation, Dir_Basin, 5, info)
     if not os.path.exists(Name_NC_Discharge):
 
         # Get the data of Reference Evapotranspiration and save as nc
@@ -345,7 +358,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
 
 
     # DEM
-    Name_NC_DEM = DC.Create_NC_name('DEM', Simulation, Dir_Basin)
+    Name_NC_DEM = DC.Create_NC_name('DEM', Simulation, Dir_Basin, 5)
     if not os.path.exists(Name_NC_DEM):
 
         # Get the data of Reference Evapotranspiration and save as nc
@@ -355,7 +368,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
         del DataCube_DEM
 
     # flow direction
-    Name_NC_DEM_Dir = DC.Create_NC_name('DEM_Dir', Simulation, Dir_Basin)
+    Name_NC_DEM_Dir = DC.Create_NC_name('DEM_Dir', Simulation, Dir_Basin, 5)
     if not os.path.exists(Name_NC_DEM_Dir):
 
         # Get the data of Reference Evapotranspiration and save as nc
@@ -368,16 +381,16 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     # Define info for the nc files
     info = ['monthly','mm', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
 
-    Name_NC_Prec = DC.Create_NC_name('Prec', Simulation, Dir_Basin)
+    Name_NC_Prec = DC.Create_NC_name('Prec', Simulation, Dir_Basin, 5)
     if not os.path.exists(Name_NC_Prec):
 
         # Get the data of Reference Evapotranspiration and save as nc
-        DataCube_Prec = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_P, Startdate, Enddate, LU_dataset)
+        DataCube_Prec = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_P_Monthly, Startdate, Enddate, LU_dataset)
         DC.Save_as_NC(Name_NC_Prec, DataCube_Prec, 'Prec', LU_dataset, Startdate, Enddate, 'monthly', 0.01)
         del DataCube_Prec
 
     # Evapotranspiration
-    Name_NC_ET = DC.Create_NC_name('ET', Simulation, Dir_Basin)
+    Name_NC_ET = DC.Create_NC_name('ET', Simulation, Dir_Basin, 5)
     if not os.path.exists(Name_NC_ET):
 
         # Get the data of Reference Evapotranspiration and save as nc
@@ -386,7 +399,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
         del DataCube_ET    
         
     # Reference Evapotranspiration data
-    Name_NC_ETref = DC.Create_NC_name('ETref', Simulation, Dir_Basin, info)
+    Name_NC_ETref = DC.Create_NC_name('ETref', Simulation, Dir_Basin, 5, info)
     if not os.path.exists(Name_NC_ETref):
 
         # Get the data of Reference Evapotranspiration and save as nc
@@ -395,7 +408,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
         del DataCube_ETref
 
     # Rivers
-    Name_NC_Rivers = DC.Create_NC_name('Rivers', Simulation, Dir_Basin, info)
+    Name_NC_Rivers = DC.Create_NC_name('Rivers', Simulation, Dir_Basin, 5, info)
     if not os.path.exists(Name_NC_Rivers):
 
         # Get the data of Reference Evapotranspiration and save as nc
@@ -408,11 +421,11 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Startdate, Enddat
     # Define info for the nc files
     info = ['monthly','m3', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
 
-    Name_NC_Routed_Discharge = DC.Create_NC_name('Routed_Discharge', Simulation, Dir_Basin, info)
+    Name_NC_Routed_Discharge = DC.Create_NC_name('Routed_Discharge', Simulation, Dir_Basin, 5, info)
     if not os.path.exists(Name_NC_Routed_Discharge):
 
         # Get the data of Reference Evapotranspiration and save as nc
-        Routed_Discharge_CR = RC.Open_nc_array(Name_NC_Natural_Discharge_CR)
+        Routed_Discharge_CR = RC.Open_nc_array(Name_NC_Discharge)
         DataCube_Routed_Discharge = RC.resize_array_example(Routed_Discharge_CR, LU_data)
         DC.Save_as_NC(Name_NC_Routed_Discharge, DataCube_Routed_Discharge, 'Routed_Discharge', LU_dataset, Startdate, Enddate, 'monthly')
         del DataCube_Routed_Discharge, Routed_Discharge_CR        

@@ -51,7 +51,7 @@ def Create(Dir_Basin, Simulation, Basin, Startdate, Enddate, Name_NC_LU, DataCub
     from wa.Functions import Start
 
     # Create output folder for CSV files
-    Data_Path_CSV = os.path.join(Dir_Basin, "Simulations", "CSV")
+    Data_Path_CSV = os.path.join(Dir_Basin, "Simulations", "Simulation_%d" %Simulation, "Sheet_2", "CSV")
     if not os.path.exists(Data_Path_CSV):
         os.mkdir(Data_Path_CSV)
 

@@ -29,7 +29,7 @@ def Create(Dir_Basin, Basin, Simulation, Dir_Basin_CSV):
     from wa.Sheets import create_sheet2
     
     # Create output folder for CSV files
-    Dir_Basin_PDF = os.path.join(Dir_Basin, "Simulations", "PDF")
+    Dir_Basin_PDF = os.path.join(Dir_Basin, "Simulations", "Simulation_%d" %Simulation, "Sheet_2", "PDF")
     if not os.path.exists(Dir_Basin_PDF):
         os.mkdir(Dir_Basin_PDF)
 

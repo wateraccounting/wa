@@ -74,10 +74,13 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
         Data_Path_NPP = Start.Download_Data.NPP(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], StartdateNDM, EnddateNDM, NDM_Product) 
         Data_Path_GPP = Start.Download_Data.GPP(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], StartdateNDM, EnddateNDM, NDM_Product) 
 
+    Data_Path_P_Daily = os.path.join(Data_Path_P, 'Daily')
+    Data_Path_P_Monthly = os.path.join(Data_Path_P, 'Monthly')
+    
     ########################### Create input data #################################
 
     # Create Rainy Days based on daily CHIRPS
-    Data_Path_RD = Two.Rainy_Days.Calc_Rainy_Days(Dir_Basin, Data_Path_P, Startdate, Enddate)
+    Data_Path_RD = Two.Rainy_Days.Calc_Rainy_Days(Dir_Basin, Data_Path_P_Daily, Startdate, Enddate)
 
     # Create monthly LAI and GPP
     Start.Eightdaily_to_monthly.Nearest_Interpolate(Dir_Basin, Data_Path_LAI, Startdate, Enddate)
@@ -95,7 +98,7 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
     LUdest = gdal.Open(Example_dataset)    
     DataCube_LU = LUdest.GetRasterBand(1).ReadAsArray()
 
-    Name_NC_LU = DC.Create_NC_name('LU', Simulation, Dir_Basin)
+    Name_NC_LU = DC.Create_NC_name('LU', Simulation, Dir_Basin, 2)
     if not os.path.exists(Name_NC_LU):
         DC.Save_as_NC(Name_NC_LU, DataCube_LU, 'LU', Example_dataset)
 
@@ -108,18 +111,18 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
     info = ['monthly','mm', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
 
     # Precipitation data
-    Name_NC_P = DC.Create_NC_name('Prec', Simulation, Dir_Basin, info)
+    Name_NC_P = DC.Create_NC_name('Prec', Simulation, Dir_Basin, 2, info)
     if not os.path.exists(Name_NC_P):
 	
         # Get the data of Precipitation and save as nc
-        DataCube_Prec = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_P, Startdate, Enddate, Example_data = Example_dataset)
+        DataCube_Prec = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_P_Monthly, Startdate, Enddate, Example_data = Example_dataset)
         DC.Save_as_NC(Name_NC_P, DataCube_Prec, 'Prec', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
         del DataCube_Prec
 
     #_______________________________Evaporation________________________________
 
     # Evapotranspiration data
-    Name_NC_ET = DC.Create_NC_name('ET', Simulation, Dir_Basin, info)
+    Name_NC_ET = DC.Create_NC_name('ET', Simulation, Dir_Basin, 2, info)
     if not os.path.exists(Name_NC_ET):
 
         # Get the data of Evaporation and save as nc
@@ -132,7 +135,7 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
     # Define info for the nc files
     info = ['monthly','kg_ha-1', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
 
-    Name_NC_NDM = DC.Create_NC_name('NDM', Simulation, Dir_Basin, info)
+    Name_NC_NDM = DC.Create_NC_name('NDM', Simulation, Dir_Basin, 2, info)
     if not os.path.exists(Name_NC_NDM):
 
         # Get the data of Evaporation and save as nc
@@ -145,7 +148,7 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
     # Define info for the nc files
     info = ['monthly','days', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
 
-    Name_NC_RD = DC.Create_NC_name('RD', Simulation, Dir_Basin, info)
+    Name_NC_RD = DC.Create_NC_name('RD', Simulation, Dir_Basin, 2, info)
     if not os.path.exists(Name_NC_RD):
 
         # Get the data of Evaporation and save as nc
@@ -158,7 +161,7 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
     # Define info for the nc files
     info = ['monthly','m2-m-2', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
 
-    Name_NC_LAI = DC.Create_NC_name('LAI', Simulation, Dir_Basin, info)
+    Name_NC_LAI = DC.Create_NC_name('LAI', Simulation, Dir_Basin, 2, info)
     if not os.path.exists(Name_NC_LAI):
 
         # Get the data of Evaporation and save as nc

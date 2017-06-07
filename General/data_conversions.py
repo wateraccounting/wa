@@ -268,11 +268,11 @@ def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Endda
         nco.close()				
     return()				
 
-def Create_NC_name(Var, Simulation, Dir_Basin, info = ''):
+def Create_NC_name(Var, Simulation, Dir_Basin, sheet_nmbr, info = ''):
 	
     # Create the output name					
     nameOut=''.join(['_'.join([Var,'Simulation%d' % Simulation,'_'.join(info)]),'.nc'])
-    namePath = os.path.join(Dir_Basin,'Simulations')
+    namePath = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_%d' %sheet_nmbr)
     if not os.path.exists(namePath):
         os.makedirs(namePath)
     nameTot=os.path.join(namePath,nameOut)

@@ -37,10 +37,16 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCa
     # Define timestep for the timedates
     if TimeCase == 'daily':
         TimeFreq = 'D'
+        output_folder = os.path.join(Dir, 'Precipitation', 'CHIRPS', 'Daily')
     elif TimeCase == 'monthly':
         TimeFreq = 'MS'
+        output_folder = os.path.join(Dir, 'Precipitation', 'CHIRPS', 'Monthly')
     else:
         raise KeyError("The input time interval is not supported")
+ 
+    # make directory if it not exists
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
     
 	# check time variables
     if not Startdate:
@@ -69,11 +75,6 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCa
                ' Now value is set to maximum')
         lonlim[0] = np.max(latlim[0], -180)
         lonlim[1] = np.min(lonlim[1], 180)
-
-    # make directory if it not exists
-    output_folder = os.path.join(Dir, 'Precipitation', 'CHIRPS')
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
 
     # Define IDs
     yID = 2000 - np.int16(np.array([np.ceil((latlim[1] + 50)*20),

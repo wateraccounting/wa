@@ -52,11 +52,14 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCa
         VarCode = 'ET_GLEAM.V3.0b_mm-day-1_daily'
         FTPprefix = 'data/v3.0b/'
         TimeFreq = 'D'
+        Folder_name = 'Daily'        
         
     elif TimeCase == 'monthly':
         VarCode = 'ET_GLEAM.V3.0b_mm-month-1_monthly'
         FTPprefix = 'data/v3.0b/'
         TimeFreq = 'M'
+        Folder_name = 'Monthly'
+        
         # Get end of month for Enddate
         monthDownloadend = str(Enddate[5:7])
         End_month = calendar.monthrange(int(YearsDownloadend),int(monthDownloadend))[1]
@@ -67,7 +70,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCa
     Dates = pd.date_range(Startdate, Enddate, freq = TimeFreq)
    
     # Make directory for the MODIS ET data
-    output_folder=os.path.join(Dir,'Evaporation',TimeCase,'GLEAM')
+    output_folder=os.path.join(Dir,'Evaporation', 'GLEAM', Folder_name)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     

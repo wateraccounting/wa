@@ -5,7 +5,7 @@ Created on Mon May 15 14:27:44 2017
 @author: tih
 """
 
-def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_NC_ETref, Name_NC_Prec, Example_dataset):
+def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_NC_ETref, Name_NC_Prec, Startdate, Enddate, Example_dataset):
 
     import copy
     import numpy as np
@@ -19,9 +19,9 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_
 
     # Extract Rivers data from NetCDF file
     Rivers = RC.Open_nc_array(Name_NC_Rivers)
-    DataCube_ET = RC.Open_nc_array(Name_NC_ET)
+    DataCube_ET = RC.Open_nc_array(Name_NC_ET, Startdate = Startdate, Enddate = Enddate)
         
-    DataCube_ETgreen = Five.Budyko.Calc_ETgreen(Name_NC_ETref, Name_NC_Prec)
+    DataCube_ETgreen = Five.Budyko.Calc_ETgreen(Name_NC_ETref, Name_NC_Prec, Name_NC_ET, Startdate, Enddate)
     DataCube_ETblue = DataCube_ET - DataCube_ETgreen
     DataCube_ETblue[DataCube_ETblue<0] = 0
                             
@@ -67,4 +67,4 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_
                                 times = 0
                             times += 1
  
-    return(Discharge_dict_new)                               
+    return(Discharge_dict_new, DataCube_ETblue_m3)                               

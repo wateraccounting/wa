@@ -69,15 +69,15 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
     mask3d_neg = (mask3d-1) * 9999          
     
     # Extract Evapotranspiration data from NetCDF file
-    ET = RC.Open_nc_array(Name_NC_ET, Var = 'ET')
+    ET = RC.Open_nc_array(Name_NC_ET, Var = 'ET')[-len(Dates):,:,:]
     # Extract Leaf Area Index data from NetCDF file
-    LAI = RC.Open_nc_array(Name_NC_LAI, Var = 'LAI')
+    LAI = RC.Open_nc_array(Name_NC_LAI, Var = 'LAI')[-len(Dates):,:,:]
     # Extract Precipitation data from NetCDF file
-    P = RC.Open_nc_array(Name_NC_P, Var = 'Prec')
+    P = RC.Open_nc_array(Name_NC_P, Var = 'Prec')[-len(Dates):,:,:]
     # Extract Rainy Days data from NetCDF file
-    RD = RC.Open_nc_array(Name_NC_RD, Var = 'RD')
+    RD = RC.Open_nc_array(Name_NC_RD, Var = 'RD')[-len(Dates):,:,:]
     # Extract Normalized Dry Matter data and time from NetCDF file
-    NDM = RC.Open_nc_array(Name_NC_NDM, Var = 'NDM')
+    NDM = RC.Open_nc_array(Name_NC_NDM, Var = 'NDM')[-len(Dates):,:,:]
     timeNDM = RC.Open_nc_array(Name_NC_NDM, Var = 'time')
     
     # Create dictory to get every month and year for each timestep
