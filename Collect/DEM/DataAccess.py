@@ -104,7 +104,49 @@ def DownloadData(output_folder, latlim, lonlim, parameter, resolution):
 
             # convert data from adf to a tiff file
             output_tiff = DC.Convert_adf_to_tiff(input_adf, output_tiff)
+            
+            geo_out, proj, size_X, size_Y = RC.Open_array_info(output_tiff)
+            if int(size_X) != int(6000) or int(size_Y) != int(6000):
+                data = np.ones((6000, 6000)) * -9999
 
+                # Create the latitude bound             												
+                Vfile = str(nameFile)[1:3]
+                SignV = str(nameFile)[0]
+                SignVer = 1
+                # If the sign before the filename is a south sign than latitude is negative 												
+                if SignV is "s":
+                    SignVer = -1
+                Bound2 = int(SignVer)*int(Vfile)
+  
+              # Create the longitude bound 
+                Hfile = str(nameFile)[4:7]
+                SignH = str(nameFile)[3]
+                SignHor = 1
+                # If the sign before the filename is a west sign than longitude is negative 																								
+                if SignH is "w":
+                    SignHor = -1
+                Bound1 = int(SignHor) * int(Hfile)
+
+                Expected_X_min = Bound1
+                Expected_Y_max = Bound2 + 5
+                
+                Xid_start = int(np.round((geo_out[0] - Expected_X_min)/geo_out[1]))
+                Xid_end = int(np.round(((geo_out[0] + size_X * geo_out[1]) - Expected_X_min)/geo_out[1]))
+                Yid_start = int(np.round((Expected_Y_max - geo_out[3])/(-geo_out[5])))
+                Yid_end = int(np.round((Expected_Y_max - (geo_out[3] + (size_Y * geo_out[5])))/(-geo_out[5])))
+                
+                data[Yid_start:Yid_end,Xid_start:Xid_end] = RC.Open_tiff_array(output_tiff)
+                if np.max(data)==255:
+                    data[data==255] = -9999
+                data[data<-9999] = -9999
+                    
+                geo_in = [Bound1, 0.00083333333333333, 0.0, int(Bound2 + 5),
+                          0.0, -0.0008333333333333333333]
+           
+                # save chunk as tiff file
+                DC.Save_as_tiff(name=output_tiff, data=data, geo=geo_in,
+                             projection="WGS84")
+               
         except:
 									
             if resolution == '3s':									
@@ -134,8 +176,8 @@ def DownloadData(output_folder, latlim, lonlim, parameter, resolution):
                 Bound1 = int(SignHor) * int(Hfile)
 
                 # Geospatial data for the tile
-                geo_in = [Bound2, 0.00083333333333333, 0.0, int(Bound1 + 5),
-                          0.0, 0.0008333333333333333333]
+                geo_in = [Bound1, 0.00083333333333333, 0.0, int(Bound2 + 5),
+                          0.0, -0.0008333333333333333333]
 
                 # save chunk as tiff file
                 DC.Save_as_tiff(name=output_tiff, data=data, geo=geo_in,

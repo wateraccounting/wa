@@ -60,20 +60,24 @@ def main(Dir, Startdate='', Enddate='',
 
 	     # Make directory
         input_folder_daily = os.path.join(Dir, 'Precipitation', 'RFE', 'Daily/')         
+        i = 0
         
         for Date_daily in Dates_daily:
             file_name = 'P_RFE.v2.0_mm-day-1_daily_%s.%02s.%02s.tif' %(Date_daily.strftime('%Y'), Date_daily.strftime('%m'), Date_daily.strftime('%d'))      
             file_name_daily_path = os.path.join(input_folder_daily, file_name)
-            
-            if Date_daily == Dates_daily[0]:
-                Raster_monthly = RC.Open_tiff_array(file_name_daily_path)
+            if os.path.exists(file_name_daily_path):
+                if Date_daily == Dates_daily[i]:
+                    Raster_monthly = RC.Open_tiff_array(file_name_daily_path)
+                else:
+                    Raster_monthly += RC.Open_tiff_array(file_name_daily_path) 
             else:
-                Raster_monthly += RC.Open_tiff_array(file_name_daily_path)                
+                if Date_daily == Dates_daily[i]:
+                    i += 1
 
         geo_out, proj, size_X, size_Y = RC.Open_array_info(file_name_daily_path)         
         file_name = 'P_RFE.v2.0_mm-month-1_monthly_%s.%02s.01.tif' %(Date.strftime('%Y'), Date.strftime('%m'))
         file_name_output = os.path.join(output_folder, file_name)       
-        DC.Save_as_tiff(file_name_output, Raster_monthly, geo_out, proj)
+        DC.Save_as_tiff(file_name_output, Raster_monthly, geo_out, projection="WGS84")
         
         if Waitbar == 1:
             amount += 1

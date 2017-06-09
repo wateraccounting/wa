@@ -482,7 +482,7 @@ def Add_Reservoirs(Name_NC_Rivers ,Name_NC_Acc_Pixels, Diff_Water_Volume, River_
 
             # Total Change outflow
             Change_outflow_m3 = np.minimum(Flow_in_res_m3, Change_Reservoir_m3)
-        
+            
             Difference = Change_outflow_m3 - Change_Reservoir_m3
             if abs(np.sum(Difference))>10000 and np.sum(Change_Reservoir_m3[Change_outflow_m3>0])>0:
                 Change_outflow_m3[Change_outflow_m3<0] = Change_outflow_m3[Change_outflow_m3<0]*np.sum(Change_outflow_m3[Change_outflow_m3>0])/np.sum(Change_Reservoir_m3[Change_outflow_m3>0]) 
@@ -511,6 +511,9 @@ def Add_Reservoirs(Name_NC_Rivers ,Name_NC_Acc_Pixels, Diff_Water_Volume, River_
                    if River_part[-1][-1] == Next_ID:
                        Next_ID = River_part[-1][0] 
                        item = River_part[0]
+                       #Always 10 procent of the incoming discharge will pass the dam
+                       Change_outflow_m3[:,None] = np.minimum(0.9 * Discharge_dict[item][:,-1:], Change_outflow_m3[:,None])
+                       
                        Discharge_dict[item][:,1:] = Discharge_dict[item][:,1:] - Change_outflow_m3[:,None]
                        print(item)
                        times = 0

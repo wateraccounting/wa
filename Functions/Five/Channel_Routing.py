@@ -111,7 +111,7 @@ def Graph_DEM_Distance_Discharge(Discharge_dict, Distance_dict, DEM_dict, River_
         DEM_dict_tot[timestep] = DEM_dict
         Discharge_dict_one = dict()
         for river_part in Discharge_dict.iteritems():
-            Discharge_dict_one[river_part[0]]= Discharge_dict[river_part[0]][timestep,:]
+            Discharge_dict_one[river_part[0]]= Discharge_dict[river_part[0]][timestep,1:]
         Discharge_dict_tot[timestep] = Discharge_dict_one   
         Distance_dict_tot[timestep] = Distance_dict
 
@@ -130,9 +130,9 @@ def Graph_DEM_Distance_Discharge(Discharge_dict, Distance_dict, DEM_dict, River_
             yData = DEM_dict_tot[i][River_number]
             zData =  Discharge_dict_tot[i][River_number]
 
-            Data_3d[River_number,0:len(Distance_dict_tot[i][River_number]),0] = xData[:]
-            Data_3d[River_number,0:len(Distance_dict_tot[i][River_number]),1] = yData[:]
-            Data_z_2d[River_number,0:len(Distance_dict_tot[i][River_number])] = zData[:]
+            Data_3d[River_number,1:len(Distance_dict_tot[i][River_number]),0] = xData[1:]
+            Data_3d[River_number,1:len(Distance_dict_tot[i][River_number]),1] = yData[1:]
+            Data_z_2d[River_number,1:len(Distance_dict_tot[i][River_number])] = zData[:]
         # Mask some values to test masked array support:
         segs = np.ma.masked_where((Data_3d < -10), Data_3d)
 
