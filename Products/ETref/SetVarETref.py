@@ -40,7 +40,7 @@ def SetVariables(Dir, Startdate, Enddate, latlim, lonlim, pixel_size, cores, LAN
 	
     # Create Waitbar
     if Waitbar == 1:
-        import wa.Functions.Start.Waitbar as Waitbar
+        import wa.Functions.Start.WaitbarConsole as Waitbar
         total_amount = len(Dates)
         amount = 0
         Waitbar.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
