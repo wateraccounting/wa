@@ -504,4 +504,27 @@ def Moving_average(dataset, Moving_front, Moving_back):
         dataset_out[i - Moving_back,:,:] = np.nanmean(dataset[i - Moving_back : i + 1 + Moving_front, :,:], 0)		
         
     return(dataset_out)					
-								
+
+
+
+def Get_ordinal(Startdate, Enddate, freq = 'MS'):
+    """
+    This function creates an array with ordinal time.
+    
+    Keyword Arguments:
+    Startdate -- Startdate of the ordinal time
+    Enddate -- Enddate of the ordinal time
+    freq -- Time frequencies between start and enddate 
+    """   
+    
+    import datetime
+    Dates = pd.date_range(Startdate, Enddate, freq = freq)
+    i = 0
+    ordinal = np.zeros([len(Dates)])
+    for date in Dates:
+ 
+        p = datetime.date(date.year, date.month, date.day).toordinal()
+        ordinal[i]=p
+        i += 1 		
+
+    return(ordinal)						

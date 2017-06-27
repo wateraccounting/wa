@@ -237,7 +237,7 @@ def Find_Area_Volume_Relation(region, input_JRC, DEM_dataset):
     done = 0
     times = 0
     
-    while done == 0 or times > 20 or maxi_end < mini:
+    while done == 0 and times > 20 and maxi_end < mini:
         try:
             if mini == 0:
                 popt, pcov = curve_fit(func, Reservoir_characteristics[mini:maxi_end,2], Reservoir_characteristics[mini:maxi_end,3])  
@@ -302,7 +302,7 @@ def GEE_calc_reservoir_area(region, Startdate, Enddate):
         This function will calculate the amount of pixels (30by30m) that are defined as water for the whole ImageCollection
         '''
         Water = ee.Image(image.gt(1))
-        areas = Water.reduceRegion(reducer=ee.Reducer.sum(),geometry= region, scale=30)
+        areas = Water.reduceRegion(reducer=ee.Reducer.sum(), maxPixels = 1e11, geometry= region, scale=30)
         mean_feature = ee.Feature(None, {'month': image.get('month'), 'year': image.get('year'), 'water': areas.get('water')})
         return mean_feature  
 

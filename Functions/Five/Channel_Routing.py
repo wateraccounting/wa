@@ -5,7 +5,7 @@ Created on Mon Jan 23 10:47:16 2017
 @author: tih
 """
 
-
+import sys
 import time
 import numpy as np
 import pandas as pd
@@ -80,8 +80,9 @@ def Channel_Routing(Name_NC_DEM_Dir, Name_NC_Runoff, Name_NC_Basin, Reference_da
             data_flow_round += data_flow
         dataflow_in = np.copy(data_flow_round)	
         dataflow_next[dataflow_in[0,:,:]==0.] = 0	
-    		
-        print "still %s pixels to go" %int(np.nansum(dataflow_next))
+
+        sys.stdout.write("\rstill %s pixels to go        " %int(np.nansum(dataflow_next)))
+        sys.stdout.flush()
 				
         data_flow_tot += data_flow_round	
 
