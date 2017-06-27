@@ -47,12 +47,10 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
     # Boundaries, Shape_file_name_shp = Start.Boundaries.Determine(Basin)
     Boundaries, LU_dataset = Start.Boundaries.Determine_LU_Based(Basin)
     LU_data = RC.Open_tiff_array(LU_dataset)
-    
+    geo_out_LU, proj_LU, size_X_LU, size_Y_LU = RC.Open_array_info(LU_dataset)
+        
     # Define resolution of SRTM
     Resolution = '15s'
-    
-    # Define fraction of how much Blue water is subtracted from Surface Water
-    Surface_Ground_Withdrawal_Fraction = 1.0
     
     # Get the amount of months
     Amount_months = len(pd.date_range(Startdate,Enddate,freq='MS'))
@@ -95,7 +93,6 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
     if not os.path.exists(Name_NC_DEM_CR):
         DC.Save_as_NC(Name_NC_DEM_CR, DataCube_DEM_CR, 'DEM_CR', Example_dataset)
     DEMdest = None
-    del DataCube_DEM_CR
 
     #___________________________________DEM Dir________________________________
     # Get the data of flow direction and save as nc.
@@ -124,6 +121,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
 
     #____________________________ Evapotranspiration___________________________
     # Evapotranspiration data
+    info = ['monthly','mm', ''.join([Startdate_2months[5:7], Startdate_2months[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
     Name_NC_ET_CR = DC.Create_NC_name('ET_CR', Simulation, Dir_Basin, 5, info)
     if not os.path.exists(Name_NC_ET_CR):
 
@@ -142,6 +140,35 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
         DC.Save_as_NC(Name_NC_ETref_CR, DataCube_ETref_CR, 'ETref_CR', Example_dataset, Startdate_2months, Enddate, 'monthly', 0.01)
         del DataCube_ETref_CR
 
+    #_______________________fraction surface water _______________________
+
+    Name_NC_frac_sw_CR = DC.Create_NC_name('Fraction_SW_CR', Simulation, Dir_Basin, 5)
+    if not os.path.exists(Name_NC_frac_sw_CR):
+        DataCube_frac_sw = np.ones_like(LU_data) * np.nan
+    
+        import wa.Functions.Start.Get_Dictionaries as GD
+        
+        # Get dictionaries and keys
+        lulc = GD.get_sheet5_classes()
+        lulc_dict = GD.get_sheet5_classes().keys()
+        consumed_frac_dict = GD.sw_supply_fractions_sheet5()
+
+        for key in lulc_dict:
+            Numbers = lulc[key]
+            for LU_nmbr in Numbers:
+                Mask = np.zeros_like(LU_data)
+                Mask[LU_data==LU_nmbr] = 1
+                DataCube_frac_sw[Mask == 1] = consumed_frac_dict[key]
+    
+        dest_frac_sw = DC.Save_as_MEM(DataCube_frac_sw, geo_out_LU, proj_LU)
+        dest_frac_sw_CR = RC.reproject_dataset_example(dest_frac_sw, Example_dataset)
+        DataCube_frac_sw_CR = dest_frac_sw_CR.ReadAsArray()
+        DataCube_frac_sw_CR[DataCube_frac_sw_CR == 0] = np.nan
+        
+        DC.Save_as_NC(Name_NC_frac_sw_CR, DataCube_frac_sw_CR, 'Fraction_SW_CR', Example_dataset, Scaling_factor = 0.01)   
+        del DataCube_frac_sw_CR
+        
+    del DataCube_DEM_CR
     ##################### 4. Create Mask based on LU map ###########################
     
     # Now a mask will be created to define the area of interest (pixels where there is a landuse defined)
@@ -363,7 +390,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
 
     if not os.path.exists(Name_py_Discharge_dict_CR3):
 
-        Discharge_dict_CR3, DataCube_ETblue_m3 = Five.Irrigation.Add_irrigation(Discharge_dict_CR2, River_dict_CR2, Name_NC_Rivers_CR, Name_NC_ET_CR, Name_NC_ETref_CR, Name_NC_Prec_CR, Name_NC_Basin_CR, Startdate, Enddate, Example_dataset, Surface_Ground_Withdrawal_Fraction)
+        Discharge_dict_CR3, DataCube_ETblue_m3 = Five.Irrigation.Add_irrigation(Discharge_dict_CR2, River_dict_CR2, Name_NC_Rivers_CR, Name_NC_ET_CR, Name_NC_ETref_CR, Name_NC_Prec_CR, Name_NC_Basin_CR, Name_NC_frac_sw_CR, Startdate, Enddate, Example_dataset)
         np.save(Name_py_Discharge_dict_CR3, Discharge_dict_CR3)
 
         # save ETblue as nc

@@ -5,7 +5,7 @@ Created on Mon May 15 14:27:44 2017
 @author: tih
 """
 
-def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_NC_ETref, Name_NC_Prec, Startdate, Enddate, Example_dataset):
+def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_NC_ETref, Name_NC_Prec, Name_NC_Basin, Name_NC_frac_sw, Startdate, Enddate, Example_dataset):
 
     import copy
     import numpy as np
@@ -30,9 +30,14 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_
        
     # Get Areas
     dlat, dlon = Start.Area_converter.Calc_dlat_dlon(geo_out, size_X, size_Y)                      
-    array_m2 = dlat * dlon           
-           
+    array_m2 = dlat * dlon                
     DataCube_ETblue_m3 = DataCube_ETblue/1000 * array_m2
+    
+    # Open array with surface water fractions
+    DataCube_frac_sw = RC.Open_nc_array(Name_NC_frac_sw)
+    
+    # Total amount of ETblue taken out of rivers
+    DataCube_surface_withdrawal_m3 = DataCube_ETblue_m3 * DataCube_frac_sw[None,:,:]
     
     # Create ID Matrix
     y,x = np.indices((size_Y, size_X))
@@ -42,19 +47,20 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_
     # Find IDs
     ID_Rivers = Rivers * ID_Matrix
     
-    # find IDs drainage
-    ID_Rivers_flow = RC.gap_filling(ID_Rivers,NoDataValue = 0.)
+    # find IDs drainage for only the basin
+    Basin = RC.Open_nc_array(Name_NC_Basin)
+    ID_Rivers_flow = RC.gap_filling(ID_Rivers,NoDataValue = 0.) * Basin
 
     for i in np.unique(ID_Rivers_flow):
         if np.nansum(DataCube_ETblue[:,ID_Rivers_flow == i]) > 0:
-            total_surface_withdrawal = np.nansum(DataCube_ETblue_m3[:,ID_Rivers_flow == i],1)
+            total_surface_withdrawal = np.nansum(DataCube_surface_withdrawal_m3[:,ID_Rivers_flow == i] ,1)
             
             # Find exact reservoir area in river directory
             for River_part in River_dict.iteritems():
                 if len(np.argwhere(River_part[1] == i)) > 0:
                     row_discharge = np.argwhere(River_part[1]==i)[0][0]
                     Discharge_dict_new[River_part[0]][:,0:row_discharge] = Discharge_dict_new[River_part[0]][:,0:row_discharge] - total_surface_withdrawal[:,None] 
-                    Discharge_dict_new[River_part[0]][Discharge_dict_new[River_part[0]]<=0] = 0
+                    Discharge_dict_new[River_part[0]][np.logical_and(Discharge_dict_new[River_part[0]]<=0,Discharge_dict[River_part[0]]>=0)] = 0
                     End_river = River_dict[River_part[0]][0]
                     times = 0
                     while len(River_dict) > times:
@@ -62,7 +68,7 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_
                             if River_dict[River_part[0]][-1] == End_river:  
                                 print River_part_downstream
                                 Discharge_dict_new[River_part_downstream[0]][:,1:] = Discharge_dict_new[River_part_downstream[0]][:,1:] - total_surface_withdrawal[:,None] 
-                                Discharge_dict_new[River_part_downstream[0]][Discharge_dict_new[River_part_downstream[0]]<=0] = 0
+                                Discharge_dict_new[River_part[0]][np.logical_and(Discharge_dict_new[River_part[0]]<=0,Discharge_dict[River_part[0]]>=0)] = 0
                                 End_river = River_dict[River_part_downstream[0]][0]
                                 times = 0
                             times += 1

@@ -141,7 +141,53 @@ def get_sheet2_classes(version = '1.0'):
     sheet2_classes['1.0'] = sheet2_classes_v10
     
     return sheet2_classes[version]
+ 
+
+def sw_supply_fractions_sheet5(version = '1.0'):
     
+    sw_supply_fractions = {
+         'Forests':              0.05,
+         'Shrubland':            0.10,
+         'Rainfed Crops':        0.05,
+         'Forest Plantations':   0.05,
+         'Natural Water Bodies': 0.95,
+         'Wetlands':             0.95,
+         'Natural Grasslands':   0.30,
+         'Other (Non-Manmade)':  0.50,
+         'Irrigated crops':      0.90,
+         'Managed water bodies': 0.95,
+         'Other':                0.50,
+         'Residential':          0.90,
+         'Greenhouses':          0.50,
+         'Aquaculture':          0.95}
+
+    sw_supply_fractions_sheet5 =dict()
+    sw_supply_fractions_sheet5['1.0'] = sw_supply_fractions
+
+    return sw_supply_fractions_sheet5[version]
+
+def get_sheet5_classes(version = '1.0'):
+    lucs2lucstype = {
+        'Forests':              [1, 8, 9, 10, 11, 17],
+        'Shrubland':            [2, 12, 14, 15],
+        'Rainfed Crops':        [34, 35, 36, 37, 38, 39, 40, 41, 42, 43],
+        'Forest Plantations':   [33, 44],
+        'Natural Water Bodies': [4, 19, 23, 24],
+        'Wetlands':             [5, 25, 30, 31],
+        'Natural Grasslands':   [3, 13, 16, 20],
+        'Other (Non-Manmade)':  [6, 7, 18, 21, 22, 26, 27, 28, 29, 32, 45, 46, 47, 48, 49, 50, 51],
+        'Irrigated crops':      [52,53,54,55,56,57,58,59,60,61,62],
+        'Managed water bodies': [63,74,75,77],
+        'Aquaculture':          [65],
+        'Residential':          [66],
+        'Greenhouses':          [64],
+        'Other':                [68,69,70,71,72,76,78]}
+    
+    get_sheet5_classes =dict()
+    get_sheet5_classes['1.0'] = lucs2lucstype    
+
+    return get_sheet5_classes[version]
+ 
 def get_sheet3_classes(version = '1.0'):
     
     sheet3_classes_v10 =  { 'CROP':         {'Cereals':              {'-':                     {'RAIN': [35], 'IRRI': [54]}},
