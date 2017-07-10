@@ -197,9 +197,9 @@ def RetrieveData_three_hourly(Date, args):
 																	
                     # Define time
                     if version == '2.1':
-                        zID = int(((Date - pd.Timestamp("2000-1-1")).days - 1) * 8) + (period - 1)
+                        zID = int(((Date - pd.Timestamp("2000-1-1")).days) * 8) + (period - 1)
                     elif version == '2.0':
-                        zID = int(((Date - pd.Timestamp("1948-1-1")).days - 1) * 8) + (period - 1)
+                        zID = int(((Date - pd.Timestamp("1948-1-1")).days) * 8) + (period - 1)
 			
                     # total URL
                     url_GLDAS = url + '.ascii?%s[%s][%s:1:%s][%s:1:%s]' %(Var,zID,yID[0],yID[1],xID[0],xID[1])
@@ -310,10 +310,10 @@ def RetrieveData_daily(Date, args):
             
             # Create the time dimension
             if version == '2.0':
-                zID_start = int(((Date - pd.Timestamp("1948-1-1")).days - 1) * 8)
+                zID_start = int(((Date - pd.Timestamp("1948-1-1")).days) * 8)
                 zID_end = zID_start + 7
             elif version == '2.1':
-                zID_start = int(((Date - pd.Timestamp("2000-1-1")).days - 1) * 8)
+                zID_start = int(((Date - pd.Timestamp("2000-1-1")).days) * 8)
                 zID_end = zID_start + 7
 
             # define total url
