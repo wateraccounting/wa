@@ -9,7 +9,7 @@ Module: Collect/GLDAS
 
 
 Description:
-This script automatically downloads GLDAS 2.0 data with a 0.25 degree
+This script automatically downloads GLDAS 2.0 or 2.1 data with a 0.25 degree
 resolution for different extends based on their opendap server. The time
 interval available are: three-hourly ('3hour'), daily ('day'), and monthly
 ('month'). A list of the variables can be printed with the command:
@@ -23,11 +23,11 @@ Futher information of the variable can be printed with the following commands:
 Examples:
 from wa.Collect import GLDAS
 GLDAS.three_hourly(Dir='C:/Temp/', Vars=['qair','tair'], Startdate='2004-12-20', Enddate='2005-01-10',
-                   latlim=[38, 41], lonlim=[-76, -73], Periods=[4, 5])
+                   latlim=[38, 41], lonlim=[-76, -73], Periods=[4, 5], gldas_version = '2.1')
 GLDAS.daily(Dir='C:/Temp/', Vars=['qair'], Startdate='2004-12-20', Enddate='2005-01-01',
             latlim=[38, 41], lonlim=[-76, -73],
-            SumMean=1, Min=1, Max=1)
-GLDAS.monthly(Dir='C:/TempGLDAS', Vars=['swnet'], Startdate='2004-12-20', Enddate='2005-03-10',latlim=[38, 41], lonlim=[-76, -73])
+            SumMean=1, Min=1, Max=1, gldas_version = '2.1')
+GLDAS.monthly(Dir='C:/TempGLDAS', Vars=['swnet'], Startdate='2004-12-20', Enddate='2005-03-10',latlim=[38, 41], lonlim=[-76, -73], gldas_version = '2.1')
 """
 
 from .three_hourly import main as three_hourly

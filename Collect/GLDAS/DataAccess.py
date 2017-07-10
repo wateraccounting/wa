@@ -13,7 +13,7 @@ from wa import WebAccounts
 import wa.General.data_conversions as DC
 
 def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, Waitbar, cores,
-                 TimeCase, CaseParameters):    
+                 TimeCase, CaseParameters, gldas_version = '2.1'):    
     """
     This function downloads GLDAS three-hourly, daily or monthly data
 
@@ -50,7 +50,7 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, Waitbar, cores,
 								
         # Define URL by using personal account								
         #url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025SUBP_3H' %(username,password)
-        url = 'https://hydro1.gesdisc.eosdis.nasa.gov/dods/GLDAS_NOAH025_3H.2.1' #%(username,password)
+        url = 'https://hydro1.gesdisc.eosdis.nasa.gov/dods/GLDAS_NOAH025_3H.{0}'.format(gldas_version) #%(username,password)
 								
         # Name the definition that will be used to obtain the data								
         RetrieveData_fcn = RetrieveData_three_hourly
@@ -83,7 +83,7 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, Waitbar, cores,
         
         # Define URL by using personal account	
         #url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025SUBP_3H' %(username,password)
-        url = 'https://hydro1.gesdisc.eosdis.nasa.gov/dods/GLDAS_NOAH025_3H.2.1' #%(username,password)
+        url = 'https://hydro1.gesdisc.eosdis.nasa.gov/dods/GLDAS_NOAH025_3H.{0}'.format(gldas_version) #%(username,password)
 										
         # Name the definition that will be used to obtain the data									
         RetrieveData_fcn = RetrieveData_daily
@@ -106,7 +106,7 @@ def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, Waitbar, cores,
 								
         # Define URL by using personal account							
         #url = 'http://%s:%s@hydro1.gesdisc.eosdis.nasa.gov:80/dods/GLDAS_NOAH025_M' %(username,password)
-        url = 'https://hydro1.gesdisc.eosdis.nasa.gov/dods/GLDAS_NOAH025_M.2.1' #%(username,password)
+        url = 'https://hydro1.gesdisc.eosdis.nasa.gov/dods/GLDAS_NOAH025_M.{0}'.format(gldas_version) #%(username,password)
 		
  								
         # Name the definition that will be used to obtain the data									
@@ -173,6 +173,9 @@ def RetrieveData_three_hourly(Date, args):
     
 	# Open variable info parameters
     VarFactor = VarInfo.factors[Var]
+    
+    # Check GLDAS version
+    version = url[-3:]
 	
 	# Loop over the periods
     for period in CaseParameters:
@@ -193,7 +196,10 @@ def RetrieveData_three_hourly(Date, args):
                 try:
 																	
                     # Define time
-                    zID = int((Date.toordinal() - 730174) * 8 + int(period) - 1) - 1
+                    if version == '2.1':
+                        zID = int(((Date - pd.Timestamp("2000-1-1")).days - 1) * 8) + (period - 1)
+                    elif version == '2.0':
+                        zID = int(((Date - pd.Timestamp("1948-1-1")).days - 1) * 8) + (period - 1)
 			
                     # total URL
                     url_GLDAS = url + '.ascii?%s[%s][%s:1:%s][%s:1:%s]' %(Var,zID,yID[0],yID[1],xID[0],xID[1])
@@ -251,7 +257,7 @@ def RetrieveData_three_hourly(Date, args):
 		
             # define geo		
             lonlimGLDAS = xID[0] * 0.25 - 180
-            latlimGLDAS = yID[1] * 0.25 - 60
+            latlimGLDAS = (yID[1] + 1) * 0.25 - 60
 
             # Save to geotiff file     
             geo = [lonlimGLDAS,0.25,0,latlimGLDAS,0,-0.25]
@@ -282,6 +288,9 @@ def RetrieveData_daily(Date, args):
     downloaded = 0
     N = 0
     data_end = []
+    
+    # Check GLDAS version
+    version = url[-3:]
 			
     # Open all variable info
     for T in types:
@@ -300,8 +309,12 @@ def RetrieveData_daily(Date, args):
         if not os.path.isfile(BasinDir):
             
             # Create the time dimension
-            zID_start = int((Date.toordinal() - 730174) * 8) - 1
-            zID_end = zID_start + 7												
+            if version == '2.0':
+                zID_start = int(((Date - pd.Timestamp("1948-1-1")).days - 1) * 8)
+                zID_end = zID_start + 7
+            elif version == '2.1':
+                zID_start = int(((Date - pd.Timestamp("2000-1-1")).days - 1) * 8)
+                zID_end = zID_start + 7
 
             # define total url
             url_GLDAS = url + '.ascii?%s[%s:1:%s][%s:1:%s][%s:1:%s]' %(Var,zID_start,zID_end,yID[0],yID[1],xID[0],xID[1])
@@ -346,7 +359,7 @@ def RetrieveData_daily(Date, args):
 
                     # define geo		
                     lonlimGLDAS = xID[0] * 0.25 - 180
-                    latlimGLDAS = yID[1] * 0.25 - 60
+                    latlimGLDAS = (yID[1] + 1) * 0.25 - 60
 																				
                     # Download was succesfull
                     downloaded = 1
@@ -405,6 +418,9 @@ def RetrieveData_monthly(Date, args):
     Y = Date.year
     M = Date.month		
     Mday = calendar.monthrange(Y, M)[1]
+    
+    # Check GLDAS version
+    version = url[-3:]
 
     # Check if the outputfile already excists						
     if not os.path.isfile(BasinDir):
@@ -414,7 +430,10 @@ def RetrieveData_monthly(Date, args):
         N=0  										
 												
         # Create the time dimension
-        zID = (Y - 2000) * 12 + M - 3											
+        if version == '2.1':
+            zID = (Y - 2000) * 12 + (M - 1)
+        elif version == '2.0':
+            zID = (Y - 1948) * 12 + (M - 1)
 
         # define total url
         url_GLDAS = url + '.ascii?%s[%s][%s:1:%s][%s:1:%s]' %(Var,zID,yID[0],yID[1],xID[0],xID[1])
@@ -475,7 +494,7 @@ def RetrieveData_monthly(Date, args):
 		
             # define geo		
             lonlimGLDAS = xID[0] * 0.25 - 180
-            latlimGLDAS = yID[1] * 0.25 - 60
+            latlimGLDAS = (yID[1] + 1) * 0.25 - 60
 
             # Save to geotiff file    
             geo = [lonlimGLDAS,0.25,0,latlimGLDAS,0,-0.25]
@@ -635,10 +654,10 @@ class VariablesInfo:
                           'swdown_f_tavg': 'W-m-2',
                           'swnet_tavg': 'W-m-2',
                           'snowf_tavg': 'mm',
-                          'sm0_10cm_ins': 'mm',
-                          'sm10_40cm_ins': 'mm',
-                          'sm40_100cm_ins': 'mm',
-                          'sm100_200cm_ins': 'mm',
+                          'sm0_10cm_ins': 'kg-m-2',
+                          'sm10_40cm_ins': 'kg-m-2',
+                          'sm40_100cm_ins': 'kg-m-2',
+                          'sm100_200cm_ins': 'kg-m-2',
                           'st0_10cm_ins': 'C',
                           'st10_40cm_ins': 'C',
                           'st40_100cm_ins': 'C',
@@ -665,10 +684,10 @@ class VariablesInfo:
                           'swdown_f_tavg': 'W-m-2',
                           'swnet_tavg': 'W-m-2',
                           'snowf_tavg': 'mm',
-                          'sm0_10cm_ins': 'mm',
-                          'sm10_40cm_ins': 'mm',
-                          'sm40_100cm_ins': 'mm',
-                          'sm100_200cm_ins': 'mm',
+                          'sm0_10cm_ins': 'kg-m-2',
+                          'sm10_40cm_ins': 'kg-m-2',
+                          'sm40_100cm_ins': 'kg-m-2',
+                          'sm100_200cm_ins': 'kg-m-2',
                           'st0_10cm_ins': 'C',
                           'st10_40cm_ins': 'C',
                           'st40_100cm_ins': 'C',
@@ -695,10 +714,10 @@ class VariablesInfo:
                           'swdown_f_tavg': 'W-m-2',
                           'swnet_tavg': 'W-m-2',
                           'snowf_tavg': 'mm',
-                          'sm0_10cm_ins': 'mm',
-                          'sm10_40cm_ins': 'mm',
-                          'sm40_100cm_ins': 'mm',
-                          'sm100_200cm_ins': 'mm',
+                          'sm0_10cm_ins': 'kg-m-2',
+                          'sm10_40cm_ins': 'kg-m-2',
+                          'sm40_100cm_ins': 'kg-m-2',
+                          'sm100_200cm_ins': 'kg-m-2',
                           'st0_10cm_ins': 'C',
                           'st10_40cm_ins': 'C',
                           'st40_100cm_ins': 'C',

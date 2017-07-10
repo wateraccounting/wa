@@ -4,7 +4,7 @@ from DataAccess import DownloadData
 
 
 def main(Dir, Vars, Startdate, Enddate, latlim, lonlim, cores=False,
-         Periods=[1, 2, 3, 4, 5, 6, 7, 8], Waitbar = 1):
+         Periods=[1, 2, 3, 4, 5, 6, 7, 8], Waitbar = 1, gldas_version = '2.1'):
     """
     This function downloads GLDAS three-hourly data for a given variable, time
     interval, spatial extent, and day period.
@@ -36,7 +36,7 @@ def main(Dir, Vars, Startdate, Enddate, latlim, lonlim, cores=False,
         
         # Download data
         DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, Waitbar, cores,
-					 TimeCase='three_hourly', CaseParameters=Periods)    # Download data
+					 TimeCase='three_hourly', CaseParameters=Periods, gldas_version = gldas_version)    # Download data
 
 if __name__ == '__main__':
     main(sys.argv)
