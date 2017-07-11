@@ -1,4 +1,4 @@
-# Water Accounting Plus (WA+) toolboox
+# Water Accounting Plus (WA+) toolbox
 
 Python module for retrieval of hydrologic, atmospheric, and remote sensing data used for [Water Accounting](http://www.wateraccounting.org/).
 
