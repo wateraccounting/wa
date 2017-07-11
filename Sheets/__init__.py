@@ -23,6 +23,16 @@ create_sheet3(basin='Helmand', period='2007-2011',
                     r'C:\Sheets\csv\Sample_sheet3_part2.csv'],
               output=[r'C:\Sheets\sheet_3_part1.jpg',
                       r'C:\Sheets\sheet_3_part2.jpg'])
+create_sheet4(basin='Helmand', period='2007-2011',
+                  units = ['km3/yr', 'km3/yr'],
+                  data = [r'C:\Sheets\csv\Sample_sheet4_part12.csv',
+                          r'C:\Sheets\csv\Sample_sheet4_part12.csv'],
+                  output = [r'C:\Sheets\sheet_4_part1.png',
+                            r'C:\Sheets\sheet_4_part2.png'])
+create_sheet6(basin='Helmand', period='2007-2011',
+                  units = 'km3/yr',
+                  data = r'C:\Sheets\csv\Sample_sheet6.csv',
+                  output = r'C:\Sheets\sheet_6.png')
 create_sheet7(basin='Sample data', period='2006-2016', units='Mm3/yr',
               data=r'C:\Sheets\csv\Sample_sheet7.csv',
               output=r'C:\Sheets\sheet_7.jpg')
@@ -32,8 +42,10 @@ create_sheet7(basin='Sample data', period='2006-2016', units='Mm3/yr',
 from .sheet1 import create_sheet1
 from .sheet2 import create_sheet2
 from .sheet3 import create_sheet3
+from .sheet4 import create_sheet4
+from .sheet6 import create_sheet6
 from .sheet7 import create_sheet7
 
-__all__ = ['create_sheet1', 'create_sheet3', 'create_sheet2', 'create_sheet7']
+__all__ = ['create_sheet1', 'create_sheet3', 'create_sheet2', 'create_sheet4', 'create_sheet6', 'create_sheet7']
 
 __version__ = '0.1'
