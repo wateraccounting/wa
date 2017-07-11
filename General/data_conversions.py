@@ -202,8 +202,8 @@ def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Endda
         nco.description = '%s data' %Var
 
         # Create dimensions, variables and attributes:
-        nco.createDimension('lon', size_X)
-        nco.createDimension('lat', size_Y)
+        nco.createDimension('longitude', size_X)
+        nco.createDimension('latitude', size_Y)
 
         # Create time dimension if the parameter is time dependent         											
         if Startdate is not '':     	
@@ -222,12 +222,12 @@ def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Endda
             timeo.standard_name = 'time'
 
         # Create the lon variable
-        lono = nco.createVariable('lon', 'f4', ('lon',))
+        lono = nco.createVariable('longitude', 'f4', ('longitude',))
         lono.standard_name = 'longitude'
         lono.units = 'degrees_east'
 
         # Create the lat variable
-        lato = nco.createVariable('lat', 'f4', ('lat',))
+        lato = nco.createVariable('latitude', 'f4', ('latitude',))
         lato.standard_name = 'latitude'
         lato.units = 'degrees_north'
  
@@ -243,10 +243,10 @@ def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Endda
 
         # Create the data variable			
         if Startdate is not '':			
-            preco = nco.createVariable('%s' %Var, 'f8',  ('time', 'lat', 'lon'), zlib=True, least_significant_digit=1)
+            preco = nco.createVariable('%s' %Var, 'f8',  ('time', 'latitude', 'longitude'), zlib=True, least_significant_digit=1)
             timeo[:]=time_or	
         else:
-            preco = nco.createVariable('%s' %Var, 'f8',  ('lat', 'lon'), zlib=True, least_significant_digit=1)
+            preco = nco.createVariable('%s' %Var, 'f8',  ('latitude', 'longitude'), zlib=True, least_significant_digit=1)
 
         # Set the data variable information
         preco.scale_factor = Scaling_factor
