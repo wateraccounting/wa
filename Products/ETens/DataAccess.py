@@ -204,8 +204,8 @@ def Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim):
 												
             if os.path.exists(filename):
                 fh = Dataset(filename, mode='r')
-                temporary = fh.variables['temp'][:]         			             
-                ETensembleMonth = np.flipud(temporary[month-1,:,:] * 0.01)
+                temporary = fh.variables['ETensemble'][:]         			             
+                ETensembleMonth = temporary[month-1,:,:]
                 del temporary
                 fh.close()
                 Tot_dataset[(v_tile - Lat_tiles[0]) * 4000 : (v_tile - Lat_tiles[0]) * 4000 + 4000,(h_tile - Lon_tiles[0]) * 4000 : (h_tile - Lon_tiles[0]) * 4000 + 4000 ] = ETensembleMonth 
