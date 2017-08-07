@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import gdal
 import urllib
+import urllib2
 import re
 import glob
 from joblib import Parallel, delayed
@@ -205,13 +206,8 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
             # Download the MODIS FPAR data            
             url = 'http://files.ntsg.umt.edu/data/NTSG_Products/MOD16/MOD16A2_MONTHLY.MERRA_GMAO_1kmALB/Y%s/M%02s/' %(Date.strftime('%Y'), Date.strftime('%m')) 
 
-            # Get environmental variable
-            WA_env_paths = os.environ["WA_PATHS"].split(';')
-            GDAL_env_path = WA_env_paths[0]
-            CURL_PATH = os.path.join(GDAL_env_path, 'curl.exe')
-
-				# Read only the content of the http server																
-            f = os.popen('"%s" -l ' %(CURL_PATH) + url,  "r")
+            # Get files on FTP server
+            f = urllib2.urlopen(url)										
 																			
             # Sum all the files on the server												
             soup = BeautifulSoup(f, "lxml")

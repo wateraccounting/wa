@@ -49,14 +49,14 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCa
 
     # String Parameters
     if TimeCase == 'daily':
-        VarCode = 'ET_GLEAM.V3.0b_mm-day-1_daily'
-        FTPprefix = 'data/v3.0b/'
+        VarCode = 'ET_GLEAM.V3.1b_mm-day-1_daily'
+        FTPprefix = 'data/v3.1b/'
         TimeFreq = 'D'
         Folder_name = 'Daily'        
         
     elif TimeCase == 'monthly':
-        VarCode = 'ET_GLEAM.V3.0b_mm-month-1_monthly'
-        FTPprefix = 'data/v3.0b/'
+        VarCode = 'ET_GLEAM.V3.1b_mm-month-1_monthly'
+        FTPprefix = 'data/v3.1b/'
         TimeFreq = 'M'
         Folder_name = 'Monthly'
         
@@ -145,7 +145,7 @@ def RetrieveData(Date, args):
     Year=Date.year
     Month=Date.month   
     
-    filename='E_' + str(Year) + '_GLEAM_v3.0b.nc'
+    filename='E_' + str(Year) + '_GLEAM_v3.1b.nc'
     local_filename = os.path.join(output_folder, filename)
 
     f = Dataset(local_filename,mode='r')
@@ -233,7 +233,7 @@ def Collect_data(FTPprefix,Years,output_folder, Waitbar):
         ftp=ssh.open_sftp()
         ftp.chdir(directory)
     
-        filename='E_' + str(year) + '_GLEAM_v3.0b.nc'
+        filename='E_' + str(year) + '_GLEAM_v3.1b.nc'
         local_filename = os.path.join(output_folder, filename)
         
         if not os.path.exists(local_filename):

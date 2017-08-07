@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import gdal
 import urllib
+import urllib2
 from bs4 import BeautifulSoup
 import re
 import urlparse
@@ -271,6 +272,9 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
             # Download the MODIS GPP data            
             url = 'https://e4ftl01.cr.usgs.gov/MOLT/MOD17A2H.006/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
 
+            # Get files on FTP server
+            f = urllib2.urlopen(url)		
+												
             # Get environmental variable
             WA_env_paths = os.environ["WA_PATHS"].split(';')
             GDAL_env_path = WA_env_paths[0]

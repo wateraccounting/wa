@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import gdal
 import urllib
+import urllib2
 from bs4 import BeautifulSoup
 import re
 import urlparse
@@ -217,14 +218,9 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
             # Download the MODIS NPP data            
             url = 'https://e4ftl01.cr.usgs.gov/MOLT/MOD17A3H.006/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
 
-            # Get environmental variable
-            WA_env_paths = os.environ["WA_PATHS"].split(';')
-            GDAL_env_path = WA_env_paths[0]
-            CURL_PATH = os.path.join(GDAL_env_path, 'curl.exe')
-
-				# Read only the content of the http server																
-            f = os.popen('"%s" -l ' %(CURL_PATH) + url,  "r")
-												
+            # Get files on FTP server
+            f = urllib2.urlopen(url)		
+																			
 		      # Sum all the files on the server												
             soup = BeautifulSoup(f, "lxml")
             for i in soup.findAll('a', attrs = {'href': re.compile('(?i)(hdf)$')}):
