@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Authors: Tim Hessels and Gonzalo Espinoza
-         UNESCO-IHE 2016
-Contact: t.hessels@unesco-ihe.org
-         g.espinoza@unesco-ihe.org
+         IHE Delft 2017
+Contact: t.hessels@un-ihe.org
+         g.espinoza@un-ihe.org
 Repository: https://github.com/wateraccounting/wa
 Module: wa
 
