@@ -11,7 +11,7 @@ def main(Dir, Vars, Startdate, Enddate, latlim, lonlim, cores=False,
 
     Keyword arguments:
     Dir -- 'C:/file/to/path/'
-    Var -- Variable code. Run: VariablesInfo('day').descriptions.keys()
+    Var --  ['wind_f_inst','qair_f_inst'] Variable code. Run: VariablesInfo('day').descriptions.keys()
     Startdate -- 'yyyy-mm-dd'
     Enddate -- 'yyyy-mm-dd'
     latlim -- [ymin, ymax]
@@ -27,7 +27,11 @@ def main(Dir, Vars, Startdate, Enddate, latlim, lonlim, cores=False,
                       6      15:00 - 18:00
                       7      18:00 - 21:00
                       8      21:00 - 24:00
-    Waitbar -- 1 (Default) Will print a waitbar    
+    Waitbar -- 1 (Default) Will print a waitbar   
+    gldas_version = '2.1' (Default) or '2.0'  
+    
+    Version 2.1 is available from 2000-01-01 till present
+    Version 2.0 is available from 1948-01-01 till 2010-12-31
     """
     for Var in Vars:
 

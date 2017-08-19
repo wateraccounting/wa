@@ -74,9 +74,7 @@ def main(Dir, Startdate = '', Enddate = '',
         dataMonth=np.zeros([size_Y,size_X])
        
         for Day in Days[:-1]: 
-            output_folder_day=os.path.join(Dir,'ETref','Daily')
-            DirDay=output_folder_day + '\ETref_mm-day-1_daily_' + Date.strftime('%Y.%m.%d') + '.tif'
-
+            DirDay=os.path.join(Dir,'ETref','Daily','ETref_mm-day-1_daily_' + Day.strftime('%Y.%m.%d') + '.tif')
             dataDay=gdal.Open(DirDay)
             Dval=dataDay.GetRasterBand(1).ReadAsArray().astype(np.float32)    
             Dval[Dval<0]=0

@@ -7,7 +7,7 @@ Repository: https://github.com/wateraccounting/wa
 Module: Generator/Sheet5
 
 Description:
-This module consists of the main script to calculte the sheet 5
+This module consists of the main script to calculate the sheet 5
 """
 
 from wa.Generator.Sheet5 import main

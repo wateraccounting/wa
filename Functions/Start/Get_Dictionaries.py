@@ -142,10 +142,56 @@ def get_sheet2_classes(version = '1.0'):
     
     return sheet2_classes[version]
  
-
-def sw_supply_fractions_sheet5(version = '1.0'):
+def consumed_fractions(version = '1.0'):
     
-    sw_supply_fractions = {
+    fractions = {
+         'Forests':              1.00,
+         'Shrubland':            1.00,
+         'Rainfed Crops':        1.00,
+         'Forest Plantations':   1.00,
+         'Natural Water Bodies': 0.15,
+         'Wetlands':             0.15,
+         'Natural Grasslands':   0.70,
+         'Other (Non-Manmade)':  0.40,
+         'Irrigated crops':      0.80,
+         'Managed water bodies': 0.40,
+         'Other':                0.40,
+         'Residential':          0.05,
+         'Greenhouses':          0.95,
+         'Aquaculture':          0.20}
+
+    consumed_fractions =dict()
+    consumed_fractions['1.0'] = fractions
+
+    return consumed_fractions[version]
+ 
+def sw_return_fractions(version = '1.0'):
+    
+    fractions = {
+         'Forests':              9999,
+         'Shrubland':            9999,
+         'Rainfed Crops':        9999,
+         'Forest Plantations':   9999,
+         'Natural Water Bodies': 0.95,
+         'Wetlands':             0.95,
+         'Natural Grasslands':   0.10,
+         'Other (Non-Manmade)':  0.50,
+         'Irrigated crops':      0.90,
+         'Managed water bodies': 0.95,
+         'Other':                0.50,
+         'Residential':          0.60,
+         'Greenhouses':          0.50,
+         'Aquaculture':          0.95}
+
+    sw_return_fractions =dict()
+    sw_return_fractions['1.0'] = fractions
+
+    return sw_return_fractions[version]
+	
+	
+def sw_supply_fractions(version = '1.0'):
+    
+    fractions = {
          'Forests':              0.05,
          'Shrubland':            0.10,
          'Rainfed Crops':        0.05,
@@ -161,10 +207,10 @@ def sw_supply_fractions_sheet5(version = '1.0'):
          'Greenhouses':          0.50,
          'Aquaculture':          0.95}
 
-    sw_supply_fractions_sheet5 =dict()
-    sw_supply_fractions_sheet5['1.0'] = sw_supply_fractions
+    sw_supply_fractions =dict()
+    sw_supply_fractions['1.0'] = fractions
 
-    return sw_supply_fractions_sheet5[version]
+    return sw_supply_fractions[version]
 
 def get_sheet5_classes(version = '1.0'):
     lucs2lucstype = {

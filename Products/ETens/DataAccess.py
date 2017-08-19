@@ -90,10 +90,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar):
         if Waitbar == 1:
             amount += 1
             WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
-
-
-    return()														
-'''
+    '''
     # Remove all the raw dataset    
     for v_tile in range(Lat_tiles[0], Lat_tiles[1]+1):
         for h_tile in range(Lon_tiles[0], Lon_tiles[1]+1):	
@@ -106,8 +103,8 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar):
     for f in os.listdir(output_folder):
         if re.search(".zip", f):
             os.remove(os.path.join(output_folder, f))
-'''				
-		
+    '''			
+    return()			
 
 
 def Download_ETens_from_WA_FTP(output_folder, Lat_tiles, Lon_tiles):           
@@ -132,7 +129,7 @@ def Download_ETens_from_WA_FTP(output_folder, Lat_tiles, Lon_tiles):
                 try:  
                     # Collect account and FTP information			
                     username, password = WebAccounts.Accounts(Type = 'FTP_WA')
-                    FTP_name = "ftp://ftp.wateraccounting.unesco-ihe.org/WaterAccounting/Data_Satellite/Evaporation/ETensV1.0/%s" % Tilename
+                    FTP_name = "ftp://ftp.wateraccounting.unesco-ihe.org//WaterAccounting_Guest/ETensV1.1/%s" % Tilename
                     local_filename = os.path.join(output_folder, Tilename)   
 			
                     # Download data from FTP 	

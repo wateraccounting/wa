@@ -15,11 +15,11 @@ import wa.General.data_conversions as DC
 def DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, Waitbar, cores,
                  TimeCase, CaseParameters, gldas_version = '2.1'):    
     """
-    This function downloads GLDAS three-hourly, daily or monthly data
+    This function downloads GLDAS Version 2 three-hourly, daily or monthly data
 
     Keyword arguments:
     Dir -- 'C:/file/to/path/'
-    Var -- ['wind','qair'] :For all variable codes: VariablesInfo('day').descriptions.keys()
+    Var -- 'wind_f_inst' : (string) For all variable codes: VariablesInfo('day').descriptions.keys()
     Startdate -- 'yyyy-mm-dd'
     Enddate -- 'yyyy-mm-dd'
     latlim -- [ymin, ymax]
@@ -543,31 +543,31 @@ class VariablesInfo:
     descriptions = {'avgsurft_inst': 'surface average surface temperature [k]',
                     'canopint_inst': 'surface plant canopy surface water [kg/m^2]',
                     'evap_tavg': 'surface total evapotranspiration [kg/m^2/s]',
-                    'lwdown_f_tavg': ('surface surface incident longwave radiation'
-                               ' [w/m^2]'),
+                    'lwdown_f_tavg': 'surface surface incident longwave radiation'
+                               ' [w/m^2]',
                     'lwnet_tavg': 'surface net longwave radiation [w/m^2]',
                     'psurf_f_inst': 'surface surface pressure [kPa]',
                     'qair_f_inst': 'surface near surface specific humidity [kg/kg]',
                     'qg_tavg': 'surface ground heat flux [w/m^2]',
                     'qh_tavg': 'surface sensible heat flux [w/m^2]',
                     'qle_tavg': 'surface latent heat flux [w/m^2]',
-                    'qs_acc': 'surface surface runoff [kg/m^2/s]',
-                    'qsb_acc': 'surface subsurface runoff [kg/m^2/s]',
+                    'qs_acc': 'storm surface runoff [kg/m^2/s]',
+                    'qsb_acc': 'baseflow-groundwater runoff [kg/m^2/s]',
                     'qsm_acc': 'surface snowmelt [kg/m^2/s]',
                     'rainf_f_tavg': 'surface rainfall rate [kg/m^2/s]',
                     'swe_inst': 'surface snow water equivalent [kg/m^2]',
-                    'swdown_f_tavg': ('surface surface incident shortwave radiation'
-                               ' [w/m^2]'),
+                    'swdown_f_tavg': 'surface surface incident shortwave radiation'
+                               ' [w/m^2]',
                     'swnet_tavg': 'surface net shortwave radiation [w/m^2]',
                     'snowf_tavg': 'surface snowfall rate [kg/m^2/s]',
-                    'sm0_10cm_ins': ('0-10 cm underground soil moisture content'
-                               ' [kg/m^2]'),
-                    'sm10_40cm_ins': ('10-40 cm underground soil moisture content'
-                               ' [kg/m^2]'),
-                    'sm40_100cm_ins': ('40-100 cm underground soil moisture content'
-                               ' [kg/m^2]'),
-                    'sm100_200cm_ins': ('100-200 cm underground soil moisture content'
-                               ' [kg/m^2]'),
+                    'sm0_10cm_ins': '0-10 cm underground soil moisture content'
+                               ' [kg/m^2]',
+                    'sm10_40cm_ins': '10-40 cm underground soil moisture content'
+                               ' [kg/m^2]',
+                    'sm40_100cm_ins': '40-100 cm underground soil moisture content'
+                               ' [kg/m^2]',
+                    'sm100_200cm_ins': '100-200 cm underground soil moisture content'
+                               ' [kg/m^2]',
                     'st0_10cm_ins': '0-10 cm underground soil temperature [k]',
                     'st10_40cm_ins': '10-40 cm underground soil temperature [k]',
                     'st40_100cm_ins': '40-100 cm underground soil temperature [k]',

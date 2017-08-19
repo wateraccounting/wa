@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 import calendar
 
-def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
+def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS', Daily = 'y'):
     """
     This functions check the precipitation files that needs to be downloaded, and send the request to the collect functions.
 
@@ -62,20 +62,21 @@ def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
             # download data between startdate and enddate
             CHIRPS.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
             i += 1												
-        
-        # daily
-        Data_Path_Daily = os.path.join('Precipitation','CHIRPS', 'Daily')
-        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
 
-        i = 1																
-        for Startdate_Download in Startdates:	
-
-            # Define enddate																	
-            Enddate_download = Enddates[-i]
-            
-            # Download the daily data
-            CHIRPS.daily(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
-            i += 1	
+        if Daily is 'y':
+            # daily
+            Data_Path_Daily = os.path.join('Precipitation','CHIRPS', 'Daily')
+            Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
+    
+            i = 1																
+            for Startdate_Download in Startdates:	
+    
+                # Define enddate																	
+                Enddate_download = Enddates[-i]
+                
+                # Download the daily data
+                CHIRPS.daily(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
+                i += 1	
 						
     if Product is 'TRMM':
         from wa.Collect import TRMM
@@ -97,19 +98,20 @@ def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
             TRMM.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
             i += 1	
 
-        # daily
-        Data_Path_Daily = os.path.join('Precipitation','TRMM', 'Daily')	        
-        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
-
-        i = 1																
-        for Startdate_Download in Startdates:
-
-            # Define enddate																	
-            Enddate_download = Enddates[-i]
-            
-            # Download the daily data            
-            TRMM.daily(Dir, Startdate_Download, Enddate_download, latlim, lonlim)	
-            i += 1	
+        if Daily is 'y':
+            # daily
+            Data_Path_Daily = os.path.join('Precipitation','TRMM', 'Daily')	        
+            Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
+    
+            i = 1																
+            for Startdate_Download in Startdates:
+    
+                # Define enddate																	
+                Enddate_download = Enddates[-i]
+                
+                # Download the daily data            
+                TRMM.daily(Dir, Startdate_Download, Enddate_download, latlim, lonlim)	
+                i += 1	
 
     if Product is 'RFE':
         from wa.Collect import RFE
@@ -131,19 +133,20 @@ def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
             RFE.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
             i += 1	
 
-        # daily
-        Data_Path_Daily = os.path.join('Precipitation','RFE', 'Daily')	        
-        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
-
-        i = 1																
-        for Startdate_Download in Startdates:
-
-            # Define enddate																	
-            Enddate_download = Enddates[-i]
-            
-            # Download the daily data            
-            RFE.daily(Dir, Startdate_Download, Enddate_download, latlim, lonlim)	
-            i += 1	
+        if Daily is 'y':
+            # daily
+            Data_Path_Daily = os.path.join('Precipitation','RFE', 'Daily')	        
+            Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
+    
+            i = 1																
+            for Startdate_Download in Startdates:
+    
+                # Define enddate																	
+                Enddate_download = Enddates[-i]
+                
+                # Download the daily data            
+                RFE.daily(Dir, Startdate_Download, Enddate_download, latlim, lonlim)	
+                i += 1	
 							
     return(Data_Path)	
 							

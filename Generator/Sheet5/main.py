@@ -151,7 +151,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
         # Get dictionaries and keys
         lulc = GD.get_sheet5_classes()
         lulc_dict = GD.get_sheet5_classes().keys()
-        consumed_frac_dict = GD.sw_supply_fractions_sheet5()
+        consumed_frac_dict = GD.sw_supply_fractions()
 
         for key in lulc_dict:
             Numbers = lulc[key]

@@ -136,8 +136,13 @@ def Save_as_tiff(name='', data='', geo='', projection=''):
     srse = osr.SpatialReference()
     if projection == '':
         srse.SetWellKnownGeogCS("WGS84")
-    else:	
+    if not srse.SetWellKnownGeogCS(projection) == 6:	
         srse.SetWellKnownGeogCS(projection)
+    else:
+        try:
+            srse.ImportFromEPSG(int(projection))
+        except:    
+            srse.ImportFromWkt(projection)
     dst_ds.SetProjection(srse.ExportToWkt())
     dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
     dst_ds.SetGeoTransform(geo)
