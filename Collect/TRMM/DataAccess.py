@@ -117,7 +117,12 @@ def RetrieveData(Date, args):
         DirFile = os.path.join(output_folder, "P_TRMM3B42.V7_mm-day-1_daily_%d.%02d.%02d.tif" %(year, month, day))
         
     if TimeCase == 'monthly': 
-        URL = 'https://disc2.nascom.nasa.gov/opendap/TRMM_L3/TRMM_3B43.7/%d/3B43.%d%02d01.7A.HDF.ascii?precipitation[%d:1:%d][%d:1:%d]'  %(year, year, month, xID[0], xID[1]-1, yID[0], yID[1]-1)
+        if Date >= pd.Timestamp('2010-10-01'):
+            URL = 'https://disc2.nascom.nasa.gov/opendap/TRMM_L3/TRMM_3B43.7/%d/3B43.%d%02d01.7.HDF.ascii?precipitation[%d:1:%d][%d:1:%d]'  %(year, year, month, xID[0], xID[1]-1, yID[0], yID[1]-1)
+
+        else:    
+            URL = 'https://disc2.nascom.nasa.gov/opendap/TRMM_L3/TRMM_3B43.7/%d/3B43.%d%02d01.7A.HDF.ascii?precipitation[%d:1:%d][%d:1:%d]'  %(year, year, month, xID[0], xID[1]-1, yID[0], yID[1]-1)
+
         DirFile = os.path.join(output_folder, "P_TRMM3B43.V7_mm-month-1_monthly_%d.%02d.01.tif" %(year, month))
     
     if not os.path.isfile(DirFile):
