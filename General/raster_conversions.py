@@ -14,6 +14,21 @@ import subprocess
 from pyproj import Proj, transform
 import scipy.interpolate
 
+def Run_command_window(argument):
+    """
+    This function runs the argument in the command window without showing cmd window
+
+    Keyword Arguments:
+    argument -- string, name of the adf file
+    """  
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW		
+    
+    process = subprocess.Popen(argument, startupinfo=startupinfo, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    process.wait()  
+    
+    return()
+
 def Open_array_info(filename=''):
 
     f = gdal.Open(r"%s" %filename)
@@ -139,8 +154,8 @@ def clip_data(input_file, latlim, lonlim):
     Start_x = np.max([int(np.ceil(((lonlim[0]) - Geo_in[0])/ Geo_in[1])),0])   				
     End_x = np.min([int(np.floor(((lonlim[1]) - Geo_in[0])/ Geo_in[1])),int(dest_in.RasterXSize)])				
 				
-    Start_y = np.max([int(np.ceil((Geo_in[3] - latlim[1])/ -Geo_in[5])),0])
-    End_y = np.min([int(np.floor(((latlim[0]) - Geo_in[3])/Geo_in[5])), int(dest_in.RasterYSize)])	
+    Start_y = np.max([int(np.floor((Geo_in[3] - latlim[1])/ -Geo_in[5])),0])
+    End_y = np.min([int(np.ceil(((latlim[0]) - Geo_in[3])/Geo_in[5])), int(dest_in.RasterYSize)])	
 
     #Create new GeoTransform
     Geo_in[0] = Geo_in[0] + Start_x * Geo_in[1]
@@ -261,8 +276,7 @@ def reproject_MODIS(input_name, epsg_to):
 
     # find path to the executable
     fullCmd = ' '.join(["%s" %(GDALWARP_PATH), '-overwrite -s_srs "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs"', '-t_srs EPSG:%s -of GTiff' %(epsg_to), input_name, name_out])   
-    process = subprocess.Popen(fullCmd)
-    process.wait() 
+    Run_command_window(fullCmd)
 				
     return(name_out)  
 				
@@ -506,7 +520,6 @@ def Moving_average(dataset, Moving_front, Moving_back):
         dataset_out[i - Moving_back,:,:] = np.nanmean(dataset[i - Moving_back : i + 1 + Moving_front, :,:], 0)		
         
     return(dataset_out)					
-
 
 
 def Get_ordinal(Startdate, Enddate, freq = 'MS'):

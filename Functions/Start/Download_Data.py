@@ -503,6 +503,36 @@ def ETreference(Dir, latlim, lonlim, Startdate, Enddate):
         ETref.monthly(Dir, Startdate_Download, Enddate_download, latlim, lonlim, pixel_size = 0.025)
         i += 1
     return(Data_Path)
+
+def GWF(Dir, latlim, lonlim):
+    """
+    This functions check the Gray Water Footprint file from TWC that needs to be downloaded, and send the request to the collect functions.
+
+    Parameters
+    ----------
+    Dir : str
+        Path to all the output data of the Basin
+    latlim : array
+        Array containing the latitude limits [latmin, latmax]
+    lonlim : array
+        Array containing the longitude limits [lonmin, lonmax]
+        
+    Returns
+    -------
+    Data_Path : str
+        Path from the Dir to the downloaded data
+
+    """     
+    from wa.Collect import TWC
+    
+    # download data between startdate and enddate    
+    TWC.Gray_Water_Footprint(Dir, latlim, lonlim)
+    
+    # Define data path         
+    Data_Path = os.path.join('TWC','GWF')	
+					
+    return(Data_Path)	
+
 				
 def Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path, freq):	
     """

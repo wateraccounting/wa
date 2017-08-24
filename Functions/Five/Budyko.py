@@ -48,7 +48,9 @@ def Calc_budyko(Name_NC_ETref, Name_NC_P):
     P[P == 0] = 0.0001
     Pavg[Pavg == 0] = 0.0001				
     phi = np.where(np.greater_equal(P, Pavg), ETref/P, ETrefavg/Pavg)
-    Budyko = np.sqrt(phi * np.tanh(1/phi) * (1-np.exp(-phi)))
+
+    import wa.Functions.Four.SplitET.Budyko as Budyko
+    Budyko = Budyko.Calc_budyko(phi)
     
     return(Budyko, P, Pavg)		
 

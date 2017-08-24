@@ -9,9 +9,9 @@ import zipfile
 import gdal
 import osr
 import os
-import subprocess
 import pandas as pd
 import numpy as np
+
 
 def Convert_nc_to_tiff(input_nc, output_folder):
     """
@@ -53,17 +53,19 @@ def Convert_nc_to_tiff(input_nc, output_folder):
 
 def Convert_grb2_to_nc(input_wgrib, output_nc, band):
 	
+    import wa.General.raster_conversions as RC
+    
     # Get environmental variable
     WA_env_paths = os.environ["WA_PATHS"].split(';')
     GDAL_env_path = WA_env_paths[0]
     GDAL_TRANSLATE_PATH = os.path.join(GDAL_env_path, 'gdal_translate.exe')
     
-    # Create command			
+    # Create command		
     fullCmd = ' '.join(['"%s" -of netcdf -b %d' %(GDAL_TRANSLATE_PATH, band), input_wgrib, output_nc])  # -r {nearest}
-
-    process = subprocess.Popen(fullCmd)
-    process.wait()  
-    return()				
+	
+    RC.Run_command_window(fullCmd)
+    
+    return()		
 
 def Convert_adf_to_tiff(input_adf, output_tiff):
     """
@@ -73,6 +75,7 @@ def Convert_adf_to_tiff(input_adf, output_tiff):
     input_adf -- name, name of the adf file
     output_tiff -- Name of the output tiff file
     """
+    import wa.General.raster_conversions as RC
 
     # Get environmental variable
     WA_env_paths = os.environ["WA_PATHS"].split(';')
@@ -80,10 +83,11 @@ def Convert_adf_to_tiff(input_adf, output_tiff):
     GDAL_TRANSLATE_PATH = os.path.join(GDAL_env_path, 'gdal_translate.exe')
     
     # convert data from ESRI GRID to GeoTIFF
-    command = ('"%s" -co COMPRESS=DEFLATE -co PREDICTOR=1 -co '
+    fullCmd = ('"%s" -co COMPRESS=DEFLATE -co PREDICTOR=1 -co '
                    'ZLEVEL=1 -of GTiff %s %s') % (GDAL_TRANSLATE_PATH, input_adf, output_tiff)
     
-    os.system(command)
+    RC.Run_command_window(fullCmd) 
+    
     return(output_tiff)
 				
 def Extract_Data(input_file, output_folder):
