@@ -129,7 +129,7 @@ def Download_ETens_from_WA_FTP(output_folder, Lat_tiles, Lon_tiles):
                 try:  
                     # Collect account and FTP information			
                     username, password = WebAccounts.Accounts(Type = 'FTP_WA')
-                    FTP_name = "ftp://ftp.wateraccounting.unesco-ihe.org//WaterAccounting_Guest/ETensV1.1/%s" % Tilename
+                    FTP_name = "ftp://ftp.wateraccounting.unesco-ihe.org//WaterAccounting_Guest/ETensV1.0/%s" % Tilename
                     local_filename = os.path.join(output_folder, Tilename)   
 			
                     # Download data from FTP 	
