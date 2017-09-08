@@ -61,7 +61,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
         os.makedirs(output_folder)
     
     # Download list (txt file on the internet) which includes the lat and lon information for the integrized sinusoidal projection tiles of MODIS
-    nameDownloadtext='http://modis-land.gsfc.nasa.gov/pdf/sn_gring_10deg.txt'  
+    nameDownloadtext='https://modis-land.gsfc.nasa.gov/pdf/sn_gring_10deg.txt'  
     file_nametext=os.path.join(output_folder,nameDownloadtext.split('/')[-1])
     urllib.urlretrieve(nameDownloadtext,file_nametext)
 

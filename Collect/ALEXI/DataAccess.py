@@ -5,25 +5,21 @@ Authors: Tim Hessels and Gonzalo Espinoza
 Contact: t.hessels@unesco-ihe.org
          g.espinoza@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
-Module: Collect/ALEXI
-
+Module: Collect/ETmonitor
 
 Restrictions:
 The data and this python file may not be distributed to others without
-permission of the WA+ team due data restriction of the ALEXI developers.
+permission of the WA+ team due data restriction of the ETmonitor developers.
 
 Description:
 This script collects ALEXI data from the UNESCO-IHE FTP server. The data has a
-weekly temporal resolution and a spatial resolution of 0.05 degree. The
+monthly temporal resolution and a spatial resolution of 0.01 degree. The
 resulting tiff files are in the WGS84 projection.
-The data is available between 2003-01-01 till 2015-12-31.
-
-The output file with the name 2003.01.01 contains the total evaporation in mm
-for the period of 1 January - 7 January.
+The data is available between 2008-01-01 till 2012-12-31.
 
 Example:
-from wa.Collect import ALEXI
-ALEXI.weekly(Dir='C:/Temp/', Startdate='2003-02-24', Enddate='2003-03-09',
+from wa.Collect import ETmonitor
+ETmonitor.monthly(Dir='C:/Temp/', Startdate='2003-02-24', Enddate='2003-03-09',
                      latlim=[50,54], lonlim=[3,7])
 
 """
@@ -41,7 +37,7 @@ import wa.General.raster_conversions as RC
 import wa.General.data_conversions as DC
 
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar):
     """
     This scripts downloads ALEXI ET data from the UNESCO-IHE ftp server.
     The output files display the total ET in mm for a period of one week.
@@ -92,10 +88,20 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
     DOY = datetime.datetime.strptime(Date,
                                      '%Y-%m-%d').timetuple().tm_yday
     # The new Startdate
-    Date = pd.Timestamp(Date)																																				
+    Date = pd.Timestamp(Date)		
+
+    # amount of Dates weekly 
+    Dates_Weekly = pd.date_range(Date, Enddate, freq = '7D')
+    
+    # Create Waitbar
+    if Waitbar == 1:
+        import wa.Functions.Start.WaitbarConsole as WaitbarConsole
+        total_amount = len(Dates_Weekly)
+        amount = 0
+        WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)																																		
 																																					
     # Define directory and create it if not exists
-    output_folder = os.path.join(Dir, 'Evaporation', 'ALEXI')
+    output_folder = os.path.join(Dir, 'Evaporation', 'ALEXI', 'Weekly')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -112,39 +118,45 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim):
         # Define end filename
         filename = "ALEXI_weekly_mm_%s_%s.tif" %(Date.strftime('%j'), Date.strftime('%Y'))
         
-		# Temporary filename for the downloaded global file												
+		 # Temporary filename for the downloaded global file												
         local_filename = os.path.join(output_folder, filename)
-           
+ 
+	    # Create the new date for the next download					
+        Date = (str(Date.strftime('%Y')) + '-' + str(Date.strftime('%m')) + '-' + str(Date.strftime('%d')))						
+
         # Define IDs
         yID = 3000 - np.int16(np.array([np.ceil((latlim[1]+60)*20),np.floor((latlim[0]+60)*20)]))
         xID = np.int16(np.array([np.floor((lonlim[0])*20),np.ceil((lonlim[1])*20)])+3600) 
 
         # Download the data from FTP server if the file not exists								
         if not os.path.exists(DirFile):
-            Download_ALEXI_from_WA_FTP(local_filename, DirFile, filename, lonlim, latlim, yID, xID)
+            try:
+                Download_ALEXI_from_WA_FTP(local_filename, DirFile, filename, lonlim, latlim, yID, xID)
+            except:
+                print "Was not able to download file with date %s" %Date 
         
-		# Create the new date for the next download					
-        Date = (str(Date.strftime('%Y')) + '-' + str(Date.strftime('%m')) + '-' + str(Date.strftime('%d')))						
-        
-		# DOY of the previous file						
-        DOY = datetime.datetime.strptime(Date,'%Y-%m-%d').timetuple().tm_yday
-        
-		# DOY of the new file						
-        DOY = DOY + 7
-        if DOY == 372:
-            DOY = 8
-            Year = Year + 1												
-        
-        DOY = str(DOY)
-		
-        # Date of new file					
-        Day = datetime.datetime.strptime(DOY, '%j')
-        Month = '%02d' % Day.month
-        Day = '%02d' % Day.day
-        Date = (str(Year) + '-' + str(Month) + '-' + str(Day))											
-        Date = pd.Timestamp(Date)
+        # Current DOY
+        DOY = datetime.datetime.strptime(Date,
+                                     '%Y-%m-%d').timetuple().tm_yday
 
-        # Check if this file must be downloaded										
+        # Define next day
+        DOY_next = int(DOY + 7)
+        if DOY_next >= 366:
+            DOY_next = 8
+            Year += 1
+        DOYnext = str('%s-%s' %(DOY_next, Year))
+        DayNext = datetime.datetime.strptime(DOYnext, '%j-%Y')
+        Month = '%02d' % DayNext.month
+        Day = '%02d' % DayNext.day
+        Date = (str(Year) + '-' + str(Month) + '-' + str(Day))
+                                                                 
+        # Adjust waitbar
+        if Waitbar == 1:
+            amount += 1
+            WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
+ 
+        # Check if this file must be downloaded
+        Date = pd.Timestamp(Date)								
         if Date.toordinal() > Stop:
             End_date = 1								
 
@@ -166,36 +178,31 @@ def Download_ALEXI_from_WA_FTP(local_filename, DirFile, filename, lonlim, latlim
     latlim -- [xmin, xmax] (values must be between -180 and 180)			
     """      
 												
-    try:  
-        
-        # Collect account and FTP information			
-        username, password = WebAccounts.Accounts(Type = 'FTP_WA')
-        ftpserver = "ftp.wateraccounting.unesco-ihe.org"
+    # Collect account and FTP information			
+    username, password = WebAccounts.Accounts(Type = 'FTP_WA')
+    ftpserver = "ftp.wateraccounting.unesco-ihe.org"
 						
-        # Download data from FTP 													
-        ftp=FTP(ftpserver)
-        ftp.login(username,password)
-        directory="/WaterAccounting/Data_Satellite/Evaporation/ALEXI/World/"
-        ftp.cwd(directory)
-        lf = open(local_filename, "wb")
-        ftp.retrbinary("RETR " + filename, lf.write)
-        lf.close()
+    # Download data from FTP 													
+    ftp=FTP(ftpserver)
+    ftp.login(username,password)
+    directory="/WaterAccounting/Data_Satellite/Evaporation/ALEXI/World/"
+    ftp.cwd(directory)
+    lf = open(local_filename, "wb")
+    ftp.retrbinary("RETR " + filename, lf.write)
+    lf.close()
 
-        # Open global ALEXI data   
-        dataset = RC.Open_tiff_array(local_filename)             
-                
-        # Clip extend out of world data
-        data = dataset[yID[0]:yID[1],xID[0]:xID[1]]                 
-        data[data < 0] = -9999
-                
-        # make geotiff file     
-        geo = [lonlim[0],0.05,0,latlim[1],0,-0.05]
-        DC.Save_as_tiff(name = DirFile, data = data, geo = geo, projection = "WGS84")																
-                
-        # delete old tif file
-        os.remove(local_filename)
-                
-    except:
-        print "file not exists"
+    # Open global ALEXI data   
+    dataset = RC.Open_tiff_array(local_filename)             
+            
+    # Clip extend out of world data
+    data = dataset[yID[0]:yID[1],xID[0]:xID[1]]                 
+    data[data < 0] = -9999
+            
+    # make geotiff file     
+    geo = [lonlim[0],0.05,0,latlim[1],0,-0.05]
+    DC.Save_as_tiff(name = DirFile, data = data, geo = geo, projection = "WGS84")																
+            
+    # delete old tif file
+    os.remove(local_filename)
 							
     return

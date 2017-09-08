@@ -36,7 +36,7 @@ def main(Dir, Vars, Startdate, Enddate, latlim, lonlim, cores=False,
     for Var in Vars:
 
         if Waitbar == 1:
-            print '\nDownloading 3-houly GLDAS %s data for the period %s till %s' %(Var, Startdate, Enddate)  
+            print '\nDownloading 3-hourly GLDAS %s data for the period %s till %s' %(Var, Startdate, Enddate)  
         
         # Download data
         DownloadData(Dir, Var, Startdate, Enddate, latlim, lonlim, Waitbar, cores,

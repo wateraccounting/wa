@@ -64,7 +64,7 @@ def main(Dir, Startdate = '', Enddate = '',
 
         # Load DEM 
         if not pixel_size:
-            nameDEM='DEM_HydroShed_m.tif'
+            nameDEM='DEM_HydroShed_m_3s.tif'
             DEMmap=os.path.join(Dir,'HydroSHED','DEM',nameDEM )
         else:
             DEMmap=os.path.join(Dir,'HydroSHED','DEM','DEM_HydroShed_m_reshaped_for_ETref.tif')

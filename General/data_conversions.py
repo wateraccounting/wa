@@ -131,7 +131,7 @@ def Save_as_tiff(name='', data='', geo='', projection=''):
     data -- [array], dataset of the geotiff
     geo -- [minimum lon, pixelsize, rotation, maximum lat, rotation,
             pixelsize], (geospatial dataset)
-    projection -- interger, the EPSG code
+    projection -- integer, the EPSG code
     """
     # save as a geotiff
     driver = gdal.GetDriverByName("GTiff")

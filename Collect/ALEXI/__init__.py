@@ -27,7 +27,8 @@ ALEXI.weekly(Dir='C:/Temp/', Startdate='2003-12-01', Enddate='2004-01-20',
 """
 
 from .weekly import main as weekly
+from .monthly import main as monthly
 
-__all__ = ['weekly']
+__all__ = ['weekly', 'monthly']
 
 __version__ = '0.1'

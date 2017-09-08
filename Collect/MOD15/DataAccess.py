@@ -85,7 +85,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, nameDo
         os.makedirs(output_folder)
     
     # Download list (txt file on the internet) which includes the lat and lon information of the MODIS tiles
-    nameDownloadtext = 'http://modis-land.gsfc.nasa.gov/pdf/sn_gring_10deg.txt'  
+    nameDownloadtext = 'https://modis-land.gsfc.nasa.gov/pdf/sn_gring_10deg.txt'  
     file_nametext = os.path.join(output_folder, nameDownloadtext.split('/')[-1])
     urllib.urlretrieve(nameDownloadtext, file_nametext)
 
@@ -326,15 +326,15 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, nameDownload)
                                 # Say that download was succesfull		
                                 if int(statinfo.st_size) > 10000:																								
                                     downloaded = 1
-	    			
-                        # If download was not succesfull								
+                                # Stop trying after 10 times																				
+                                if N == 10:
+                                    downloaded = 1
+
+                    # If download was not succesfull								
                     except:	
-	                  # Try another time                     																				
+                        # Try another time                     																				
                         N = N + 1
 																				
-				  # Stop trying after 10 times																				
-                    if N == 10:
-                        downloaded = 1
                     try:
                         # Open .hdf only band with FPAR and collect all tiles to one array
                         if nameDownload == 'Fpar_500m':

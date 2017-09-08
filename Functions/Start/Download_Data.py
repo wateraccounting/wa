@@ -232,7 +232,87 @@ def Evapotranspiration(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD16
             # download data between startdate and enddate            
             GLEAM.ET_monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
             i += 1
-	   							
+            
+    if Product is 'ALEXI':
+        
+        from wa.Collect import ALEXI
+        
+        # Define data path             
+        Data_Path = os.path.join('Evaporation', 'ALEXI', 'Monthly')
+        
+        # Get start and enddates             
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																  								
+
+        i = 1																
+        for Startdate_Download in Startdates:
+
+            # Define enddate																	
+            Enddate_download = Enddates[-i]
+            
+            # download data between startdate and enddate            
+            ALEXI.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
+            i += 1		       
+
+    if Product is 'ETmonitor':
+        
+        from wa.Collect import ETmonitor
+        
+        # Define data path             
+        Data_Path = os.path.join('Evaporation', 'ETmonitor', 'Monthly')
+        
+        # Get start and enddates             
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																  								
+
+        i = 1																
+        for Startdate_Download in Startdates:
+
+            # Define enddate																	
+            Enddate_download = Enddates[-i]
+            
+            # download data between startdate and enddate            
+            ETmonitor.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
+            i += 1		            
+
+    if Product is 'SSEBop':
+        
+        from wa.Collect import SSEBop
+        
+        # Define data path             
+        Data_Path = os.path.join('Evaporation', 'SSEBop', 'Monthly')
+        
+        # Get start and enddates             
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																  								
+
+        i = 1																
+        for Startdate_Download in Startdates:
+
+            # Define enddate																	
+            Enddate_download = Enddates[-i]
+            
+            # download data between startdate and enddate            
+            SSEBop.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
+            i += 1		  	 
+
+    if Product is 'CMRSET':
+        
+        from wa.Collect import CMRSET
+        
+        # Define data path             
+        Data_Path = os.path.join('Evaporation', 'CMRSET', 'Monthly')
+        
+        # Get start and enddates             
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																  								
+
+        i = 1																
+        for Startdate_Download in Startdates:
+
+            # Define enddate																	
+            Enddate_download = Enddates[-i]
+            
+            # download data between startdate and enddate            
+            CMRSET.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
+            i += 1		  	 
+  							
     return(Data_Path)		
 
 def LAI(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD15'):

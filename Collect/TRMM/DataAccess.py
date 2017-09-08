@@ -11,6 +11,7 @@ import numpy as np
 import os
 import pandas as pd
 import requests
+import calendar
 from joblib import Parallel, delayed
 
 import wa.General.data_conversions as DC
@@ -70,8 +71,8 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, TimeCa
         lonlim[1] = np.min(lonlim[1], 180)
     
     # Define IDs
-    yID = 400 - np.int16(np.array([np.ceil((latlim[1] + 50)*4),
-                                   np.floor((latlim[0] + 50)*4)]))
+    yID = np.int16(np.array([np.ceil((latlim[0] + 50)*4),
+                                   np.floor((latlim[1] + 50)*4)]))
     xID = np.int16(np.array([np.floor((lonlim[0])*4),
                              np.ceil((lonlim[1])*4)]) + 720)
 
@@ -115,6 +116,7 @@ def RetrieveData(Date, args):
     if TimeCase == 'daily':
         URL = 'https://disc2.nascom.nasa.gov/opendap/TRMM_L3/TRMM_3B42_Daily.7/%d/%02d/3B42_Daily.%d%02d%02d.7.nc4.ascii?precipitation[%d:1:%d][%d:1:%d]'  %(year, month, year, month, day, xID[0], xID[1]-1, yID[0], yID[1]-1)
         DirFile = os.path.join(output_folder, "P_TRMM3B42.V7_mm-day-1_daily_%d.%02d.%02d.tif" %(year, month, day))
+        Scaling = 1
         
     if TimeCase == 'monthly': 
         if Date >= pd.Timestamp('2010-10-01'):
@@ -123,6 +125,7 @@ def RetrieveData(Date, args):
         else:    
             URL = 'https://disc2.nascom.nasa.gov/opendap/TRMM_L3/TRMM_3B43.7/%d/3B43.%d%02d01.7A.HDF.ascii?precipitation[%d:1:%d][%d:1:%d]'  %(year, year, month, xID[0], xID[1]-1, yID[0], yID[1]-1)
 
+        Scaling = calendar.monthrange(year,month)[1] * 24
         DirFile = os.path.join(output_folder, "P_TRMM3B43.V7_mm-month-1_monthly_%d.%02d.01.tif" %(year, month))
     
     if not os.path.isfile(DirFile):
@@ -142,7 +145,7 @@ def RetrieveData(Date, args):
 	 														
         # Open text file and remove header and footer																				
         data_start = np.genfromtxt(pathtext,dtype = float,skip_header = 1,delimiter=',')
-        data = data_start[:,1:]
+        data = data_start[:,1:] * Scaling
         data[data < 0] = -9999 
         data = data.transpose()
         data = np.flipud(data)

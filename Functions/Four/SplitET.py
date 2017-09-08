@@ -14,7 +14,6 @@ import numpy as np
 def Blue_Green(Name_NC_ET, Name_NC_P, Name_NC_ETref, Startdate, Enddate, Additional_Months):
     """
     This functions split the evapotranspiration into green and blue evapotranspiration.
-
     Parameters
     ----------
     Dir_Basin : str
@@ -27,7 +26,6 @@ def Blue_Green(Name_NC_ET, Name_NC_P, Name_NC_ETref, Startdate, Enddate, Additio
         Path to the .nc file containing ETref data (including moving average period)
     Moving_Averaging_Length: integer
         Number defines the amount of months that are taken into account
-
     Returns
     -------
     ET_Blue : array
@@ -75,7 +73,6 @@ def Blue_Green(Name_NC_ET, Name_NC_P, Name_NC_ETref, Startdate, Enddate, Additio
 def Calc_budyko(phi):
     """
     This functions calculate the budyko number based on the aridity index
-
     Parameters
     ----------
     phi : Array
@@ -90,4 +87,5 @@ def Calc_budyko(phi):
     Budyko = np.sqrt(phi * np.tanh(1/phi) * (1-np.exp(-phi)))
     
     return(Budyko)		
+      
       

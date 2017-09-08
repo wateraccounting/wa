@@ -136,7 +136,8 @@ def Calculate(Basin, P_Product, ET_Product, Moving_Averaging_Length, Startdate, 
         dest_GWF = RC.reproject_dataset_example(GWF_Filepath, Example_dataset, method=1)
         DataCube_GWF = dest_GWF.GetRasterBand(1).ReadAsArray()
         DC.Save_as_NC(Name_NC_GWF, DataCube_GWF, 'GWF', Example_dataset,Scaling_factor = 0.01)
-
+        del DataCube_GWF
+        
     ####################### Calculations Sheet 4 ##############################
 
     # Evapotranspiration data
@@ -152,12 +153,22 @@ def Calculate(Basin, P_Product, ET_Product, Moving_Averaging_Length, Startdate, 
         DC.Save_as_NC(Name_NC_ETblue, DataCube_ETblue, 'ETblue', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
         DC.Save_as_NC(Name_NC_ETgreen, DataCube_ETgreen, 'ETgreen', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
 
-    else:
-        DataCube_ETblue = RC.Open_nc_array(Name_NC_ETblue, Var=None, Startdate = Startdate, Enddate = Enddate)
-        DataCube_ETgreen = RC.Open_nc_array(Name_NC_ETgreen, Var=None, Startdate = Startdate, Enddate = Enddate)
+        del DataCube_ETblue, DataCube_ETgreen
 
     # Calculate non-consumend and Total supply maps by using fractions and consumed maps (blue ET)
+    Name_NC_Total_Supply = DC.Create_NC_name('TotSup', Simulation, Dir_Basin, 4, info)
+    Name_NC_Non_Consumed = DC.Create_NC_name('NonCon', Simulation, Dir_Basin, 4, info)    
 
+    if not os.path.exists(Name_NC_Total_Supply) or os.path.exists(Name_NC_Non_Consumed):
+
+        # Do the calculations
+        DataCube_Total_Supply, DataCube_Non_Consumed = Four.Total_Supply.Fraction_Based(Name_NC_ETblue, Name_NC_LU, Startdate, Enddate)
+    
+        # Get the data of Evaporation and save as nc
+        DC.Save_as_NC(Name_NC_Total_Supply, DataCube_Total_Supply, 'TotSup', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
+        DC.Save_as_NC(Name_NC_Non_Consumed, DataCube_Non_Consumed, 'NonCon', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
+        del DataCube_Total_Supply, DataCube_Non_Consumed
+    
     # Apply fractions over total supply to calculate gw and sw supply
     
     # Apply gray water footprint fractions to calculated non recoverable flow based on the non consumed flow

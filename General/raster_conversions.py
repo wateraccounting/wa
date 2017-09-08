@@ -125,7 +125,20 @@ def Open_nc_array(NC_filename, Var = None, Startdate = '', Enddate = ''):
     else:
         Data = fh.variables[Var][:]	
 				
-    return(Data)				
+    return(Data)	
+			
+def Clip_Dataset_GDAL(output1, output2, latlim, lonlim):
+    
+    # Get environmental variable
+    WA_env_paths = os.environ["WA_PATHS"].split(';')
+    GDAL_env_path = WA_env_paths[0]
+    GDALTRANSLATE_PATH = os.path.join(GDAL_env_path, 'gdal_translate.exe')
+
+    # find path to the executable
+    fullCmd = ' '.join(["%s" %(GDALTRANSLATE_PATH), '-projwin %d %d %d %d -of GTiff %s %s'  %(lonlim[0], latlim[1], lonlim[1], latlim[0], output1, output2)]) 
+    Run_command_window(fullCmd)
+    
+    return()
 			
 def clip_data(input_file, latlim, lonlim):
     """
@@ -331,6 +344,18 @@ def reproject_dataset_example(dataset, dataset_example, method=1):
     return(dest1)				
 
 def resize_array_example(Array_in, Array_example, method=1):
+    """
+    This function resizes an array so it has the same size as an example array
+    The extend of the array must be the same
+				
+    Keyword arguments:
+    Array_in -- []
+        Array: 2D or 3D array
+    Array_example -- [] 
+        Array: 2D or 3D array
+    method: -- 1 ... 5     
+        int: Resampling method 
+    """
 
     # Create old raster
     Array_out_shape = np.int_(Array_in.shape)
@@ -431,7 +456,21 @@ def gap_filling(dataset,NoDataValue):
     return (EndProduct)
 
 def Get3Darray_time_series_monthly(Dir_Basin, Data_Path, Startdate, Enddate, Example_data = None):	
-
+    """
+    This function creates a datacube
+				
+    Keyword arguments:
+    Dir_Basin -- 
+        str: path to the basin folder
+    Data_Path -- 'product/monthly' 
+        str: Path from the basin folder to the dataset
+    Startdate -- 'YYYY-mm-dd'
+        str: startdate of the 3D array
+    Enddate -- 'YYYY-mm-dd'
+        str: enddate of the 3D array 
+    Example_data: -- 'C:/....../.tif'     
+        str: Path to an example tiff file (all arrays will be reprojected to this example)    
+    """
     Dates = pd.date_range(Startdate, Enddate, freq = 'MS')
     os.chdir(os.path.join(Dir_Basin,Data_Path))
     i = 0
@@ -452,13 +491,24 @@ def Get3Darray_time_series_monthly(Dir_Basin, Data_Path, Startdate, Enddate, Exa
                     dataTot=np.zeros([len(Dates),size_Y,size_X])			
             Array_one_date = Open_tiff_array(file_name_path)
 								
-        dataTot[i,:,:]	 = Array_one_date						
+        dataTot[i,:,:] = Array_one_date						
         i += 1
 								
     return(dataTot)		
 
 def Vector_to_Raster(Dir, shapefile_name, reference_raster_data_name):
-
+    """
+    This function creates a raster of a shp file
+				
+    Keyword arguments:
+    Dir -- 
+        str: path to the basin folder
+    shapefile_name -- 'C:/....../.shp'  
+        str: Path from the shape file
+    reference_raster_data_name -- 'C:/....../.tif'     
+        str: Path to an example tiff file (all arrays will be reprojected to this example)    
+    """
+ 
     from osgeo import gdal, ogr
 
     geo, proj, size_X, size_Y=Open_array_info(reference_raster_data_name)
