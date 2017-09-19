@@ -189,36 +189,41 @@ def Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim):
     year = Date.year 
     month = Date.month  				
 
-    # Create an empty start array
-    Tot_dataset = np.zeros([4000 * (Lat_tiles[1]-Lat_tiles[0] + 1), 4000 * (Lon_tiles[1]-Lon_tiles[0] + 1)])
-    
+    # Create empty array
+    ET_data = np.zeros([int(np.round((latlim[1]-latlim[0]))/0.0025),int(np.round((lonlim[1]-lonlim[0])/0.0025))])				
+
     # Open the tiles and fill in the empty array
     for v_tile in range(Lat_tiles[0], Lat_tiles[1]+1):
         for h_tile in range(Lon_tiles[0], Lon_tiles[1]+1):													
 
             Tilename = "h%sv%s" %(h_tile, v_tile)    
             filename = os.path.join(output_folder, Tilename,"ETensemble250m-%s-mm-Monthly-%s.nc" %(Tilename, year))
-												
+
+            # Defines the area of one ETensemble tile
+            IDy_min = np.maximum(0,int(np.round(((100 - v_tile * 10) - latlim[1])/0.0025)))
+            IDy_max = np.minimum(4000,int(np.round(((100 - v_tile * 10) - latlim[0])/0.0025)))
+            IDx_min = np.maximum(0,int(np.round((lonlim[0]-(-190 + h_tile* 10))/0.0025)))
+            IDx_max = np.minimum(4000,int(np.round((lonlim[1]-(-190 + h_tile* 10))/0.0025)))
+			
+            latlim_part = [(100 - v_tile * 10)-0.0025 * IDy_max,(100 - v_tile * 10)-0.0025 * IDy_min]
+            lonlim_part = [(-190 + h_tile* 10)+0.0025 * IDx_min,(-190 + h_tile* 10)+0.0025 * IDx_max]
+            
+            # Defines the area of the end array
+            IDy_max_end	= int(np.round((latlim[1] - latlim_part[0])/0.0025))
+            IDy_min_end	= int(np.round((latlim[1] - latlim_part[1])/0.0025))
+            IDx_max_end	= int(np.round((lonlim_part[1] - lonlim[0])/0.0025))
+            IDx_min_end	= int(np.round((lonlim_part[0] - lonlim[0])/0.0025))
+								
             if os.path.exists(filename):
                 fh = Dataset(filename, mode='r')
-                temporary = fh.variables['ETensemble'][:]         			             
-                ETensembleMonth = temporary[month-1,:,:]
-                del temporary
+                ETensembleMonth = fh.variables['ETensemble'][month-1, IDy_min : IDy_max, IDx_min : IDx_max]        			             
                 fh.close()
-                Tot_dataset[(v_tile - Lat_tiles[0]) * 4000 : (v_tile - Lat_tiles[0]) * 4000 + 4000,(h_tile - Lon_tiles[0]) * 4000 : (h_tile - Lon_tiles[0]) * 4000 + 4000 ] = ETensembleMonth 
-
+                ET_data[IDy_min_end : IDy_max_end, IDx_min_end : IDx_max_end]= ETensembleMonth
+                
             else:
-                Tot_dataset[(v_tile - Lat_tiles[0]) * 4000 : (v_tile - Lat_tiles[0]) * 4000 + 4000, (h_tile - Lon_tiles[0]) * 4000 : (h_tile - Lon_tiles[0]) * 4000 + 4000 ] = np.ones([4000,4000]) * -9999												
+                ETensembleMonth = np.ones([int(IDy_max_end - IDy_min_end), int(IDx_max_end - IDx_min_end)]) * np.nan
+                ET_data[IDy_min_end : IDy_max_end, IDx_min_end : IDx_max_end]= ETensembleMonth
 
-    # Define the area of interest
-    IDy_min = int(np.round(((100 - Lat_tiles[0] * 10) - latlim[1])/0.0025))
-    IDy_max = int(int(Tot_dataset.shape[0]) - np.round((latlim[0] - (90 - Lat_tiles[1] * 10))/0.0025))
-    IDx_min = int(np.round((lonlim[0]-(-190 + Lon_tiles[0] * 10))/0.0025))
-    IDx_max = int(int(Tot_dataset.shape[1]) - np.round(((- 180 + Lon_tiles[1] * 10) - lonlim[1])/0.0025))				
-
-    # Clip the ET data to the area of interest
-    ET_data = np.zeros([int(np.round((latlim[1]-latlim[0]))/0.0025),int(np.round((lonlim[1]-lonlim[0])/0.0025))])				
-    ET_data = Tot_dataset[IDy_min : IDy_max, IDx_min : IDx_max]
     ET_data[ET_data >= 9999] = np.nan			
     ET_data[ET_data <= -9999] = np.nan	
 				

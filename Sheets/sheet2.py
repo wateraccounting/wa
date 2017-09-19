@@ -9,6 +9,7 @@ Module: Sheets/sheet2
 
 import os
 import pandas as pd
+import subprocess
 import xml.etree.ElementTree as ET
 
 
@@ -1022,14 +1023,18 @@ def create_sheet2(basin, period, units, data, output, template=False,
 
     # svg to string
     ET.register_namespace("", "http://www.w3.org/2000/svg")
-    root = tree.getroot()
-    svg_string = ET.tostring(root, encoding='UTF-8', method='xml')
+
+    # Get the paths based on the environment variable
+    WA_env_paths = os.environ["WA_PATHS"].split(';')
+    Inkscape_env_path = WA_env_paths[1]
+    Path_Inkscape = os.path.join(Inkscape_env_path,'inkscape.exe')
 
     # Export svg to png
-    from wand.image import Image
-    img_out = Image(blob=svg_string, resolution=300)
-    img_out.format = 'jpg'
-    img_out.save(filename=output)
+    tempout_path = output.replace('.pdf', '_temporary.svg')
+    tree.write(tempout_path)
+    subprocess.call([Path_Inkscape,tempout_path,'--export-pdf='+output, '-d 300'])
+    os.remove(tempout_path)
+
 
     # Return
     return output

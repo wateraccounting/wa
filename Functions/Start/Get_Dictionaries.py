@@ -168,10 +168,10 @@ def consumed_fractions(version = '1.0'):
 def sw_return_fractions(version = '1.0'):
     
     fractions = {
-         'Forests':              9999,
-         'Shrubland':            9999,
-         'Rainfed Crops':        9999,
-         'Forest Plantations':   9999,
+         'Forests':              -9999,
+         'Shrubland':            -9999,
+         'Rainfed Crops':        -9999,
+         'Forest Plantations':   -9999,
          'Natural Water Bodies': 0.95,
          'Wetlands':             0.95,
          'Natural Grasslands':   0.10,

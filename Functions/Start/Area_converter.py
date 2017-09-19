@@ -8,6 +8,7 @@ Module: Function/Start
 """
 # import general python modules
 import numpy as np
+import os
 
 # import WA modules
 from wa.General import raster_conversions as RC
@@ -19,7 +20,7 @@ def Degrees_to_m2(Reference_data):
     Parameters
     ----------
     Reference_data: str
-        Path to a tiff file of which the pixel area must be defined
+        Path to a tiff file or nc file of which the pixel area must be defined
         
     Returns
     -------
@@ -27,9 +28,15 @@ def Degrees_to_m2(Reference_data):
         Array containing the area of each pixel in squared meters
 
     """ 
-    # Get raster information 
-    geo_out, proj, size_X, size_Y = RC.Open_array_info(Reference_data)	
+    # Get the extension of the example data
+    filename, file_extension = os.path.splitext(Reference_data)
     
+    # Get raster information 
+    if str(file_extension) == '.tif':
+        geo_out, proj, size_X, size_Y = RC.Open_array_info(Reference_data)	
+    if str(file_extension) == '.nc':
+        geo_out, epsg, size_X, size_Y, size_Z, Time = RC.Open_nc_info(Reference_data)	
+
     # Calculate the difference in latitude and longitude in meters
     dlat, dlon = Calc_dlat_dlon(geo_out, size_X, size_Y)  
 

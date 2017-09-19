@@ -64,7 +64,7 @@ def Open_nc_info(NC_filename):
     
     data = fh.variables[Var][:]
     
-    size_X, size_Y = np.int_(data.shape[-2:])
+    size_Y, size_X = np.int_(data.shape[-2:])
     if len(data.shape) == 3:
         size_Z = np.int_(data.shape[0])
         Time = fh.variables['time'][:]

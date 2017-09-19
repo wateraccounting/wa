@@ -14,8 +14,8 @@ This data is used within a water accounting framework.
 """
 
 
-from wa.Functions.Four import SplitET, Total_Supply, SplitGW_SW 
+from wa.Functions.Four import SplitET, Total_Supply, SplitGW_SW_Supply, SplitNonConsumed_NonRecov, SplitGW_SW_Return
 
-__all__ = ['SplitET', 'Total_Supply', 'SplitGW_SW']
+__all__ = ['SplitET', 'Total_Supply', 'SplitGW_SW_Supply', 'SplitNonConsumed_NonRecov', 'SplitGW_SW_Return']
 
 __version__ = '0.1'

@@ -12,7 +12,7 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 import subprocess
 
-def create_sheet4(basin, period, units, data, output, template=False, margin = 0.01):
+def create_sheet4(basin, period, units, data, output, template=False, tolerance = 0.01):
     """
     Create sheet 4 of the Water Accounting Plus framework.
     
@@ -34,7 +34,7 @@ def create_sheet4(basin, period, units, data, output, template=False, margin = 0
     template : list or boolean, optional
         A list with two entries of the svg files of the sheet. False
         uses the standard svg files. Default is False.
-    margin : float, optional
+    tolerance : float, optional
         Range used when checked if different totals match with eachother.
 
     Examples
@@ -47,6 +47,9 @@ def create_sheet4(basin, period, units, data, output, template=False, margin = 0
                   output = [r'C:\Sheets\sheet_4_part1.png',
                             r'C:\Sheets\sheet_4_part2.png'])
     """
+    # import WA+ modules
+    import wa.General.raster_conversions as RC
+    
     if data[0] is not None:
         df1 = pd.read_csv(data[0], sep=';')
     if data[1] is not None:
@@ -138,24 +141,7 @@ def create_sheet4(basin, period, units, data, output, template=False, margin = 0
                                          float(df1.loc[(df1.LANDUSE_TYPE == "Power and Energy")].RECOVERABLE_SURFACEWATER)]) 
         p1['sp_r08_c03'] = pd.np.sum([float(df1.loc[(df1.LANDUSE_TYPE == "Other")].RECOVERABLE_GROUNDWATER),
                                          float(df1.loc[(df1.LANDUSE_TYPE == "Other")].RECOVERABLE_SURFACEWATER)])
-                                         
-        assert pd.np.any([np.isnan(p1['sp_r01_c01']), pd.np.all([p1['sp_r01_c01'] <= (1 + margin) * (p1['sp_r01_c02'] + p1['sp_r01_c03']), 
-                          p1['sp_r01_c01'] >= (1 - margin) * (p1['sp_r01_c02'] + p1['sp_r01_c03'])])])
-        assert pd.np.any([np.isnan(p1['sp_r02_c01']), pd.np.all([p1['sp_r02_c01'] <= (1 + margin) * (p1['sp_r02_c02'] + p1['sp_r02_c03']), 
-                          p1['sp_r02_c01'] >= (1 - margin) * (p1['sp_r02_c02'] + p1['sp_r02_c03'])])])
-        assert pd.np.any([np.isnan(p1['sp_r03_c01']), pd.np.all([p1['sp_r03_c01'] <= (1 + margin) * (p1['sp_r03_c02'] + p1['sp_r03_c03']), 
-                          p1['sp_r03_c01'] >= (1 - margin) * (p1['sp_r03_c02'] + p1['sp_r03_c03'])])])
-        assert pd.np.any([np.isnan(p1['sp_r04_c01']), pd.np.all([p1['sp_r04_c01'] <= (1 + margin) * (p1['sp_r04_c02'] + p1['sp_r04_c03']), 
-                          p1['sp_r04_c01'] >= (1 - margin) * (p1['sp_r04_c02'] + p1['sp_r04_c03'])])])
-        assert pd.np.any([np.isnan(p1['sp_r05_c01']), pd.np.all([p1['sp_r05_c01'] <= (1 + margin) * (p1['sp_r05_c02'] + p1['sp_r05_c03']), 
-                          p1['sp_r05_c01'] >= (1 - margin) * (p1['sp_r05_c02'] + p1['sp_r05_c03'])])])
-        assert pd.np.any([np.isnan(p1['sp_r06_c01']), pd.np.all([p1['sp_r06_c01'] <= (1 + margin) * (p1['sp_r06_c02'] + p1['sp_r06_c03']), 
-                          p1['sp_r06_c01'] >= (1 - margin) * (p1['sp_r06_c02'] + p1['sp_r06_c03'])])])
-        assert pd.np.any([np.isnan(p1['sp_r07_c01']), pd.np.all([p1['sp_r07_c01'] <= (1 + margin) * (p1['sp_r07_c02'] + p1['sp_r07_c03']), 
-                          p1['sp_r07_c01'] >= (1 - margin) * (p1['sp_r07_c02'] + p1['sp_r07_c03'])])])
-        assert pd.np.any([np.isnan(p1['sp_r08_c01']), pd.np.all([p1['sp_r08_c01'] <= (1 + margin) * (p1['sp_r08_c02'] + p1['sp_r08_c03']), 
-                          p1['sp_r08_c01'] >= (1 - margin) * (p1['sp_r08_c02'] + p1['sp_r08_c03'])])])
-        
+                                                 
         p1['wd_r01_c01'] = pd.np.nansum([float(df1.loc[(df1.LANDUSE_TYPE == "Irrigated crops")].SUPPLY_GROUNDWATER),
                                float(df1.loc[(df1.LANDUSE_TYPE == "Managed water bodies")].SUPPLY_GROUNDWATER),
                                float(df1.loc[(df1.LANDUSE_TYPE == "Industry")].SUPPLY_GROUNDWATER),
@@ -302,24 +288,7 @@ def create_sheet4(basin, period, units, data, output, template=False, margin = 0
                                    float(df2.loc[(df2.LANDUSE_TYPE == "Natural Grasslands")].SUPPLY_GROUNDWATER)])
         p2['sp_r08_c01'] = pd.np.sum([float(df2.loc[(df2.LANDUSE_TYPE == "Other (Non-Manmade)")].SUPPLY_SURFACEWATER),
                                    float(df2.loc[(df2.LANDUSE_TYPE == "Other (Non-Manmade)")].SUPPLY_GROUNDWATER)])
-        
-        assert pd.np.any([np.isnan(p2['sp_r01_c01']), pd.np.all([p2['sp_r01_c01'] <= (1 + margin) * (p2['sp_r01_c02'] + p2['sp_r01_c03']), 
-                          p2['sp_r01_c01'] >= (1 - margin) * (p2['sp_r01_c02'] + p2['sp_r01_c03'])])])
-        assert pd.np.any([np.isnan(p2['sp_r02_c01']), pd.np.all([p2['sp_r02_c01'] <= (1 + margin) * (p2['sp_r02_c02'] + p2['sp_r02_c03']), 
-                          p2['sp_r02_c01'] >= (1 - margin) * (p2['sp_r02_c02'] + p2['sp_r02_c03'])])])
-        assert pd.np.any([np.isnan(p2['sp_r03_c01']), pd.np.all([p2['sp_r03_c01'] <= (1 + margin) * (p2['sp_r03_c02'] + p2['sp_r03_c03']), 
-                          p2['sp_r03_c01'] >= (1 - margin) * (p2['sp_r03_c02'] + p2['sp_r03_c03'])])])
-        assert pd.np.any([np.isnan(p2['sp_r04_c01']), pd.np.all([p2['sp_r04_c01'] <= (1 + margin) * (p2['sp_r04_c02'] + p2['sp_r04_c03']), 
-                          p2['sp_r04_c01'] >= (1 - margin) * (p2['sp_r04_c02'] + p2['sp_r04_c03'])])])
-        assert pd.np.any([np.isnan(p2['sp_r05_c01']), pd.np.all([p2['sp_r05_c01'] <= (1 + margin) * (p2['sp_r05_c02'] + p2['sp_r05_c03']), 
-                          p2['sp_r05_c01'] >= (1 - margin) * (p2['sp_r05_c02'] + p2['sp_r05_c03'])])])
-        assert pd.np.any([np.isnan(p2['sp_r06_c01']), pd.np.all([p2['sp_r06_c01'] <= (1 + margin) * (p2['sp_r06_c02'] + p2['sp_r06_c03']), 
-                          p2['sp_r06_c01'] >= (1 - margin) * (p2['sp_r06_c02'] + p2['sp_r06_c03'])])])
-        assert pd.np.any([np.isnan(p2['sp_r07_c01']), pd.np.all([p2['sp_r07_c01'] <= (1 + margin) * (p2['sp_r07_c02'] + p2['sp_r07_c03']), 
-                          p2['sp_r07_c01'] >= (1 - margin) * (p2['sp_r07_c02'] + p2['sp_r07_c03'])])])
-        assert pd.np.any([np.isnan(p2['sp_r08_c01']), pd.np.all([p2['sp_r08_c01'] <= (1 + margin) * (p2['sp_r08_c02'] + p2['sp_r08_c03']), 
-                          p2['sp_r08_c01'] >= (1 - margin) * (p2['sp_r08_c02'] + p2['sp_r08_c03'])])])
-        
+              
         
         p2['dm_r01_c01'] = float(df2.loc[(df2.LANDUSE_TYPE == "Forests")].DEMAND)
         p2['dm_r02_c01'] = float(df2.loc[(df2.LANDUSE_TYPE == "Shrubland")].DEMAND)
@@ -451,15 +420,23 @@ def create_sheet4(basin, period, units, data, output, template=False, margin = 0
                 xml_txt_box.getchildren()[0].text = '-'    
 
     ET.register_namespace("", "http://www.w3.org/2000/svg")
+
+    # Get the paths based on the environment variable    
+    WA_env_paths = os.environ["WA_PATHS"].split(';')
+    Inkscape_env_path = WA_env_paths[1]
+    Path_Inkscape = os.path.join(Inkscape_env_path,'inkscape.exe')
+    
     
     if data[0] is not None:
-        tempout_path = output[0].replace('.png', '_temporary.svg')
+        tempout_path = output[0].replace('.pdf', '_temporary.svg')
         tree1.write(tempout_path)
-        subprocess.call(['C:\Program Files\Inkscape\inkscape.exe',tempout_path,'--export-png='+output[0], '-d 300'])
+        fullCmd = (' ').join([Path_Inkscape, tempout_path,'--export-pdf='+output[0], '-d 300'])
+        RC.Run_command_window(fullCmd)    
         os.remove(tempout_path)
         
     if data[1] is not None:
-        tempout_path = output[1].replace('.png', '_temporary.svg')
+        tempout_path = output[1].replace('.pdf', '_temporary.svg')
         tree2.write(tempout_path)
-        subprocess.call(['C:\Program Files\Inkscape\inkscape.exe',tempout_path,'--export-png='+output[1], '-d 300'])
+        fullCmd = (' ').join([Path_Inkscape, tempout_path,'--export-pdf='+output[1], '-d 300'])
+        RC.Run_command_window(fullCmd)   
         os.remove(tempout_path)
