@@ -17,6 +17,8 @@ import urllib2
 from bs4 import BeautifulSoup
 import re
 import urlparse
+import math
+import datetime
 import glob
 import requests
 from joblib import Parallel, delayed
@@ -26,9 +28,9 @@ import wa.General.raster_conversions as RC
 import wa.General.data_conversions as DC
 from wa import WebAccounts
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, LC_Type, Waitbar, cores):
     """
-    This function downloads MOD17 yearly NPP data
+    This function downloads MOD17 8-daily data
 
     Keyword arguments:
     Dir -- 'C:/file/to/path/'
@@ -43,16 +45,12 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
  
     # Check start and end date and otherwise set the date to max
     if not Startdate:
-        Startdate = pd.Timestamp('2000-02-18')
+        Startdate = pd.Timestamp('2001-01-01')
     if not Enddate: 
         Enddate = pd.Timestamp('Now')
-
-    # Make an array of the days of which the NPP is taken
-    yearstart = pd.Timestamp(Startdate).year
-    yearend = pd.Timestamp(Enddate).year
-    Startdate_NPP='%s-01-01' % yearstart
-    Enddate_NPP='%s-12-31'% yearend				
-    Dates = pd.date_range(Startdate_NPP, Enddate_NPP, freq = 'AS')   
+    
+    # Make an array of the days of which the GPP is taken
+    Dates = pd.date_range(Startdate, Enddate, freq = 'AS')  
 
     # Create Waitbar
     if Waitbar == 1:
@@ -71,9 +69,9 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
         lonlim[0] = np.max(lonlim[0], -180)
         lonlim[1] = np.min(lonlim[1], 180)
         
-    # Make directory for the MODIS NPP data
+    # Make directory for the MODIS GPP data
     Dir = Dir.replace("/", os.sep)						
-    output_folder = os.path.join(Dir, 'NPP', 'MOD17')
+    output_folder = os.path.join(Dir, 'LC%d' %LC_Type, 'MOD12')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
@@ -90,7 +88,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
     TilesVertical, TilesHorizontal = Tiles_to_download(tiletext2=tiletext2,lonlim1=lonlim,latlim1=latlim)
             
     # Pass variables to parallel function and run
-    args = [output_folder, TilesVertical, TilesHorizontal, lonlim, latlim]
+    args = [output_folder, TilesVertical, TilesHorizontal, lonlim, latlim, LC_Type]
     if not cores:
         for Date in Dates:
             RetrieveData(Date, args)
@@ -101,7 +99,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
     else:
         results = Parallel(n_jobs=cores)(delayed(RetrieveData)(Date, args)
                                          for Date in Dates)
-     # Remove all .hdf files	
+    # Remove all .hdf files	
     os.chdir(output_folder)
     files = glob.glob("*.hdf")																																				
     for f in files:
@@ -110,13 +108,13 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
     # Remove all .txt files	
     files = glob.glob("*.txt")																																				
     for f in files:
-        os.remove(os.path.join(output_folder, f))    
+        os.remove(os.path.join(output_folder, f))      
 								
 	return results		
 
 def RetrieveData(Date, args):
     """
-    This function retrieves MOD17 NPP data for a given date from the
+    This function retrieves MOD17 GPP data for a given date from the
     http://e4ftl01.cr.usgs.gov/ server.
 
     Keyword arguments:
@@ -124,15 +122,15 @@ def RetrieveData(Date, args):
     args -- A list of parameters defined in the DownloadData function.
     """
     # Argument
-    [output_folder, TilesVertical, TilesHorizontal, lonlim, latlim] = args
+    [output_folder, TilesVertical, TilesHorizontal, lonlim, latlim, LC_Type] = args
 
     # Collect the data from the MODIS webpage and returns the data and lat and long in meters of those tiles
     try:
-        Collect_data(TilesHorizontal, TilesVertical, Date, output_folder)
+        Collect_data(TilesHorizontal, TilesVertical, Date, output_folder, LC_Type)
     except:
         print "Was not able to download the file"  
          
-    # Define the output name of the collect data function
+      # Define the output name of the collect data function
     name_collect = os.path.join(output_folder, 'Merged.tif')	         
 
     # Reproject the MODIS product to epsg_to
@@ -143,15 +141,16 @@ def RetrieveData(Date, args):
     data, geo = RC.clip_data(name_reprojected, latlim, lonlim)
                                 
     # Save results as Gtiff
-    NPPfileName = os.path.join(output_folder, 'NPP_MOD17_kg-C-m^-2_yearly_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
-    DC.Save_as_tiff(name=NPPfileName, data=data, geo=geo, projection='WGS84')
+    LCfileName = os.path.join(output_folder, 'LC_MOD12_LC%d_yearly_' %LC_Type + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
+    DC.Save_as_tiff(name=LCfileName, data=data, geo=geo, projection='WGS84')
  
     # remove the side products       
     os.remove(os.path.join(output_folder, name_collect))
     os.remove(os.path.join(output_folder, name_reprojected))
-                											  
+
     return True
-    
+
+   
 def Tiles_to_download(tiletext2,lonlim1,latlim1):
     '''
     Defines the MODIS tiles that must be downloaded in order to cover the latitude and longitude limits
@@ -187,10 +186,9 @@ def Tiles_to_download(tiletext2,lonlim1,latlim1):
     TilesHorizontal = [TotalTiles[:,1].min(), TotalTiles[:,1].max()]
     return(TilesVertical, TilesHorizontal)
     
-    
-def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
+def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, LC_Type):
     '''
-    This function downloads all the needed MODIS tiles from http://e4ftl01.cr.usgs.gov/MOLT/MOD17A3H.006/ as a hdf file.
+    This function downloads all the needed MODIS tiles from http://e4ftl01.cr.usgs.gov/MOLT/MOD13Q1.006/ as a hdf file.
 
     Keywords arguments:
     TilesHorizontal -- [TileMin,TileMax] max and min horizontal tile number	
@@ -215,25 +213,25 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
         for Horizontal in range(int(TilesHorizontal[0]), int(TilesHorizontal[1]) + 1):
             countX=Horizontal - TilesHorizontal[0] + 1
             
-            # Download the MODIS NPP data            
-            url = 'https://e4ftl01.cr.usgs.gov/MOLT/MOD17A3H.006/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
+            # Download the MODIS GPP data            
+            url = 'https://e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.051/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
 
             # Get files on FTP server
             f = urllib2.urlopen(url)		
-																			
-		      # Sum all the files on the server												
+																																			
+            # Sum all the files on the server												
             soup = BeautifulSoup(f, "lxml")
             for i in soup.findAll('a', attrs = {'href': re.compile('(?i)(hdf)$')}):
 													
                 # Find the file with the wanted tile number													
-                Vfile=str(i)[31:33]
-                Hfile=str(i)[28:30]
+                Vfile=str(i)[30:32]
+                Hfile=str(i)[27:29]
                 if int(Vfile) is int(Vertical) and int(Hfile) is int(Horizontal):
-																	
+						  										
                     # Define the whole url name																	
-                    full_url = urlparse.urljoin(url, i['href'])
-																				
-		           # Reset the begin parameters for downloading												
+                    full_url = urlparse.urljoin(url, i['href'])	
+												
+		              # Reset the begin parameters for downloading												
                     downloaded = 0   
                     N=0  
 																				
@@ -274,15 +272,15 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                         print 'Data from ' + Date.strftime('%Y-%m-%d') + ' is not available'
                         downloaded = 1
                     try:
-                        # Open .hdf only band with NPP and collect all tiles to one array
+                        # Open .hdf only band with GPP and collect all tiles to one array
                         dataset = gdal.Open(file_name)
                         sdsdict = dataset.GetMetadata('SUBDATASETS')
-                        sdslist = [sdsdict[k] for k in sdsdict.keys() if '_1_NAME' in k]
+                        sdslist = [sdsdict[k] for k in sdsdict.keys() if '_%d_NAME' %LC_Type in k]
                         sds = []
                        
                         for n in sdslist:
                             sds.append(gdal.Open(n))
-                            full_layer = [i for i in sdslist if 'Npp_500m' in i]
+                            full_layer = [i for i in sdslist if 'Land_Cover_Type_%d' %LC_Type in i]
                             idx = sdslist.index(full_layer[0])
                             if Horizontal == TilesHorizontal[0] and Vertical == TilesVertical[0]:
                                 geo_t = sds[idx].GetGeoTransform()  
@@ -292,7 +290,7 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
 
                             data = sds[idx].ReadAsArray() 
                             countYdata = (TilesVertical[1] - TilesVertical[0] + 2) - countY
-                            DataTot[int((countYdata - 1) * 2400):int(countYdata * 2400), int((countX - 1) * 2400):int(countX * 2400)]=data * 0.0001
+                            DataTot[int((countYdata - 1) * 2400):int(countYdata * 2400), int((countX - 1) * 2400):int(countX * 2400)]=data
                         del data
                         
                     # if the tile not exists or cannot be opened, create a nan array with the right projection                          
@@ -306,10 +304,10 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                         proj='PROJCS["unnamed",GEOGCS["Unknown datum based upon the custom spheroid",DATUM["Not specified (based on custom spheroid)",SPHEROID["Custom spheroid",6371007.181,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Sinusoidal"],PARAMETER["longitude_of_center",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1]]'																													 
                         data=np.ones((2400, 2400)) * (0)
                         countYdata=(TilesVertical[1] - TilesVertical[0] + 2) - countY
-                        DataTot[(countYdata - 1) * 2400:countYdata * 2400,(countX - 1) * 2400:countX * 2400] = data * 0.0001
+                        DataTot[(countYdata - 1) * 2400:countYdata * 2400,(countX - 1) * 2400:countX * 2400] = data
 
     # Make geotiff file  
-    DataTot[DataTot>3.27]=-9999    
+    DataTot[DataTot>300]=-9999    
     name2 = os.path.join(output_folder, 'Merged.tif')
     driver = gdal.GetDriverByName("GTiff")
     dst_ds = driver.Create(name2, DataTot.shape[1], DataTot.shape[0], 1, gdal.GDT_Float32, ['COMPRESS=LZW'])     
