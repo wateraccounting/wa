@@ -303,38 +303,42 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, nameDownload)
                     N=0  
 																				
                     # if not downloaded try to download file																	
-                    try:# open http and download whole .hdf       
-                        nameDownload_url = full_url  
-                        file_name = os.path.join(output_folder,nameDownload_url.split('/')[-1])
-                        if os.path.isfile(file_name):
-                            print "file ", file_name, " already exists"
-                            downloaded = 1   
-                        else:
-                            while (downloaded == 0 or N<10):
+                    while downloaded == 0:		
+																					
+                        try:# open http and download whole .hdf       
+                            nameDownload_url = full_url  
+                            file_name = os.path.join(output_folder,nameDownload_url.split('/')[-1])
+                            if os.path.isfile(file_name):
+                                print "file ", file_name, " already exists"
+                                downloaded = 1
+                            else:
                                 x = requests.get(nameDownload_url, allow_redirects = False)
                                 try:																						
                                     y = requests.get(x.headers['location'], auth = (username, password))
                                 except:
                                     from requests.packages.urllib3.exceptions import InsecureRequestWarning
                                     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+                        
                                     y = requests.get(x.headers['location'], auth = (username, password), verify = False)					     																							
                                 z = open(file_name, 'wb')
                                 z.write(y.content)
                                 z.close()
-                                statinfo = os.stat(file_name)
-                                N = N + 1
+                                statinfo = os.stat(file_name)																									
                                 # Say that download was succesfull		
                                 if int(statinfo.st_size) > 10000:																								
-                                    downloaded = 1
-                                # Stop trying after 10 times																				
-                                if N == 10:
-                                    downloaded = 1
+                                     downloaded = 1
+	    			
+                        # If download was not succesfull								
+                        except:	
+													
+                            # Try another time                     																				
+                            N = N + 1
+                            
+						      # Stop trying after 10 times																				
+                        if N == 10:
+                            print 'Data from ' + Date.strftime('%Y-%m-%d') + ' is not available'
+                            downloaded = 1				
 
-                    # If download was not succesfull								
-                    except:	
-                        # Try another time                     																				
-                        N = N + 1
-																				
                     try:
                         # Open .hdf only band with FPAR and collect all tiles to one array
                         if nameDownload == 'Fpar_500m':

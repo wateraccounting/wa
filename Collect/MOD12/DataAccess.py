@@ -4,7 +4,7 @@ Authors: Tim Hessels
          UNESCO-IHE 2016
 Contact: t.hessels@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
-Module: Collect/MOD17
+Module: Collect/MOD12
 """
 
 # import general python modules
@@ -30,7 +30,7 @@ from wa import WebAccounts
 
 def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, LC_Type, Waitbar, cores):
     """
-    This function downloads MOD17 8-daily data
+    This function downloads MOD12 yearly data
 
     Keyword arguments:
     Dir -- 'C:/file/to/path/'
@@ -69,7 +69,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, LC_Type, Waitbar, core
         lonlim[0] = np.max(lonlim[0], -180)
         lonlim[1] = np.min(lonlim[1], 180)
         
-    # Make directory for the MODIS GPP data
+    # Make directory for the MODIS LC data
     Dir = Dir.replace("/", os.sep)						
     output_folder = os.path.join(Dir, 'LC%d' %LC_Type, 'MOD12')
     if not os.path.exists(output_folder):
@@ -114,7 +114,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, LC_Type, Waitbar, core
 
 def RetrieveData(Date, args):
     """
-    This function retrieves MOD17 GPP data for a given date from the
+    This function retrieves MOD12 LC data for a given date from the
     http://e4ftl01.cr.usgs.gov/ server.
 
     Keyword arguments:
@@ -188,7 +188,7 @@ def Tiles_to_download(tiletext2,lonlim1,latlim1):
     
 def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, LC_Type):
     '''
-    This function downloads all the needed MODIS tiles from http://e4ftl01.cr.usgs.gov/MOLT/MOD13Q1.006/ as a hdf file.
+    This function downloads all the needed MODIS tiles from http://e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.051/ as a hdf file.
 
     Keywords arguments:
     TilesHorizontal -- [TileMin,TileMax] max and min horizontal tile number	
@@ -213,7 +213,7 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, LC_Type):
         for Horizontal in range(int(TilesHorizontal[0]), int(TilesHorizontal[1]) + 1):
             countX=Horizontal - TilesHorizontal[0] + 1
             
-            # Download the MODIS GPP data            
+            # Download the MODIS LC data            
             url = 'https://e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.051/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
 
             # Get files on FTP server
@@ -272,7 +272,7 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, LC_Type):
                         print 'Data from ' + Date.strftime('%Y-%m-%d') + ' is not available'
                         downloaded = 1
                     try:
-                        # Open .hdf only band with GPP and collect all tiles to one array
+                        # Open .hdf only band with LC and collect all tiles to one array
                         dataset = gdal.Open(file_name)
                         sdsdict = dataset.GetMetadata('SUBDATASETS')
                         sdslist = [sdsdict[k] for k in sdsdict.keys() if '_%d_NAME' %LC_Type in k]

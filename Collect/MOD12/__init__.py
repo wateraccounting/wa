@@ -4,19 +4,19 @@ Authors: Tim Hessels
          UNESCO-IHE 2016
 Contact: t.hessels@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
-Module: Collect/MOD17
+Module: Collect/MOD12
 
 Description:
-This module downloads MOD17 GPP data from
-http://e4ftl01.cr.usgs.gov/. Use the MOD17.GPP_8daily function to
-download and create 8 daily GPP images in Gtiff format.
-The data is available between 2000-02-18 till present.
+This module downloads MOD12 LC data from
+http://e4ftl01.cr.usgs.gov/. Use the MOD12.LC_yearly function to
+download and create yearly LC images in Gtiff format.
+The data is available between 2001-01-01 till 2014-01-01 .
 
 Examples:
-from wa.Collect import MOD17
-MOD17.GPP_8daily(Dir='C:/Temp3/', Startdate='2003-12-01', Enddate='2003-12-20',
+from wa.Collect import MOD12
+MOD17.LC_yearly(Dir='C:/Temp3/', Startdate='2003-12-01', Enddate='2003-12-20',
            latlim=[41, 45], lonlim=[-8, -5])
-MOD17.NPP_yearly(Dir='C:/Temp3/', Startdate='2003-12-01', Enddate='2003-12-20',
+MOD17.LC_yearly(Dir='C:/Temp3/', Startdate='2003-12-01', Enddate='2003-12-20',
            latlim=[41, 45], lonlim=[-8, -5])		   
 """
 

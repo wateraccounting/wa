@@ -269,10 +269,10 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                             # Try another time                     																				
                             N = N + 1
 																				
-				  # Stop trying after 10 times																				
-                    if N == 10:
-                        print 'Data from ' + Date.strftime('%Y-%m-%d') + ' is not available'
-                        downloaded = 1
+				            # Stop trying after 10 times																				
+                        if N == 10:
+                            print 'Data from ' + Date.strftime('%Y-%m-%d') + ' is not available'
+                            downloaded = 1
                     try:
                         # Open .hdf only band with NPP and collect all tiles to one array
                         dataset = gdal.Open(file_name)
