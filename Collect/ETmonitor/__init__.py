@@ -19,12 +19,13 @@ The data is available between 2008-01-01 till 2012-12-31.
 
 Examples:
 from wa.Collect import ETmonitor
-ETmonitor.monthly(Dir='C:/Temp/', Startdate='2008-12-01', Enddate='2011-01-20',
+ETmonitor.ET_monthly(Dir='C:/Temp/', Startdate='2008-12-01', Enddate='2011-01-20',
            latlim=[-10, 30], lonlim=[-20, -10])
 """
 
-from .monthly import main as monthly
+from .ET_monthly import main as ET_monthly
+from .ETpot_monthly import main as ETpot_monthly
 
-__all__ = ['monthly']
+__all__ = ['ET_monthly', 'ETpot_monthly']
 
 __version__ = '0.1'

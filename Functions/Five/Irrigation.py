@@ -5,25 +5,18 @@ Created on Mon May 15 14:27:44 2017
 @author: tih
 """
 
-def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_NC_ETref, Name_NC_Prec, Name_NC_Basin, Name_NC_frac_sw, Startdate, Enddate, Example_dataset):
-
-    import copy
-    import numpy as np
+def Calc_Supply(Discharge_dict, Name_NC_Rivers, Name_NC_ET, Name_NC_ETref, Name_NC_Prec, Name_NC_Basin, Name_NC_frac_sw, Startdate, Enddate, Example_dataset):
     
     import wa.Functions.Five as Five
     import wa.Functions.Start as Start
     import wa.General.raster_conversions as RC
     
-    # Copy dicts as starting adding reservoir 
-    Discharge_dict_new = copy.deepcopy(Discharge_dict)
-
     # Extract Rivers data from NetCDF file
-    Rivers = RC.Open_nc_array(Name_NC_Rivers)
     DataCube_ET = RC.Open_nc_array(Name_NC_ET, Startdate = Startdate, Enddate = Enddate)
         
     DataCube_ETgreen = Five.Budyko.Calc_ETgreen(Name_NC_ETref, Name_NC_Prec, Name_NC_ET, Startdate, Enddate)
     DataCube_ETblue = DataCube_ET - DataCube_ETgreen
-    DataCube_ETblue[DataCube_ETblue<0] = 0
+    DataCube_ETblue[DataCube_ETblue < 0] = 0
                             
     # Open data array info based on example data
     geo_out, epsg, size_X, size_Y = RC.Open_array_info(Example_dataset)
@@ -39,6 +32,24 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_
     # Total amount of ETblue taken out of rivers
     DataCube_surface_withdrawal_m3 = DataCube_ETblue_m3 * DataCube_frac_sw[None,:,:]
     
+    return(DataCube_surface_withdrawal_m3)
+    
+def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, DataCube_surface_withdrawal_m3, DataCube_ETblue, Name_NC_Basin, Startdate, Enddate, Example_dataset):
+    
+    import copy
+    import numpy as np
+    
+    import wa.General.raster_conversions as RC
+    
+    # Copy dicts as starting adding reservoir 
+    Discharge_dict_new = copy.deepcopy(Discharge_dict)
+
+    # Extract Rivers data from NetCDF file
+    Rivers = RC.Open_nc_array(Name_NC_Rivers)
+    
+    # Open data array info based on example data
+    geo_out, epsg, size_X, size_Y = RC.Open_array_info(Example_dataset)
+  
     # Create ID Matrix
     y,x = np.indices((size_Y, size_X))
     ID_Matrix = np.int32(np.ravel_multi_index(np.vstack((y.ravel(),x.ravel())),(size_Y,size_X),mode='clip').reshape(x.shape))+1
@@ -73,4 +84,4 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_ET, Name_
                                 times = 0
                             times += 1
  
-    return(Discharge_dict_new, DataCube_ETblue_m3)                               
+    return(Discharge_dict_new)                               

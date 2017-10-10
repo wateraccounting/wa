@@ -5,19 +5,19 @@ Created on Thu Jan 19 10:07:52 2017
 @author: tih
 """
 
-def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_Calculations, Startdate, Enddate, Simulation):
+def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_Calculations, WaterPIX_filename, Reservoirs_GEE_on_off, Startdate, Enddate, Simulation):
     '''
     This functions consists of the following sections:
     1. Set General Parameters
     2. Download Data
     3. Convert the RAW data to NETCDF files
     4. Create Mask based on LU map
-    5. Calculate Runoff based on Budyko
+    5. Calculate Runoff based on Budyko or WaterPIX
     6. Add inflow in Runoff
     7. Calculate River flow
        7.1  Route Runoff
        7.2  Add Reservoirs
-       7.3  Add surface water withdrawals
+       7.3  Add surface water withdrawals BlueET or WaterPIX
     ''' 
     # import General modules
     import os
@@ -69,7 +69,10 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
     if Resolution is not '3s':
         Data_Path_DEM = Start.Download_Data.DEM(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Resolution) 
     Data_Path_DEM_Dir = Start.Download_Data.DEM_Dir(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Resolution) 
-    Data_Path_ETref = Start.Download_Data.ETreference(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate) 
+    
+    if WaterPIX_filename == "":
+        Data_Path_ETref = Start.Download_Data.ETreference(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate) 
+
     Data_Path_JRC_occurrence = Start.Download_Data.JRC_occurrence(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']]) 
     Data_Path_P_Monthly = os.path.join(Data_Path_P, 'Monthly')
     
@@ -129,16 +132,18 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
         DataCube_ET_CR = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_ET, Startdate_2months, Enddate, Example_data = Example_dataset)
         DC.Save_as_NC(Name_NC_ET_CR, DataCube_ET_CR, 'ET_CR', Example_dataset, Startdate_2months, Enddate, 'monthly', 0.01)
         del DataCube_ET_CR
-
-    #_______________________Reference Evapotranspiration_______________________
-    # Reference Evapotranspiration data
-    Name_NC_ETref_CR = DC.Create_NC_name('ETref_CR', Simulation, Dir_Basin, 5, info)
-    if not os.path.exists(Name_NC_ETref_CR):
-
-        # Get the data of Reference Evapotranspiration and save as nc
-        DataCube_ETref_CR = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_ETref, Startdate_2months, Enddate, Example_data = Example_dataset)
-        DC.Save_as_NC(Name_NC_ETref_CR, DataCube_ETref_CR, 'ETref_CR', Example_dataset, Startdate_2months, Enddate, 'monthly', 0.01)
-        del DataCube_ETref_CR
+    
+    if WaterPIX_filename == "":
+        
+        #_______________________Reference Evapotranspiration_______________________
+        # Reference Evapotranspiration data
+        Name_NC_ETref_CR = DC.Create_NC_name('ETref_CR', Simulation, Dir_Basin, 5, info)
+        if not os.path.exists(Name_NC_ETref_CR):
+    
+            # Get the data of Reference Evapotranspiration and save as nc
+            DataCube_ETref_CR = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_ETref, Startdate_2months, Enddate, Example_data = Example_dataset)
+            DC.Save_as_NC(Name_NC_ETref_CR, DataCube_ETref_CR, 'ETref_CR', Example_dataset, Startdate_2months, Enddate, 'monthly', 0.01)
+            del DataCube_ETref_CR
 
     #_______________________fraction surface water _______________________
 
@@ -193,7 +198,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
         DC.Save_as_NC(Name_NC_Basin, Raster_Basin, 'Basin_CR', Example_dataset)
         #del Raster_Basin
     '''
-    ###################### 5. Calculate Runoff based on Budyko ###########################
+    ################### 5. Calculate Runoff (2 methods: a = Budyko and b = WaterPIX) #####################    
     
     # Define info for the nc files
     info = ['monthly','mm', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
@@ -202,15 +207,26 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
     Name_NC_Runoff_CR = DC.Create_NC_name('Runoff_CR', Simulation, Dir_Basin, 5, info)
     Name_NC_Runoff_for_Routing_CR = Name_NC_Runoff_CR
     
-    if not os.path.exists(Name_NC_Runoff_CR):
+    ###################### 5a. Calculate Runoff based on Budyko ###########################
+    if WaterPIX_filename == "":
         
-        # Calculate runoff based on Budyko
-        DataCube_Runoff_CR = Five.Budyko.Calc_runoff(Name_NC_ETref_CR, Name_NC_Prec_CR)
-        
-        # Save the runoff as netcdf
-        DC.Save_as_NC(Name_NC_Runoff_CR, DataCube_Runoff_CR, 'Runoff_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
-        del DataCube_Runoff_CR
-        
+        if not os.path.exists(Name_NC_Runoff_CR):
+            
+            # Calculate runoff based on Budyko
+            DataCube_Runoff_CR = Five.Budyko.Calc_runoff(Name_NC_ETref_CR, Name_NC_Prec_CR)
+            
+    ###################### 5b. Get Runoff from WaterPIX ###########################
+    if WaterPIX_filename != "": 
+
+        # Get WaterPIX data
+        WaterPIX_Var = 'TotalRunoff_M'
+        DataCube_Runoff_CR = Five.Read_WaterPIX.Get_Array(WaterPIX_filename, WaterPIX_Var, Example_dataset, Startdate, Enddate)
+                  
+              
+    # Save the runoff as netcdf
+    DC.Save_as_NC(Name_NC_Runoff_for_Routing_CR, DataCube_Runoff_CR, 'Runoff_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
+    del DataCube_Runoff_CR    
+     
     '''  
     ###################### Calculate Runoff with P min ET ###########################
   
@@ -324,18 +340,13 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
         # Load
         Discharge_dict_CR1 = np.load(Name_py_Discharge_dict_CR1).item() 
     
-    
     ###################### 7.2 Calculate surface water storage characteristics ######################  
 
-    Name_py_Discharge_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5', 'Discharge_dict_CR2_simulation%d.npy' %(Simulation))    
-    Name_py_River_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','River_dict_CR2_simulation%d.npy' %(Simulation))
-    Name_py_DEM_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','DEM_dict_CR2_simulation%d.npy' %(Simulation))    
-    Name_py_Distance_dict_CR2 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','Distance_dict_CR2_simulation%d.npy' %(Simulation))
-    Name_py_Diff_Water_Volume =  os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','Diff_Water_Volume_CR2_simulation%d.npy' %(Simulation))
-    Name_py_Regions =  os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','Regions_simulation%d.npy' %(Simulation))
-    
-    
-
+    # Define names
+    Name_py_Discharge_dict_CR2 = os.path.join(Dir_Basin, 'Simulations', 'Simulation_%d' %Simulation, 'Sheet_5', 'Discharge_dict_CR2_simulation%d.npy' %(Simulation))    
+    Name_py_River_dict_CR2 = os.path.join(Dir_Basin, 'Simulations', 'Simulation_%d' %Simulation, 'Sheet_5', 'River_dict_CR2_simulation%d.npy' %(Simulation))
+    Name_py_DEM_dict_CR2 = os.path.join(Dir_Basin, 'Simulations', 'Simulation_%d' %Simulation, 'Sheet_5', 'DEM_dict_CR2_simulation%d.npy' %(Simulation))    
+    Name_py_Distance_dict_CR2 = os.path.join(Dir_Basin, 'Simulations', 'Simulation_%d' %Simulation, 'Sheet_5', 'Distance_dict_CR2_simulation%d.npy' %(Simulation))
     
     if not (os.path.exists(Name_py_Discharge_dict_CR2) and os.path.exists(Name_py_River_dict_CR2) and os.path.exists(Name_py_DEM_dict_CR2) and os.path.exists(Name_py_Distance_dict_CR2)):      
 
@@ -345,45 +356,54 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
         DEM_dict_CR2 = copy.deepcopy(DEM_dict_CR1)
         Distance_dict_CR2 = copy.deepcopy(Distance_dict_CR1)
         
-        if Reservoirs_Lakes_Calculations == 1:
-        
-            # define input tiffs for surface water calculations 
-            input_JRC = os.path.join(Dir_Basin, Data_Path_JRC_occurrence, 'JRC_Occurrence_percent.tif')
-            DEM_dataset = os.path.join(Dir_Basin, Data_Path_DEM, 'DEM_HydroShed_m_3s.tif')
-    
-            sensitivity = 700 # 900 is less sensitive 1 is very sensitive
-            Regions = Five.Reservoirs.Calc_Regions(Name_NC_Basin_CR, input_JRC, sensitivity, Boundaries)
-    
-            Diff_Water_Volume = np.zeros([len(Regions), Amount_months_reservoirs -1, 3])
-            reservoir=0
-    
-            for region in Regions:
-
-                popt = Five.Reservoirs.Find_Area_Volume_Relation(region, input_JRC, DEM_dataset)
-
-                Area_Reservoir_Values = Five.Reservoirs.GEE_calc_reservoir_area(region, Startdate, Enddate)
-        
-                Diff_Water_Volume[reservoir,:,:] = Five.Reservoirs.Calc_Diff_Storage(Area_Reservoir_Values, popt)
-                reservoir+=1
-
-            ################# 7.3 Add storage reservoirs and change outflows ##################
-            Discharge_dict_CR2, River_dict_CR2, DEM_dict_CR2, Distance_dict_CR2 = Five.Reservoirs.Add_Reservoirs(Name_NC_Rivers_CR, Name_NC_Acc_Pixels_CR, Diff_Water_Volume, River_dict_CR2, Discharge_dict_CR2, DEM_dict_CR2, Distance_dict_CR2, Regions, Example_dataset)       
-    
-            np.save(Name_py_Regions, Regions)
-            np.save(Name_py_Diff_Water_Volume, Diff_Water_Volume)
+        # If reservoirs calculations needs to be included than calculate reservoir storage using GEE    
+        if Reservoirs_GEE_on_off == 1:    
             
+            # Define names for reservoirs calculations
+            Name_py_Diff_Water_Volume =  os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','Diff_Water_Volume_CR2_simulation%d.npy' %(Simulation))
+            Name_py_Regions =  os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','Regions_simulation%d.npy' %(Simulation))
+
+            if Reservoirs_Lakes_Calculations == 1:
+            
+                # define input tiffs for surface water calculations 
+                input_JRC = os.path.join(Dir_Basin, Data_Path_JRC_occurrence, 'JRC_Occurrence_percent.tif')
+                DEM_dataset = os.path.join(Dir_Basin, Data_Path_DEM, 'DEM_HydroShed_m_3s.tif')
+        
+                sensitivity = 700 # 900 is less sensitive 1 is very sensitive
+                Regions = Five.Reservoirs.Calc_Regions(Name_NC_Basin_CR, input_JRC, sensitivity, Boundaries)
+        
+                Diff_Water_Volume = np.zeros([len(Regions), Amount_months_reservoirs -1, 3])
+                reservoir=0
+        
+                for region in Regions:
+    
+                    popt = Five.Reservoirs.Find_Area_Volume_Relation(region, input_JRC, DEM_dataset)
+    
+                    Area_Reservoir_Values = Five.Reservoirs.GEE_calc_reservoir_area(region, Startdate, Enddate)
+            
+                    Diff_Water_Volume[reservoir,:,:] = Five.Reservoirs.Calc_Diff_Storage(Area_Reservoir_Values, popt)
+                    reservoir+=1
+    
+                ################# 7.3 Add storage reservoirs and change outflows ##################
+                Discharge_dict_CR2, River_dict_CR2, DEM_dict_CR2, Distance_dict_CR2 = Five.Reservoirs.Add_Reservoirs(Name_NC_Rivers_CR, Name_NC_Acc_Pixels_CR, Diff_Water_Volume, River_dict_CR2, Discharge_dict_CR2, DEM_dict_CR2, Distance_dict_CR2, Regions, Example_dataset)       
+        
+                np.save(Name_py_Regions, Regions)
+                np.save(Name_py_Diff_Water_Volume, Diff_Water_Volume)
+       
+        # Save variables    
         np.save(Name_py_Discharge_dict_CR2, Discharge_dict_CR2)
         np.save(Name_py_River_dict_CR2, River_dict_CR2)
         np.save(Name_py_DEM_dict_CR2, DEM_dict_CR2)
         np.save(Name_py_Distance_dict_CR2, Distance_dict_CR2)
-        
+            
     else:
+        
         # Load
         Discharge_dict_CR2 = np.load(Name_py_Discharge_dict_CR2).item() 
         River_dict_CR2 = np.load(Name_py_River_dict_CR2).item() 
         DEM_dict_CR2 = np.load(Name_py_DEM_dict_CR2).item() 
         Distance_dict_CR2 = np.load(Name_py_Distance_dict_CR2).item() 
-        
+          
     ####################### 7.3 Add surface water withdrawals ############################# 
    
     Name_py_Discharge_dict_CR3 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','Discharge_dict_CR3_simulation%d.npy' %(Simulation))    
@@ -400,18 +420,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, Reservoirs_Lakes_
 
     else:
         Discharge_dict_CR3 = np.load(Name_py_Discharge_dict_CR3).item() 
-
-
-
-
-
-
-
-
-
-
-
-                                       
+    
     ################################# Plot graph ##################################
 
     # Draw graph

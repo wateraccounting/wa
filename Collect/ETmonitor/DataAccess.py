@@ -34,7 +34,7 @@ import wa.WebAccounts as WebAccounts
 import wa.General.raster_conversions as RC
 
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Type, Waitbar):
     """
     This scripts downloads ETmonitor ET data from the UNESCO-IHE ftp server.
     The output files display the total ET in mm for a period of one month.
@@ -74,7 +74,10 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar):
         WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)																																		
 																																					
     # Define directory and create it if not exists
-    output_folder = os.path.join(Dir, 'Evaporation', 'ETmonitor', 'Monthly')
+    if Type == "act":
+        output_folder = os.path.join(Dir, 'Evaporation', 'ETmonitor', 'Monthly')
+    if Type == "pot":
+        output_folder = os.path.join(Dir, 'ETpot', 'ETmonitor', 'Monthly')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 		
@@ -83,20 +86,23 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar):
         # Define year and month
         year = Date.year
         month = Date.month   
- 
-        # Date as printed in filename
-        Filename_out= os.path.join(output_folder,'ETa_ETmonitor_mm-month-1_monthly_%s.%02s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d')))
+
+        # Define end filename and Date as printed in filename
+        if Type == "act":
+            Filename_in = "ET_ETmonitor_mm-month_%d_%02d_01.tif" %(year, month)
+            Filename_out= os.path.join(output_folder,'ETa_ETmonitor_mm-month-1_monthly_%s.%02s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d')))
+       			
+        if Type == "pot":
+            Filename_in = "ETpot_ETmonitor_mm-month_%d_%02d_01.tif" %(year, month)
+            Filename_out= os.path.join(output_folder,'ETpot_ETmonitor_mm-month-1_monthly_%s.%02s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d')))
         
-        # Define end filename
-        Filename_in = "ET_ETmonitor_mm-month_%d_%02d_01.tif" %(year, month)
-        
-		 # Temporary filename for the downloaded global file												
+		  # Temporary filename for the downloaded global file												
         local_filename = os.path.join(output_folder, Filename_in)
  
         # Download the data from FTP server if the file not exists								
         if not os.path.exists(Filename_out):
             try:
-                Download_ETmonitor_from_WA_FTP(local_filename, Filename_in)
+                Download_ETmonitor_from_WA_FTP(local_filename, Filename_in, Type)
            
         
                 # Reproject dataset
@@ -118,7 +124,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar):
 
     return					
 
-def Download_ETmonitor_from_WA_FTP(local_filename, Filename_in):           
+def Download_ETmonitor_from_WA_FTP(local_filename, Filename_in, Type):           
     """
     This function retrieves ETmonitor data for a given date from the
     ftp.wateraccounting.unesco-ihe.org server.
@@ -130,6 +136,7 @@ def Download_ETmonitor_from_WA_FTP(local_filename, Filename_in):
     Keyword arguments:
 	 local_filename -- name of the temporary file which contains global ETmonitor data			
     Filename_in -- name of the end file with the weekly ETmonitor data	
+	 Type = Type of data ("act" or "pot")
     """      
 												
     # Collect account and FTP information			
@@ -139,7 +146,10 @@ def Download_ETmonitor_from_WA_FTP(local_filename, Filename_in):
     # Download data from FTP 													
     ftp=FTP(ftpserver)
     ftp.login(username,password)
-    directory="/WaterAccounting/Data_Satellite/Evaporation/ETmonitor/Global/"
+    if Type == "act":
+        directory="/WaterAccounting/Data_Satellite/Evaporation/ETmonitor/Global/"
+    if Type == "pot":
+        directory="/WaterAccounting/Data_Satellite/Evaporation/ETmonitor/Potential_Evapotranspiration/"
     ftp.cwd(directory)
     lf = open(local_filename, "wb")
     ftp.retrbinary("RETR " + Filename_in, lf.write)

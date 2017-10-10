@@ -190,7 +190,7 @@ def Collect_dataset(output_folder, Date, Lat_tiles, Lon_tiles, latlim, lonlim):
     month = Date.month  				
 
     # Create empty array
-    ET_data = np.zeros([int(np.round((latlim[1]-latlim[0]))/0.0025),int(np.round((lonlim[1]-lonlim[0])/0.0025))])				
+    ET_data = np.zeros([int(np.round((latlim[1]-latlim[0])/0.0025)),int(np.round((lonlim[1]-lonlim[0])/0.0025))])				
 
     # Open the tiles and fill in the empty array
     for v_tile in range(Lat_tiles[0], Lat_tiles[1]+1):

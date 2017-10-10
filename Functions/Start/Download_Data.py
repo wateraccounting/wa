@@ -270,7 +270,7 @@ def Evapotranspiration(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD16
             Enddate_download = Enddates[-i]
             
             # download data between startdate and enddate            
-            ETmonitor.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
+            ETmonitor.ET_monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
             i += 1		            
 
     if Product is 'SSEBop':

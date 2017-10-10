@@ -140,13 +140,22 @@ def Save_as_tiff(name='', data='', geo='', projection=''):
     srse = osr.SpatialReference()
     if projection == '':
         srse.SetWellKnownGeogCS("WGS84")
-    if not srse.SetWellKnownGeogCS(projection) == 6:	
-        srse.SetWellKnownGeogCS(projection)
-    else:
+        
+    else:  
         try:
-            srse.ImportFromEPSG(int(projection))
-        except:    
-            srse.ImportFromWkt(projection)
+            if not srse.SetWellKnownGeogCS(projection) == 6:	
+                srse.SetWellKnownGeogCS(projection)
+            else:
+                try:
+                    srse.ImportFromEPSG(int(projection))
+                except:    
+                    srse.ImportFromWkt(projection)   
+        except:
+            try:
+                srse.ImportFromEPSG(int(projection))
+            except:    
+                srse.ImportFromWkt(projection)
+
     dst_ds.SetProjection(srse.ExportToWkt())
     dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
     dst_ds.SetGeoTransform(geo)
@@ -203,8 +212,8 @@ def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Endda
         geo_out, proj, size_X, size_Y = RC.Open_array_info(Reference_filename)				
 
         # Create the lat/lon rasters				
-        lon = np.arange(size_X)*geo_out[1]+geo_out[0]
-        lat = np.arange(size_Y)*geo_out[5]+geo_out[3]	
+        lon = np.arange(size_X)*geo_out[1]+geo_out[0] + 0.5 * geo_out[1]
+        lat = np.arange(size_Y)*geo_out[5]+geo_out[3] + 0.5 * geo_out[5]
 
         # Create the nc file   
         nco = Dataset(namenc, 'w', format='NETCDF4_CLASSIC')
