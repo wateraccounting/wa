@@ -68,14 +68,22 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_Supply, N
         if np.nansum(DataCube_ETblue_m3[:,ID_Rivers_flow == i]) > 0:
             total_surface_withdrawal = np.nansum(DataCube_surface_withdrawal_m3[:,ID_Rivers_flow == i] ,1)
             
-            # Find exact reservoir area in river directory
+            # Find exact area in river directory
             for River_part in River_dict.iteritems():
                 if len(np.argwhere(River_part[1] == i)) > 0:
+                    
+                    # Find the river part in the dictionery
                     row_discharge = np.argwhere(River_part[1]==i)[0][0]
+                    
+                    # Subtract the withdrawal from that specific riverpart
                     Discharge_dict_new[River_part[0]][:,0:row_discharge] = Discharge_dict_new[River_part[0]][:,0:row_discharge] - total_surface_withdrawal[:,None] 
+
+                    # Subtract the withdrawal from the part downstream of the riverpart within the same dictionary
                     Discharge_dict_new[River_part[0]][np.logical_and(Discharge_dict_new[River_part[0]]<=0,Discharge_dict[River_part[0]]>=0)] = 0
                     End_river = River_dict[River_part[0]][0]
                     times = 0
+                    
+                    # Subtract the withdrawal from all the other downstream dictionaries
                     while len(River_dict) > times:
                         for River_part_downstream in River_dict.iteritems():
                             if River_dict[River_part[0]][-1] == End_river:  
