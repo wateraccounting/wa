@@ -119,7 +119,7 @@ def Open_nc_array(NC_filename, Var = None, Startdate = '', Enddate = ''):
         except:
             End = ''
 
-    if Enddate is not '' or Startdate is not '':        
+    if (Enddate is not '' or Startdate is not ''):        
         Data = fh.variables[Var][int(Start):int(End), :, :]	
         
     else:

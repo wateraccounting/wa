@@ -5,7 +5,7 @@ Created on Mon May 15 14:27:44 2017
 @author: tih
 """
 
-def Calc_Supply(Discharge_dict, Name_NC_Rivers, Name_NC_ET, Name_NC_ETref, Name_NC_Prec, Name_NC_Basin, Name_NC_frac_sw, Startdate, Enddate, Example_dataset):
+def Calc_Supply_Budyko(Discharge_dict, Name_NC_Rivers, Name_NC_ET, Name_NC_ETref, Name_NC_Prec, Name_NC_Basin, Name_NC_frac_sw, Startdate, Enddate, Example_dataset):
     
     import wa.Functions.Five as Five
     import wa.Functions.Start as Start
@@ -32,9 +32,9 @@ def Calc_Supply(Discharge_dict, Name_NC_Rivers, Name_NC_ET, Name_NC_ETref, Name_
     # Total amount of ETblue taken out of rivers
     DataCube_surface_withdrawal_m3 = DataCube_ETblue_m3 * DataCube_frac_sw[None,:,:]
     
-    return(DataCube_surface_withdrawal_m3)
+    return(DataCube_surface_withdrawal_m3, DataCube_ETblue_m3)
     
-def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, DataCube_surface_withdrawal_m3, DataCube_ETblue, Name_NC_Basin, Startdate, Enddate, Example_dataset):
+def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_Supply, Name_NC_ETblue, Name_NC_Basin, Startdate, Enddate, Example_dataset):
     
     import copy
     import numpy as np
@@ -46,7 +46,9 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, DataCube_surface_
 
     # Extract Rivers data from NetCDF file
     Rivers = RC.Open_nc_array(Name_NC_Rivers)
-    
+    DataCube_surface_withdrawal_m3 = RC.Open_nc_array(Name_NC_Supply, Startdate = Startdate, Enddate = Enddate)
+    DataCube_ETblue_m3 = RC.Open_nc_array(Name_NC_ETblue, Startdate = Startdate, Enddate = Enddate)
+
     # Open data array info based on example data
     geo_out, epsg, size_X, size_Y = RC.Open_array_info(Example_dataset)
   
@@ -63,7 +65,7 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, DataCube_surface_
     ID_Rivers_flow = RC.gap_filling(ID_Rivers,NoDataValue = 0.) * Basin
 
     for i in np.unique(ID_Rivers_flow):
-        if np.nansum(DataCube_ETblue[:,ID_Rivers_flow == i]) > 0:
+        if np.nansum(DataCube_ETblue_m3[:,ID_Rivers_flow == i]) > 0:
             total_surface_withdrawal = np.nansum(DataCube_surface_withdrawal_m3[:,ID_Rivers_flow == i] ,1)
             
             # Find exact reservoir area in river directory
