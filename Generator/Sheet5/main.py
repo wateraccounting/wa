@@ -453,7 +453,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, WaterPIX_filename
     if not os.path.exists(Name_NC_Discharge):
 
         # Get the data of Reference Evapotranspiration and save as nc
-        DataCube_Discharge_CR = DC.Convert_dict_to_array(Discharge_dict_CR3, Discharge_dict_CR3, Example_dataset)
+        DataCube_Discharge_CR = DC.Convert_dict_to_array(River_dict_CR2, Discharge_dict_CR3, Example_dataset)
         DC.Save_as_NC(Name_NC_Discharge, DataCube_Discharge_CR, 'Discharge_End_CR', Example_dataset, Startdate, Enddate, 'monthly')
         del DataCube_Discharge_CR       
    

@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 import calendar
 
-def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS', Daily = 'y'):
+def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS', Daily = 'n'):
     """
     This functions check the precipitation files that needs to be downloaded, and send the request to the collect functions.
 
