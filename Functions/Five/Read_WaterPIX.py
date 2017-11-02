@@ -48,13 +48,13 @@ def Get_Array(nc_filename_waterpix, Var_name, Example_dataset, Startdate, Enddat
 
     # Set the startpoint    
     if np.sum(time_start)>0:
-        Start_time = np.argwhere(time_start==1) + 1
+        Start_time = np.argwhere(time_start==1)[0][0] + 1
     else:
         Start_time = 0   
 
     # Set the endpoint            
     if np.sum(time_end)>0:                        
-        End_time = np.argwhere(time_end==1) + 1
+        End_time = np.argwhere(time_end==1)[0][0] + 1
     else:
         End_time = len(Dates) + Start_time   
 

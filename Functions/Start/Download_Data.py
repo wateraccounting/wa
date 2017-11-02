@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 import calendar
 
-def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS', Daily = 'y'):
+def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS', Daily = 'n'):
     """
     This functions check the precipitation files that needs to be downloaded, and send the request to the collect functions.
 
@@ -710,8 +710,11 @@ def Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path, freq):
 
         for Enddate_number in np.flipud(Enddates_place):
             Date = Dates[Enddate_number]
-            month = Date.month																
+            month = Date.month												
             year = Date.year
+            if np.any([type(month) == pd.core.indexes.numeric.Int64Index, type(year) == pd.core.indexes.numeric.Int64Index]):
+                month = int(month[0])
+                year = int(year[0])
             dates_in_month = calendar.monthrange(year,month)
             # Define enddate													
             Enddate_one = '%d-%02d-%02d' %(year,month,int(dates_in_month[1]))

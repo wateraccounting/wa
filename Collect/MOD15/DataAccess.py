@@ -87,7 +87,12 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores, nameDo
     # Download list (txt file on the internet) which includes the lat and lon information of the MODIS tiles
     nameDownloadtext = 'https://modis-land.gsfc.nasa.gov/pdf/sn_gring_10deg.txt'  
     file_nametext = os.path.join(output_folder, nameDownloadtext.split('/')[-1])
-    urllib.urlretrieve(nameDownloadtext, file_nametext)
+    try:
+        urllib.urlretrieve(nameDownloadtext, file_nametext)
+    except:
+        data = urllib2.urlopen(nameDownloadtext).read()
+        with open(file_nametext, "wb") as fp:
+            fp.write(data)
 
     # Open text file with tiles which is downloaded before
     tiletext=np.genfromtxt(file_nametext,skip_header=7,skip_footer=1,usecols=(0,1,2,3,4,5,6,7,8,9))
