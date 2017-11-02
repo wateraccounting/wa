@@ -63,7 +63,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, WaterPIX_filename
     ############################# 2. Download Data ###################################
 
     # Download data
-    Data_Path_P = Start.Download_Data.Precipitation(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate, P_Product) 
+    Data_Path_P = Start.Download_Data.Precipitation(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate, P_Product, Daily = 'n') 
     Data_Path_ET = Start.Download_Data.Evapotranspiration(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate, ET_Product)
     Data_Path_DEM = Start.Download_Data.DEM(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Resolution) 
     if Resolution is not '3s':
@@ -453,7 +453,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, WaterPIX_filename
     if not os.path.exists(Name_NC_Discharge):
 
         # Get the data of Reference Evapotranspiration and save as nc
-        DataCube_Discharge_CR = DC.Convert_dict_to_array(Discharge_dict_CR3, Discharge_dict_CR3, Example_dataset)
+        DataCube_Discharge_CR = DC.Convert_dict_to_array(River_dict_CR2, Discharge_dict_CR3, Example_dataset)
         DC.Save_as_NC(Name_NC_Discharge, DataCube_Discharge_CR, 'Discharge_End_CR', Example_dataset, Startdate, Enddate, 'monthly')
         del DataCube_Discharge_CR       
    
