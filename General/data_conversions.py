@@ -11,7 +11,7 @@ import osr
 import os
 import pandas as pd
 import numpy as np
-
+import netCDF4
 
 def Convert_nc_to_tiff(input_nc, output_folder):
     """
@@ -24,7 +24,16 @@ def Convert_nc_to_tiff(input_nc, output_folder):
     from datetime import date
     import wa.General.raster_conversions as RC
     
-    All_Data = RC.Open_nc_array(input_nc)
+    #All_Data = RC.Open_nc_array(input_nc)
+    
+    if type(input_nc) == str:
+        nc = netCDF4.Dataset(input_nc)
+    elif type(input_nc) == list:
+        nc = netCDF4.MFDataset(input_nc)
+        
+    Var = nc.variables.keys()[-1]
+    All_Data = nc[Var]
+    
     geo_out, epsg, size_X, size_Y, size_Z, Time = RC.Open_nc_info(input_nc)  
     
     if epsg == 4326:
@@ -234,7 +243,7 @@ def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Endda
             for Date in Dates:
                 time_or[i] = Date.toordinal()
                 i += 1 	
-            nco.createDimension('time', len(Dates))
+            nco.createDimension('time', None)
             timeo = nco.createVariable('time', 'f4', ('time',))
             timeo.units = '%s' %Time_steps
             timeo.standard_name = 'time'
