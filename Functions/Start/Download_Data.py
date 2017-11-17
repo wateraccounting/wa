@@ -700,9 +700,14 @@ def Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path, freq):
 
         for Startdate_number in Startdates_place:
             Date = Dates[Startdate_number]
-            month = Date.month																
+            month = Date.month														
             year = Date.year
             day = Date.day
+            
+            if np.any([type(month) == pd.core.indexes.numeric.Int64Index, type(year) == pd.core.indexes.numeric.Int64Index, type(day) == pd.core.indexes.numeric.Int64Index]):
+                month = int(Date.month[0])															
+                year = int(Date.year[0])	
+                day = int(Date.day[0])	
             
             # Define startdate
             Startdate_one = '%d-%02d-%02d' %(year,month, day)

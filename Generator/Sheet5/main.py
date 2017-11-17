@@ -63,7 +63,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, WaterPIX_filename
     ############################# 2. Download Data ###################################
 
     # Download data
-    Data_Path_P = Start.Download_Data.Precipitation(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate, P_Product) 
+    Data_Path_P = Start.Download_Data.Precipitation(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate, P_Product, Daily = 'n') 
     Data_Path_ET = Start.Download_Data.Evapotranspiration(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate, ET_Product)
     Data_Path_DEM = Start.Download_Data.DEM(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Resolution) 
     if Resolution is not '3s':
@@ -421,16 +421,12 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, WaterPIX_filename
             
 
         if Supply_method == "WaterPIX":
-            
-            # MOET NOG AFGEMAAKT WORDEN
-            DataCube_Supply_m3 = 2
-            Discharge_dict_CR3, DataCube_ETblue_m3 = Five.Irrigation.Add_irrigation(Discharge_dict_CR2, River_dict_CR2, Name_NC_Rivers_CR, Name_NC_ET_CR, Name_NC_ETref_CR, Name_NC_Prec_CR, Name_NC_Basin_CR, Name_NC_frac_sw_CR, Startdate, Enddate, Example_dataset)
-            np.save(Name_py_Discharge_dict_CR3, Discharge_dict_CR3)
-
-            # save ETblue as nc
-            info = ['monthly','m3-month-1', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
-            Name_NC_ETblue = DC.Create_NC_name('ETblue', Simulation, Dir_Basin, 5, info)
-            DC.Save_as_NC(Name_NC_ETblue, DataCube_ETblue_m3, 'ETblue', Example_dataset, Startdate, Enddate, 'monthly')
+            WaterPIX_Var = 'Supply_M'
+            DataCube_Runoff_CR = Five.Read_WaterPIX.Get_Array(WaterPIX_filename, WaterPIX_Var, Example_dataset, Startdate, Enddate)
+            area_in_m2 = Start.Area_converter.Degrees_to_m2(Example_dataset)
+            DataCube_Supply_m3 = DataCube_Runoff_CR/1000 * area_in_m2
+            DC.Save_as_NC(Name_NC_Supply, DataCube_Supply_m3, 'Supply', Example_dataset, Startdate, Enddate, 'monthly')
+            Discharge_dict_CR3 = Five.Irrigation.Add_irrigation(Discharge_dict_CR2, River_dict_CR2, Name_NC_Rivers_CR,  Name_NC_Supply, Name_NC_Supply, Name_NC_Basin_CR, Startdate, Enddate, Example_dataset)
 
     else:
         Discharge_dict_CR3 = np.load(Name_py_Discharge_dict_CR3).item() 
@@ -439,9 +435,6 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, WaterPIX_filename
 
     # Draw graph
     Five.Channel_Routing.Graph_DEM_Distance_Discharge(Discharge_dict_CR3, Distance_dict_CR2, DEM_dict_CR2, River_dict_CR2, Startdate, Enddate, Example_dataset)
-
-
-
 
     ######################## Change data to fit the LU data #######################
 
@@ -461,18 +454,6 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, WaterPIX_filename
 
 
     '''
-
-
-
-
-
-
-
-
-
-
-
-
 
     # DEM
     Name_NC_DEM = DC.Create_NC_name('DEM', Simulation, Dir_Basin, 5)
