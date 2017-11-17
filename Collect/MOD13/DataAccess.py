@@ -80,11 +80,18 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
     nameDownloadtext = 'https://modis-land.gsfc.nasa.gov/pdf/sn_gring_10deg.txt'  
     file_nametext = os.path.join(output_folder, nameDownloadtext.split('/')[-1])
     try:
-        urllib.urlretrieve(nameDownloadtext, file_nametext)
+        try:
+            urllib.urlretrieve(nameDownloadtext, file_nametext)
+        except:
+            data = urllib2.urlopen(nameDownloadtext).read()
+            with open(file_nametext, "wb") as fp:
+                fp.write(data)
     except:
-        data = urllib2.urlopen(nameDownloadtext).read()
+        from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)             
         with open(file_nametext, "wb") as fp:
-            fp.write(data)
+            data = requests.get(nameDownloadtext, verify=False)
+            fp.write(data.content)
 
     # Open text file with tiles which is downloaded before
     tiletext=np.genfromtxt(file_nametext,skip_header=7,skip_footer=1,usecols=(0,1,2,3,4,5,6,7,8,9))
