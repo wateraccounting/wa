@@ -66,10 +66,10 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
     EnddateNDM = '%d-12-31' %int(EndYear)
     
     # Download data
-    Data_Path_P = Start.Download_Data.Precipitation(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, P_Product) 
+    Data_Path_P = Start.Download_Data.Precipitation(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, P_Product, Daily = 'y') 
     Data_Path_ET = Start.Download_Data.Evapotranspiration(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, ET_Product)
     Data_Path_LAI = Start.Download_Data.LAI(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, LAI_Product) 
-
+    
     if NDM_Product == 'MOD17':
         Data_Path_NPP = Start.Download_Data.NPP(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], StartdateNDM, EnddateNDM, NDM_Product) 
         Data_Path_GPP = Start.Download_Data.GPP(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], StartdateNDM, EnddateNDM, NDM_Product) 
@@ -184,9 +184,6 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
     Generate.PDF.Create(Dir_Basin, Basin, Simulation, Dir_Basin_CSV)
 
     return()
-
-
-
 
 
 
