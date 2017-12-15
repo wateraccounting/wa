@@ -114,7 +114,7 @@ def Create(Dir_Basin, Simulation, Basin, Startdate, Enddate, Name_NC_LU, DataCub
     sheet2_classes_dict = GD.get_sheet2_classes()
 
     # Convert data from mm/month to km3/month
-    I_km3 = np.einsum('ij,kij->kij', area_in_m2, DataCube_I)/ 1e12   
+    I_km3 = np.einsum('ij,kij->kij', area_in_m2, DataCube_I)/ 1e12         
     E_km3 = np.einsum('ij,kij->kij', area_in_m2, DataCube_E)/ 1e12       
     T_km3 = np.einsum('ij,kij->kij', area_in_m2, DataCube_T)/ 1e12      
     

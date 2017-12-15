@@ -53,7 +53,6 @@ def Open_tiff_array(filename='', band=''):
         Data = f.GetRasterBand(band).ReadAsArray()				
     return(Data)
 
-
 def Open_nc_info(NC_filename):
 	
     from netCDF4 import Dataset
@@ -394,7 +393,7 @@ def resize_array_example(Array_in, Array_example, method=1):
     return(Array_out)				
 				
 def Get_epsg(g, extension = 'tiff'):				
-			
+  			
     try:
         if extension == 'tiff':
             # Get info of the dataset that is used for transforming     
