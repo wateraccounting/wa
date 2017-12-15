@@ -111,7 +111,6 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Type, Waitbar):
         
                 # Clip dataset
                 RC.Clip_Dataset_GDAL(name_reprojected_ETmonitor, Filename_out, latlim, lonlim)
-                os.remove(local_filename)
                 os.remove(name_reprojected_ETmonitor)  
                 
             except:
