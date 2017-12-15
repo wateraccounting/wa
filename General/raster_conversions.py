@@ -53,7 +53,6 @@ def Open_tiff_array(filename='', band=''):
         Data = f.GetRasterBand(band).ReadAsArray()				
     return(Data)
 
-
 def Open_nc_info(NC_filename):
 	
     from netCDF4 import Dataset
