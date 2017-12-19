@@ -134,7 +134,7 @@ def Clip_Dataset_GDAL(output1, output2, latlim, lonlim):
     GDALTRANSLATE_PATH = os.path.join(GDAL_env_path, 'gdal_translate.exe')
 
     # find path to the executable
-    fullCmd = ' '.join(["%s" %(GDALTRANSLATE_PATH), '-projwin %d %d %d %d -of GTiff %s %s'  %(lonlim[0], latlim[1], lonlim[1], latlim[0], output1, output2)]) 
+    fullCmd = ' '.join(["%s" %(GDALTRANSLATE_PATH), '-projwin %s %s %s %s -of GTiff %s %s'  %(lonlim[0], latlim[1], lonlim[1], latlim[0], output1, output2)]) 
     Run_command_window(fullCmd)
     
     return()
