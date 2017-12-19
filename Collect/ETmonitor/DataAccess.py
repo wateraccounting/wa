@@ -112,6 +112,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Type, Waitbar):
                 # Clip dataset
                 RC.Clip_Dataset_GDAL(name_reprojected_ETmonitor, Filename_out, latlim, lonlim)
                 os.remove(name_reprojected_ETmonitor)  
+                os.remove(local_filename)  
                 
             except:
                 print "Was not able to download file with date %s" %Date 
