@@ -613,121 +613,130 @@ def GWF(Dir, latlim, lonlim):
 					
     return(Data_Path)	
 
-				
-def Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path, freq):	
+
+def Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, freq):
     """
-    This functions check all the files if they are already downloaded, or needs to be downloaded.
+    This functions check all the files if they are already downloaded, or needs
+    to be downloaded.
 
     Parameters
     ----------
     Startdate : str
-        Contains the start date of the model 'yyyy-mm-dd'    
+        Contains the start date of the model 'yyyy-mm-dd'
     Enddate : str
-        Contains the end date of the model 'yyyy-mm-dd'  
+        Contains the end date of the model 'yyyy-mm-dd'
     Dir : str
         Path to all the output data of the Basin
     Data_Path : str
         Path from the Dir to the downloaded data
     freq : 'D','8D','MS', or 'AS'
         Defines the frequenct of the dataset that must be downloaded
-        
+
     Returns
     -------
     Startdates : str
         Contains all the start dates of data that needs to be downloaded
     Enddates : str
         Contains all the end dates of data that needs to be downloaded
-    """  
-	 # Defines the total data path		
-    Data_Dir = os.path.join(Dir,Data_Path)	
+    """
+    # Defines the total data path
+    Data_Dir = os.path.join(Dir, Data_Path)
 
-    # Check if folder already exists							
+    # Check if folder already exists
     if os.path.exists(Data_Dir):
         os.chdir(Data_Dir)
-        
+
         # Defines the dates of the 8 daily periods
         if freq == '8D':
             import wa.Collect.MOD15.DataAccess as TimeStamps_8D
             Dates = TimeStamps_8D.Make_TimeStamps(Startdate, Enddate)
-        else:    
-            Dates	= pd.date_range(Startdate,Enddate,freq=freq)	
-        
+        else:
+            Dates = pd.date_range(Startdate, Enddate, freq=freq)
+
         # Check if the dates already exists
-        Date_Check = np.zeros([len(Dates)+2])
-        Date_Check_end = np.zeros([len(Dates),2])										
-        i = 0	
- 
-        # Loop over the dates								
+        Date_Check = np.zeros([len(Dates) + 2])
+        Date_Check_end = np.zeros([len(Dates), 2])
+        i = 0
+
+        # Loop over the dates
         for Date in Dates:
-            i += 1	
-            
-            # Define month, day, and year													
+            i += 1
+
+            # Define month, day, and year
             month = Date.month
             year = Date.year
             day = Date.day
-            
+
             # Get all the files that already exists in folder
-            if freq == 'MS':						
-                files =glob.glob('*monthly_%d.%02d.01.tif' %(year,month))	
-            if freq == 'AS':						
-                files =glob.glob('*yearly_%d.%02d.01.tif' %(year,month))	
-            if freq == 'D':	     
-                files =glob.glob('*daily_%d.%02d.%02d.tif' %(year,month, day))	
-            if freq == '8D':				
-                files =glob.glob('*8-daily_%d.%02d.%02d.tif' %(year,month, day))	 
-            # If file exits put a 1 in the array    
+            if freq == 'MS':
+                files = glob.glob('*monthly_%d.%02d.01.tif' % (year, month))
+            if freq == 'AS':
+                files = glob.glob('*yearly_%d.%02d.01.tif' % (year, month))
+            if freq == 'D':
+                files = glob.glob('*daily_%d.%02d.%02d.tif' % (year, month,
+                                                               day))
+            if freq == '8D':
+                files = glob.glob('*8-daily_%d.%02d.%02d.tif' % (year, month,
+                                                                 day))
+            # If file exits put a 1 in the array
             if len(files) == 1:
-                Date_Check[i] = 1	
-                          
-        # Add additional numbers to the Date_Check array                
-        Date_Check_end[:,0] = Date_Check[1:-1] + Date_Check[:-2]																		
-        Date_Check_end[:,1] = Date_Check[1:-1] + Date_Check[2:]	
+                Date_Check[i] = 1
 
-        # Find place where there is a startdate														
-        Startdates_place = np.argwhere(np.logical_and(Date_Check_end[:,0] == 1,Date_Check_end[:,1] == 0))                   															
-        # Find place where there is a enddate	
-        Enddates_place = np.argwhere(np.logical_and(Date_Check_end[:,1] == 1,Date_Check_end[:,0] == 0))  
+        # Add additional numbers to the Date_Check array
+        Date_Check_end[:, 0] = Date_Check[1:-1] + Date_Check[:-2]
+        Date_Check_end[:, 1] = Date_Check[1:-1] + Date_Check[2:]
 
-        # Add all the startdates and enddates in 1 array                 															
+        # Find place where there is a startdate
+        Startdates_place = np.argwhere(np.logical_and(
+            Date_Check_end[:, 0] == 1, Date_Check_end[:, 1] == 0))
+        # Find place where there is a enddate
+        Enddates_place = np.argwhere(np.logical_and(
+            Date_Check_end[:, 1] == 1, Date_Check_end[:, 0] == 0))
+
+        # Add all the startdates and enddates in 1 array
         if Date_Check[1] != 1:
             Startdates = [Startdate]
         else:
-            Startdates = []												
-        if Date_Check[-2] != 1:												
-            Enddates = [Enddate]	
+            Startdates = []
+        if Date_Check[-2] != 1:
+            Enddates = [Enddate]
         else:
-            Enddates = []														
+            Enddates = []
 
         for Startdate_number in Startdates_place:
             Date = Dates[Startdate_number]
-            month = Date.month														
+            month = Date.month
             year = Date.year
             day = Date.day
-            
-            if np.any([type(month) == pd.core.indexes.numeric.Int64Index, type(year) == pd.core.indexes.numeric.Int64Index, type(day) == pd.core.indexes.numeric.Int64Index]):
-                month = int(Date.month[0])															
-                year = int(Date.year[0])	
-                day = int(Date.day[0])	
-            
+
+            if np.any([isinstance(month, pd.core.index.Int64Index),
+                       isinstance(year, pd.core.index.Int64Index),
+                       isinstance(day, pd.core.index.Int64Index)]):
+                month = int(Date.month[0])
+                year = int(Date.year[0])
+                day = int(Date.day[0])
+
             # Define startdate
-            Startdate_one = '%d-%02d-%02d' %(year,month, day)
-            Startdates = np.append(Startdates,Startdate_one)            																
+            Startdate_one = '%d-%02d-%02d' % (year, month, day)
+            Startdates = np.append(Startdates, Startdate_one)
 
         for Enddate_number in np.flipud(Enddates_place):
             Date = Dates[Enddate_number]
-            month = Date.month												
+            month = Date.month
             year = Date.year
-            if np.any([type(month) == pd.core.indexes.numeric.Int64Index, type(year) == pd.core.indexes.numeric.Int64Index]):
+            if np.any([isinstance(month, pd.core.index.Int64Index),
+                       isinstance(year, pd.core.index.Int64Index)]):
                 month = int(month[0])
                 year = int(year[0])
-            dates_in_month = calendar.monthrange(year,month)
-            # Define enddate													
-            Enddate_one = '%d-%02d-%02d' %(year,month,int(dates_in_month[1]))
+            dates_in_month = calendar.monthrange(year, month)
+            # Define enddate
+            Enddate_one = '%d-%02d-%02d' % (year, month,
+                                            int(dates_in_month[1]))
             Enddates = np.append(Enddates, Enddate_one)
-            
-    # If folder not exists than all dates must be downloaded         
+
+    # If folder not exists than all dates must be downloaded
     else:
         Startdates = [Startdate]
-        Enddates = [Enddate]    								
-											
-    return(Startdates, Enddates)				
+        Enddates = [Enddate]
+
+    return(Startdates, Enddates)
