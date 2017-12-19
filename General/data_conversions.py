@@ -44,17 +44,19 @@ def Convert_nc_to_tiff(input_nc, output_folder):
         os.mkdir(output_folder)
 
     for i in range(0,size_Z):
-        if not Time is -9999:
+        if not Time == -9999:
             time_one = Time[i]
             d = date.fromordinal(time_one)
             name = os.path.splitext(os.path.basename(input_nc))[0]
             nameparts = name.split('_')[0:-2]
             name_out = os.path.join(output_folder, '_'.join(nameparts) + '_%d.%02d.%02d.tif' %(d.year, d.month, d.day))
+            Data_one = All_Data[i,:,:]
         else:
             name=os.path.splitext(os.path.basename(input_nc))[0]
             name_out = os.path.join(output_folder, name + '.tif')
+            Data_one = All_Data[:,:]
    
-        Data_one = All_Data[i,:,:]
+        
         Save_as_tiff(name_out, Data_one, geo_out, epsg)
     
     return()
