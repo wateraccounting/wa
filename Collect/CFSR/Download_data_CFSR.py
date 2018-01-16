@@ -12,7 +12,7 @@ import pycurl
 def Download_data(Date, Version, output_folder, Var):        
     """
     This function downloads CFSR data from the FTP server
-				For - CFSR:    ftp://nomads.ncdc.noaa.gov/CFSR/HP_time_series/
+				For - CFSR:    https://nomads.ncdc.noaa.gov/data/cfsr/
 				    - CFSRv2:  http://nomads.ncdc.noaa.gov/modeldata/cfsv2_analysis_timeseries/
 
     Keyword arguments:
@@ -36,7 +36,7 @@ def Download_data(Date, Version, output_folder, Var):
             while Downloaded == 0:				
                 # Create the command and run the command in cmd
                 if Version == 1:
-                    FTP_name = 'ftp://nomads.ncdc.noaa.gov/CFSR/HP_time_series/' + Date.strftime('%Y') + Date.strftime('%m')+ '/' + filename
+                    FTP_name = 'https://nomads.ncdc.noaa.gov/data/cfsr/' + Date.strftime('%Y') + Date.strftime('%m')+ '/' + filename
     							
                 if Version == 2:
                     FTP_name = 'https://nomads.ncdc.noaa.gov/modeldata/cfsv2_analysis_timeseries/' + Date.strftime('%Y') + '/' + Date.strftime('%Y') + Date.strftime('%m')+ '/' + filename

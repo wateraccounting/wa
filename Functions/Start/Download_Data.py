@@ -199,7 +199,7 @@ def Evapotranspiration(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD16
         from wa.Collect import MOD16
         
         # Define data path             
-        Data_Path = os.path.join('Evaporation','MOD16')	
+        Data_Path = os.path.join('Evaporation','MOD16','Monthly')	
         
         # Get start and enddates             
         Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																							

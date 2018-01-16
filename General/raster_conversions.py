@@ -21,11 +21,16 @@ def Run_command_window(argument):
     Keyword Arguments:
     argument -- string, name of the adf file
     """  
-    startupinfo = subprocess.STARTUPINFO()
-    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW		
-    
-    process = subprocess.Popen(argument, startupinfo=startupinfo, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    process.wait()  
+    if os.name == 'posix':
+        argument = argument.replace(".exe","")
+        os.system(argument)
+        
+    else:
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW		
+        
+        process = subprocess.Popen(argument, startupinfo=startupinfo, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        process.wait()  
     
     return()
 

@@ -4,15 +4,16 @@ Authors: Tim Hessels
          UNESCO-IHE 2017
 Contact: t.hessels@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
-Module: Function/Two
+Module: Function/Three
 """
 # import general python modules
 import os
 import gdal
+import pandas as pd
 
-def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate, Enddate, Simulation):
+def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Moving_Averaging_Length, Startdate, Enddate, Simulation):
     """
-    This functions is the main framework for calculating sheet 2.
+    This functions is the main framework for calculating sheet 3.
 
     Parameters
     ----------
@@ -40,7 +41,7 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
     from wa.General import data_conversions as DC
     import wa.Functions.Two as Two
     import wa.Functions.Start as Start
-    import wa.Generator.Sheet2 as Generate
+    import wa.Generator.Sheet3 as Generate
     
     ######################### Set General Parameters ##############################
 
@@ -64,32 +65,31 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
     EndYear = Enddate[:4]
     StartdateNDM = '%d-01-01' %int(StartYear)
     EnddateNDM = '%d-12-31' %int(EndYear)
-    
+
+    #Set Startdate and Enddate for moving average
+    Additional_Months = (Moving_Averaging_Length - 1)/2
+    Startdate_Moving_Average = pd.Timestamp(Startdate) - pd.DateOffset(months = Additional_Months)
+    Enddate_Moving_Average = pd.Timestamp(Enddate) + pd.DateOffset(months = Additional_Months)
+    Startdate_Moving_Average_String = '%d-%02d-%02d' %(Startdate_Moving_Average.year, Startdate_Moving_Average.month, Startdate_Moving_Average.day)
+    Enddate_Moving_Average_String = '%d-%02d-%02d' %(Enddate_Moving_Average.year, Enddate_Moving_Average.month, Enddate_Moving_Average.day)
+
     # Download data
-    Data_Path_P = Start.Download_Data.Precipitation(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, P_Product, Daily = 'y') 
+    Data_Path_P = Start.Download_Data.Precipitation(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, P_Product, Daily = 'n') 
     Data_Path_ET = Start.Download_Data.Evapotranspiration(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, ET_Product)
-    Data_Path_LAI = Start.Download_Data.LAI(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, LAI_Product) 
-    
+    Data_Path_ETref = Start.Download_Data.ETreference(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_Moving_Average_String, Enddate_Moving_Average_String)
+   
     if NDM_Product == 'MOD17':
         Data_Path_NPP = Start.Download_Data.NPP(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], StartdateNDM, EnddateNDM, NDM_Product) 
         Data_Path_GPP = Start.Download_Data.GPP(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], StartdateNDM, EnddateNDM, NDM_Product) 
 
-    Data_Path_P_Daily = os.path.join(Data_Path_P, 'Daily')
     Data_Path_P_Monthly = os.path.join(Data_Path_P, 'Monthly')
     
     ########################### Create input data #################################
 
-    # Create Rainy Days based on daily CHIRPS
-    Data_Path_RD = Two.Rainy_Days.Calc_Rainy_Days(Dir_Basin, Data_Path_P_Daily, Startdate, Enddate)
-
-    # Create monthly LAI
-    Dir_path_LAI = os.path.join(Dir_Basin, Data_Path_LAI)
-    Start.Eightdaily_to_monthly_state.Nearest_Interpolate(Dir_path_LAI, Startdate, Enddate)
-
     # Create NDM based on MOD17
     if NDM_Product == 'MOD17':
-        
-        # Create monthly GPP        
+
+        # Create monthly GPP
         Dir_path_GPP = os.path.join(Dir_Basin, Data_Path_GPP)
         Start.Eightdaily_to_monthly_state.Nearest_Interpolate(Dir_path_GPP, StartdateNDM, EnddateNDM)
         Data_Path_NDM = Two.Calc_NDM.NPP_GPP_Based(Dir_Basin, Data_Path_GPP, Data_Path_NPP, Startdate, Enddate)
@@ -134,6 +134,17 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
         DC.Save_as_NC(Name_NC_ET, DataCube_ET, 'ET', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
         del DataCube_ET
 
+   #_______________________Reference Evaporation______________________________
+
+    # Reference Evapotranspiration data
+    Name_NC_ETref = DC.Create_NC_name('ETref', Simulation, Dir_Basin, 4, info)
+    if not os.path.exists(Name_NC_ETref):
+
+        # Get the data of Evaporation and save as nc
+        DataCube_ETref = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_ETref, Startdate_Moving_Average_String, Enddate_Moving_Average_String, Example_data = Example_dataset)
+        DC.Save_as_NC(Name_NC_ETref, DataCube_ETref, 'ETref', Example_dataset, Startdate_Moving_Average_String, Enddate_Moving_Average_String, 'monthly', 0.01)
+        del DataCube_ETref
+
     #___________________________Normalized Dry Matter__________________________
 
     # Define info for the nc files
@@ -147,41 +158,54 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
         DC.Save_as_NC(Name_NC_NDM, DataCube_NDM, 'NDM', Example_dataset, Startdate, Enddate, 'monthly', 100)
         del DataCube_NDM
 
-    #_______________________________Rainy Days_________________________________
 
-    # Define info for the nc files
-    info = ['monthly','days', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
 
-    Name_NC_RD = DC.Create_NC_name('RD', Simulation, Dir_Basin, 2, info)
-    if not os.path.exists(Name_NC_RD):
 
-        # Get the data of Evaporation and save as nc
-        DataCube_RD = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_RD, Startdate, Enddate, Example_data = Example_dataset)
-        DC.Save_as_NC(Name_NC_RD, DataCube_RD, 'RD', Example_dataset, Startdate, Enddate, 'monthly', 100)
-        del DataCube_RD
 
-    #_______________________________Leaf Area Index____________________________
 
-    # Define info for the nc files
-    info = ['monthly','m2-m-2', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
 
-    Name_NC_LAI = DC.Create_NC_name('LAI', Simulation, Dir_Basin, 2, info)
-    if not os.path.exists(Name_NC_LAI):
 
-        # Get the data of Evaporation and save as nc
-        DataCube_LAI = RC.Get3Darray_time_series_monthly(Dir_Basin, Data_Path_LAI, Startdate, Enddate, Example_data = Example_dataset)
-        DC.Save_as_NC(Name_NC_LAI, DataCube_LAI, 'LAI', Example_dataset, Startdate, Enddate, 'monthly', 1)
-        del DataCube_LAI
 
-    ####################### Calculations Sheet 2 ##############################
+
+
+
+
+
+
+
+
+
+
+    ############################# Calculate Sheet 3 ###########################
+
+    #____________ Evapotranspiration data split in ETblue and ETgreen ____________
+
+    Name_NC_ETgreen = DC.Create_NC_name('ETgreen', Simulation, Dir_Basin, 4, info)
+    Name_NC_ETblue = DC.Create_NC_name('ETblue', Simulation, Dir_Basin, 4, info)
     
-    DataCube_I, DataCube_T, DataCube_E = Two.SplitET.ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, Name_NC_LU, Startdate, Enddate, Simulation)
+    if not (os.path.exists(Name_NC_ETgreen) or os.path.exists(Name_NC_ETblue)):
+
+        # Calculate Blue and Green ET
+        DataCube_ETblue, DataCube_ETgreen = Four.SplitET.Blue_Green(Name_NC_ET, Name_NC_P, Name_NC_ETref, Startdate, Enddate, Additional_Months)
+
+        # Save the ETblue and ETgreen data as NetCDF files
+        DC.Save_as_NC(Name_NC_ETblue, DataCube_ETblue, 'ETblue', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
+        DC.Save_as_NC(Name_NC_ETgreen, DataCube_ETgreen, 'ETgreen', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
+
+        del DataCube_ETblue, DataCube_ETgreen
+        
+        
+        
+        
+        
+        
+        
     
-    ############################ Create CSV 2 #################################    
+    ############################ Create CSV 3 #################################    
 
     Dir_Basin_CSV = Generate.CSV.Create(Dir_Basin, Simulation, Basin, Startdate, Enddate, Name_NC_LU, DataCube_I, DataCube_T, DataCube_E, Example_dataset)
 
-    ############################ Create Sheet 2 ############################### 
+    ############################ Create Sheet 3 ############################### 
 
     Generate.PDF.Create(Dir_Basin, Basin, Simulation, Dir_Basin_CSV)
 

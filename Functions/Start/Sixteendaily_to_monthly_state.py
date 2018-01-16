@@ -105,25 +105,27 @@ def Nearest_Interpolate(Dir_in, Startdate, Enddate, Dir_out = None):
         Data_one_month = np.ones([size_Y, size_X]) * np.nan
         
         # Loop over the files that are within the DOYs
-        for EightDays in DOYs_oneMonth[:,0]:
+        for EightDays in DOYs_oneMonth[:,1]:
             
             # Calculate the amount of days in this month of each file
             Weight = np.ones([size_Y, size_X])      
             
             # For start of month
-            if EightDays == DOYs_oneMonth[:,0][0]:
-                Weight =  Weight * int(DOYs_oneMonth[:,1][0] + 16 - int(DOY_month_start))
+            if np.min(DOYs_oneMonth[:,1]) == EightDays:
+                Weight =  Weight * int(EightDays + 16 - int(DOY_month_start))
              
             # For end of month    
-            elif EightDays == DOYs_oneMonth[:,0][-1]:    
-                Weight = Weight * (int(DOY_month_end) - DOYs_oneMonth[:,1][-1] + 1)
+            elif np.max(DOYs_oneMonth[:,1]) == EightDays:   
+                Weight = Weight * (int(DOY_month_end) - EightDays + 1)
              
             # For the middle of the month    
             else:
                 Weight = Weight * 16
-           
+ 
+            row = DOYs_oneMonth[np.argwhere(DOYs_oneMonth[:,1]==EightDays)[0][0],:][0]
+         
             # Open the array of current file
-            input_name = os.path.join(Dir_in, files[int(EightDays)])
+            input_name = os.path.join(Dir_in, files[int(row)])
             Data = RC.Open_tiff_array(input_name) 
                                 
             # Remove NDV                          
@@ -148,8 +150,8 @@ def Nearest_Interpolate(Dir_in, Startdate, Enddate, Dir_out = None):
             Dir_out = Dir_in
 
         # Define output name
-        output_name = os.path.join(Dir_out, files[int(EightDays)].replace('16-daily', 'monthly'))
-        output_name = output_name[:-6] + '01.tif'
+        output_name = os.path.join(Dir_out, files[int(row)].replace('16-daily', 'monthly'))
+        output_name = output_name[:-9] + '%02d.01.tif' %(date.month)
         
         # Save tiff file
         DC.Save_as_tiff(output_name, Data_one_month, geo_out, proj)      

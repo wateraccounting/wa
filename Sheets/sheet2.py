@@ -1025,9 +1025,13 @@ def create_sheet2(basin, period, units, data, output, template=False,
     ET.register_namespace("", "http://www.w3.org/2000/svg")
 
     # Get the paths based on the environment variable
-    WA_env_paths = os.environ["WA_PATHS"].split(';')
-    Inkscape_env_path = WA_env_paths[1]
-    Path_Inkscape = os.path.join(Inkscape_env_path,'inkscape.exe')
+    if os.name == 'posix':
+        Path_Inkscape = 'inkscape'
+        
+    else:
+        WA_env_paths = os.environ["WA_PATHS"].split(';')
+        Inkscape_env_path = WA_env_paths[1]
+        Path_Inkscape = os.path.join(Inkscape_env_path,'inkscape.exe')
 
     # Export svg to png
     tempout_path = output.replace('.pdf', '_temporary.svg')

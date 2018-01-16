@@ -309,6 +309,33 @@ def get_sheet1_classes(lulc_version = '4.0'):
         sheet1_classes[cat] = [key for key, value in zip(lulc_dict.keys(), lulc_dict.values()) if value[1] == cat]
 
     return sheet1_classes
+
+def get_sheet3_empties(): 
+    wp_y_irrigated_dictionary = {
+    'Cereals': {'-': None},
+    'Non-cereals': {'Root/tuber crops':None, 'Leguminous crops':None, 'Sugar crops':None, 'Merged':None},
+    'Fruit & vegetables': {'Vegetables & melons':None, 'Fruits & nuts':None, 'Merged':None},
+    'Oilseeds': {'-': None},
+    'Feed crops': {'-': None},
+    'Beverage crops': {'-': None},
+    'Other crops': {'-': None}}
+    
+    wp_y_rainfed_dictionary = {
+    'Cereals': {'-':None},
+    'Non-cereals': {'Root/tuber crops':None, 'Leguminous crops':None, 'Sugar crops':None, 'Merged':None},
+    'Fruit & vegetables': {'Vegetables & melons':None, 'Fruits & nuts':None, 'Merged':None},
+    'Oilseeds': {'-': None},
+    'Feed crops': {'-': None},
+    'Beverage crops': {'-': None},
+    'Other crops': {'-': None}}
+    
+    wp_y_non_crop_dictionary = {
+    'Livestock': {'Meat':None, 'Milk':None},
+    'Fish (Aquaculture)': {'-':None},
+    'Timber': {'-':None}}
+    
+    return wp_y_irrigated_dictionary, wp_y_rainfed_dictionary, wp_y_non_crop_dictionary
+ 
     
 #import csv
 #lulc = dict()

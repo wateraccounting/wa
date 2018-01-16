@@ -329,7 +329,7 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
         									
     dst_ds.GetRasterBand(1).SetNoDataValue(-9999)
     dst_ds.SetGeoTransform(geo_t)
-    dst_ds.GetRasterBand(1).WriteArray(DataTot*10000)
+    dst_ds.GetRasterBand(1).WriteArray(DataTot*0.0001)
     dst_ds = None
     sds = None
     return()
