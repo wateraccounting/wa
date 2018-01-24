@@ -10,8 +10,8 @@ Description:
 This module consists of the main script to calculte the sheets
 """
 
-from wa.Generator import Sheet2, Sheet4, Sheet5
+from wa.Generator import Sheet2, Sheet3, Sheet4, Sheet5
 
-__all__ = ['Sheet2', 'Sheet4', 'Sheet5']
+__all__ = ['Sheet2', 'Sheet3', 'Sheet4', 'Sheet5']
 
 __version__ = '0.1'

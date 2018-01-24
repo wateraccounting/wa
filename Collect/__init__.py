@@ -17,8 +17,8 @@ help(Collect)
 dir(Collect)
 """
 
-from wa.Collect import TRMM, GLDAS, ALEXI, CHIRPS, DEM, CFSR, MOD9, MOD11, MOD12, MOD13, MOD15, MOD16, MOD17, GLEAM, ECMWF, RFE, JRC, TWC, ETmonitor, SSEBop, CMRSET, MSWEP
+from wa.Collect import TRMM, GLDAS, ALEXI, CHIRPS, DEM, CFSR, MOD9, MOD10, MOD11, MOD12, MOD13, MOD15, MOD16, MOD17, GLEAM, ECMWF, RFE, JRC, TWC, ETmonitor, SSEBop, CMRSET, MSWEP
 
-__all__ = ['TRMM', 'GLDAS', 'ALEXI', 'CHIRPS', 'DEM', 'CFSR', 'MOD9', 'MOD11', 'MOD12', 'MOD13', 'MOD15', 'MOD16', 'MOD17', 'GLEAM', 'ECMWF', 'RFE', 'JRC', 'TWC', 'ETmonitor', 'SSEBop', 'CMRSET', 'MSWEP']
+__all__ = ['TRMM', 'GLDAS', 'ALEXI', 'CHIRPS', 'DEM', 'CFSR', 'MOD9', 'MOD10', 'MOD11', 'MOD12', 'MOD13', 'MOD15', 'MOD16', 'MOD17', 'GLEAM', 'ECMWF', 'RFE', 'JRC', 'TWC', 'ETmonitor', 'SSEBop', 'CMRSET', 'MSWEP']
 
 __version__ = '0.1'

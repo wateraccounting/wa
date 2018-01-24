@@ -309,6 +309,59 @@ def get_sheet1_classes(lulc_version = '4.0'):
         sheet1_classes[cat] = [key for key, value in zip(lulc_dict.keys(), lulc_dict.values()) if value[1] == cat]
 
     return sheet1_classes
+
+def get_sheet3_empties(): 
+    wp_y_irrigated_dictionary = {
+    'Cereals': {'-': None},
+    'Non-cereals': {'Root/tuber crops':None, 'Leguminous crops':None, 'Sugar crops':None, 'Merged':None},
+    'Fruit & vegetables': {'Vegetables & melons':None, 'Fruits & nuts':None, 'Merged':None},
+    'Oilseeds': {'-': None},
+    'Feed crops': {'-': None},
+    'Beverage crops': {'-': None},
+    'Other crops': {'-': None}}
+    
+    wp_y_rainfed_dictionary = {
+    'Cereals': {'-':None},
+    'Non-cereals': {'Root/tuber crops':None, 'Leguminous crops':None, 'Sugar crops':None, 'Merged':None},
+    'Fruit & vegetables': {'Vegetables & melons':None, 'Fruits & nuts':None, 'Merged':None},
+    'Oilseeds': {'-': None},
+    'Feed crops': {'-': None},
+    'Beverage crops': {'-': None},
+    'Other crops': {'-': None}}
+    
+    wp_y_non_crop_dictionary = {
+    'Livestock': {'Meat':None, 'Milk':None},
+    'Fish (Aquaculture)': {'-':None},
+    'Timber': {'-':None}}
+    
+    return wp_y_irrigated_dictionary, wp_y_rainfed_dictionary, wp_y_non_crop_dictionary
+
+def get_bluegreen_classes(version = '1.0'):
+    
+    gb_cats = dict()
+    mvg_avg_len = dict()
+    
+    gb_cats['1.0'] = {
+    'crops':                [53,54,55,56,57,58,59,60,61,62, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 33, 44],
+    'perennial crops':      [52],
+    'savanna':              [12,13],
+    'water':                [63,74,75,77,4, 19, 23, 24],
+    'forests':              [1, 8, 9, 10, 11, 17],
+    'grass':                [3, 16, 20, 2, 14, 15],
+    'other':                [68,69,70,71,72,76,78,73,67,65,66,64,79,80,6, 7, 18, 21, 22, 26, 27, 28, 29, 32, 45, 46, 47, 48, 49, 50, 51, 5, 25, 30, 31],
+    }
+
+    mvg_avg_len['1.0'] = {
+    'crops':                2,
+    'perennial crops':      3,
+    'savanna':              4,
+    'water':                1,
+    'forests':              5,
+    'grass':                1,
+    'other':                1,
+    }
+    
+    return gb_cats[version], mvg_avg_len[version] 
     
 #import csv
 #lulc = dict()
