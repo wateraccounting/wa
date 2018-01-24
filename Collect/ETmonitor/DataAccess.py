@@ -19,7 +19,7 @@ The data is available between 2008-01-01 till 2012-12-31.
 
 Example:
 from wa.Collect import ETmonitor
-ETmonitor.monthly(Dir='C:/Temp/', Startdate='2003-02-24', Enddate='2003-03-09',
+ETmonitor.ET_monthly(Dir='C:/Temp/', Startdate='2003-02-24', Enddate='2003-03-09',
                      latlim=[50,54], lonlim=[3,7])
 
 """
@@ -41,7 +41,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Type, Waitbar):
     The name of the file corresponds to the first day of the month.
 
     Keyword arguments:
-	Dir -- 'C:/file/to/path/'
+	 Dir -- 'C:/file/to/path/'
     Startdate -- 'yyyy-mm-dd'
     Enddate -- 'yyyy-mm-dd'
     lonlim -- [ymin, ymax] (values must be between -90 and 90)
@@ -78,6 +78,14 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Type, Waitbar):
         output_folder = os.path.join(Dir, 'Evaporation', 'ETmonitor', 'Monthly')
     if Type == "pot":
         output_folder = os.path.join(Dir, 'ETpot', 'ETmonitor', 'Monthly')
+    if Type == "ei":
+        output_folder = os.path.join(Dir, 'Ei', 'ETmonitor', 'Monthly')        
+    if Type == "es":
+        output_folder = os.path.join(Dir, 'Es', 'ETmonitor', 'Monthly')
+    if Type == "ew":
+        output_folder = os.path.join(Dir, 'Ew', 'ETmonitor', 'Monthly')
+    if Type == "tr":
+        output_folder = os.path.join(Dir, 'Transpiration', 'ETmonitor', 'Monthly')        
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 		
@@ -95,6 +103,22 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Type, Waitbar):
         if Type == "pot":
             Filename_in = "ETpot_ETmonitor_mm-month_%d_%02d_01.tif" %(year, month)
             Filename_out= os.path.join(output_folder,'ETpot_ETmonitor_mm-month-1_monthly_%s.%02s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d')))
+
+        if Type == "ei":
+            Filename_in = "Ei_ETmonitor_mm-month_%d_%02d_01.tif" %(year, month)
+            Filename_out= os.path.join(output_folder,'Ei_ETmonitor_mm-month-1_monthly_%s.%02s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d')))
+
+        if Type == "es":
+            Filename_in = "Es_ETmonitor_mm-month_%d_%02d_01.tif" %(year, month)
+            Filename_out= os.path.join(output_folder,'Es_ETmonitor_mm-month-1_monthly_%s.%02s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d')))
+
+        if Type == "ew":
+            Filename_in = "Ew_ETmonitor_mm-month_%d_%02d_01.tif" %(year, month)
+            Filename_out= os.path.join(output_folder,'Ew_ETmonitor_mm-month-1_monthly_%s.%02s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d')))
+
+        if Type == "tr":
+            Filename_in = "Tr_ETmonitor_mm-month_%d_%02d_01.tif" %(year, month)
+            Filename_out= os.path.join(output_folder,'Tr_ETmonitor_mm-month-1_monthly_%s.%02s.%02s.tif' %(Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d')))
         
 		  # Temporary filename for the downloaded global file												
         local_filename = os.path.join(output_folder, Filename_in)
@@ -146,10 +170,10 @@ def Download_ETmonitor_from_WA_FTP(local_filename, Filename_in, Type):
     # Download data from FTP 													
     ftp=FTP(ftpserver)
     ftp.login(username,password)
-    if Type == "act":
-        directory="/WaterAccounting/Data_Satellite/Evaporation/ETmonitor/Global/"
     if Type == "pot":
         directory="/WaterAccounting/Data_Satellite/Evaporation/ETmonitor/Potential_Evapotranspiration/"
+    else:
+        directory="/WaterAccounting/Data_Satellite/Evaporation/ETmonitor/Global/"        
     ftp.cwd(directory)
     lf = open(local_filename, "wb")
     ftp.retrbinary("RETR " + Filename_in, lf.write)

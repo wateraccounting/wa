@@ -20,12 +20,14 @@ import glob
 from joblib import Parallel, delayed
 from bs4 import BeautifulSoup
 import requests
+import datetime
+import math
 
 # Water Accounting modules
 import wa.General.raster_conversions as RC
 import wa.General.data_conversions as DC
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, timestep, Waitbar, cores):
     """
     This function downloads MOD13 16-daily data
 
@@ -47,8 +49,13 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
         Enddate = pd.Timestamp('2014-12-31')
     
     # Make an array of the days of which the ET is taken
-    Dates = pd.date_range(Startdate,Enddate,freq = 'M')    
-
+    if timestep == 'monthly':
+        Dates = pd.date_range(Startdate,Enddate,freq = 'M') 
+        TIMESTEP = 'Monthly'
+    elif timestep == '8-daily':
+        Dates = Make_TimeStamps(Startdate,Enddate)  
+        TIMESTEP = '8_Daily'
+        
     # Create Waitbar
     if Waitbar == 1:
         import wa.Functions.Start.WaitbarConsole as WaitbarConsole
@@ -57,7 +64,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
         WaitbarConsole.printWaitBar(amount, total_amount, prefix = 'Progress:', suffix = 'Complete', length = 50)
     
     # Make directory for the MODIS ET data
-    output_folder=os.path.join(Dir,'Evaporation','MOD16')
+    output_folder=os.path.join(Dir,'Evaporation','MOD16', TIMESTEP)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
@@ -86,7 +93,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
     TilesVertical, TilesHorizontal = Tiles_to_download(tiletext2=tiletext2,lonlim1=lonlim,latlim1=latlim)
 	
     # Pass variables to parallel function and run
-    args = [output_folder, TilesVertical, TilesHorizontal,latlim, lonlim]
+    args = [output_folder, TilesVertical, TilesHorizontal,latlim, lonlim, timestep]
     if not cores:
         for Date in Dates:
             RetrieveData(Date, args)
@@ -121,11 +128,11 @@ def RetrieveData(Date, args):
     args -- A list of parameters defined in the DownloadData function.
     """
     # Argument
-    [output_folder, TilesVertical, TilesHorizontal,latlim, lonlim] = args
+    [output_folder, TilesVertical, TilesHorizontal,latlim, lonlim, timestep] = args
 
     # Collect the data from the MODIS webpage and returns the data and lat and long in meters of those tiles
     try:
-        Collect_data(TilesHorizontal,TilesVertical,Date,output_folder)
+        Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, timestep)
     except:
         print "Was not able to download the file"  
     
@@ -138,8 +145,12 @@ def RetrieveData(Date, args):
 
     # Clip the data to the users extend			
     data, geo = RC.clip_data(name_reprojected, latlim, lonlim)
-				
-    ETfileName = os.path.join(output_folder, 'ET_MOD16A2_mm-month-1_monthly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.01.tif')
+		
+    if timestep == 'monthly':	
+         ETfileName = os.path.join(output_folder, 'ET_MOD16A2_mm-month-1_monthly_'+Date.strftime('%Y')+'.' + Date.strftime('%m')+'.01.tif')
+    elif timestep == '8-daily':
+         ETfileName = os.path.join(output_folder, 'ET_MOD16A2_mm-8days-1_8-daily_'+Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
+
     DC.Save_as_tiff(name=ETfileName, data=data, geo=geo, projection='WGS84')
                    				
     # remove the side products       
@@ -186,7 +197,7 @@ def Tiles_to_download(tiletext2,lonlim1,latlim1):
     return(TilesVertical,TilesHorizontal)
     
     
-def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
+def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder,timestep):
     '''
     This function downloads all the needed MODIS tiles from ftp.ntsg.umt.edu/pub/MODIS/NTSG_Products/MOD16/MOD16A2_MONTHLY.MERRA_GMAO_1kmALB/ as a hdf file.
 
@@ -216,8 +227,12 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
             countX=int(Horizontal-TilesHorizontal[0]+1)
             LongMet[int((countX-1)*1200):int((countX)*1200)]=np.linspace(((Horizontal-18)*1200+0.5)*Distance,((Horizontal-18)*1200+1199.5)*Distance,1200)
          
-            # Download the MODIS FPAR data            
-            url = 'http://files.ntsg.umt.edu/data/NTSG_Products/MOD16/MOD16A2_MONTHLY.MERRA_GMAO_1kmALB/Y%s/M%02s/' %(Date.strftime('%Y'), Date.strftime('%m')) 
+            # Download the MODIS FPAR data
+            if timestep == 'monthly':            
+                url = 'http://files.ntsg.umt.edu/data/NTSG_Products/MOD16/MOD16A2_MONTHLY.MERRA_GMAO_1kmALB/Y%s/M%02s/' %(Date.strftime('%Y'), Date.strftime('%m')) 
+
+            if timestep == '8-daily':            
+                url = 'http://files.ntsg.umt.edu/data/NTSG_Products/MOD16/MOD16A2.105_MERRAGMAO/Y%s/D%03s/' %(Date.strftime('%Y'), Date.strftime('%j')) 
 
             # Get files on FTP server
             f = urllib2.urlopen(url)										
@@ -291,3 +306,60 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
     sds = None
 				
     return(DataTot,LatMet,LongMet)
+
+def Make_TimeStamps(Startdate,Enddate):
+    '''
+    This function determines all time steps of which the FPAR must be downloaded   
+    The time stamps are 8 daily.
+	
+    Keywords arguments:
+    Startdate -- 'yyyy-mm-dd'
+    Enddate -- 'yyyy-mm-dd'
+    '''
+    
+    # Define the DOY and year of the start day
+    DOY = datetime.datetime.strptime(Startdate,'%Y-%m-%d').timetuple().tm_yday
+    Year = datetime.datetime.strptime(Startdate,'%Y-%m-%d').timetuple().tm_year
+
+    # Define the year of the end day
+    YearEnd = datetime.datetime.strptime(Enddate,'%Y-%m-%d').timetuple().tm_year
+
+    # Change the DOY of the start day into a DOY of MODIS day (8-daily) and create new startdate
+    DOYstart = int(math.floor(DOY / 8.0) * 8) + 1
+    DOYstart = str('%s-%s' %(DOYstart, Year))
+    Day = datetime.datetime.strptime(DOYstart, '%j-%Y')
+    Month = '%02d' % Day.month
+    Day = '%02d' % Day.day
+    Startdate = (str(Year) + '-' + str(Month) + '-' + str(Day))
+				
+    # Create the start and end data for the whole year				
+    YearStartDate = pd.date_range(Startdate, Enddate, freq = 'AS')
+    YearEndDate = pd.date_range(Startdate, Enddate, freq = 'A')
+				
+    # Define the amount of years that are involved				
+    AmountOfYear = YearEnd - Year
+
+    # If the startday is not in the same year as the enddate
+    if AmountOfYear > 0:
+        for i in range(0, AmountOfYear+1):
+            if i is 0:
+                Startdate1 = Startdate
+                Enddate1 = YearEndDate[0]
+                Dates = pd.date_range(Startdate1, Enddate1, freq = '8D')
+            if i is AmountOfYear:
+                Startdate1 = YearStartDate[-1]
+                Enddate1 = Enddate
+                Dates1 = pd.date_range(Startdate1, Enddate1, freq = '8D')
+                Dates = Dates.union(Dates1)
+            if (i is not AmountOfYear and i is not 0):
+                Startdate1 = YearStartDate[i-AmountOfYear-1]              
+                Enddate1 = YearEndDate[i] 
+                Dates1 = pd.date_range(Startdate1, Enddate1, freq = '8D')
+                Dates = Dates.union(Dates1)
+																								
+    # If the startday is in the same year as the enddate               
+    if AmountOfYear is 0:
+        Dates = pd.date_range(Startdate, Enddate, freq = '8D')
+    
+    return(Dates)
+            

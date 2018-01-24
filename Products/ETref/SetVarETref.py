@@ -73,19 +73,19 @@ def ETref(Date, args):
 
     # Set the paths
     nameTmin='Tair-min_GLDAS-NOAH_C_daily_' + Date.strftime('%Y.%m.%d') + ".tif"
-    tmin_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','tair_f_inst','min',nameTmin )
+    tmin_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','daily','tair_f_inst','min',nameTmin )
         
     nameTmax='Tair-max_GLDAS-NOAH_C_daily_' + Date.strftime('%Y.%m.%d') + ".tif"
-    tmax_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','tair_f_inst','max',nameTmax )
+    tmax_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','daily','tair_f_inst','max',nameTmax )
         
     nameHumid='Hum_GLDAS-NOAH_kg-kg_daily_'+ Date.strftime('%Y.%m.%d') + ".tif"
-    humid_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','qair_f_inst','mean',nameHumid )
+    humid_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','daily','qair_f_inst','mean',nameHumid )
         
     namePress='P_GLDAS-NOAH_kpa_daily_'+ Date.strftime('%Y.%m.%d') + ".tif"
-    press_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','psurf_f_inst','mean',namePress )
+    press_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','daily','psurf_f_inst','mean',namePress )
         
     nameWind='W_GLDAS-NOAH_m-s-1_daily_'+ Date.strftime('%Y.%m.%d') + ".tif"
-    wind_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','Daily','wind_f_inst','mean',nameWind )
+    wind_str=os.path.join(Dir,'Weather_Data','Model','GLDAS','daily','wind_f_inst','mean',nameWind )
         
     if LANDSAF==1:
                 

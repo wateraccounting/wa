@@ -199,7 +199,7 @@ def Evapotranspiration(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD16
         from wa.Collect import MOD16
         
         # Define data path             
-        Data_Path = os.path.join('Evaporation','MOD16')	
+        Data_Path = os.path.join('Evaporation','MOD16','Monthly')	
         
         # Get start and enddates             
         Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																							
@@ -406,6 +406,53 @@ def NPP(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD17'):
             i += 1
 
     return(Data_Path)	
+
+def NDVI(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD13'):
+    """
+    This functions check the GPP files that needs to be downloaded, and send the request to the collect functions.
+
+    Parameters
+    ----------
+    Dir : str
+        Path to all the output data of the Basin
+    latlim : array
+        Array containing the latitude limits [latmin, latmax]
+    lonlim : array
+        Array containing the longitude limits [lonmin, lonmax]
+    Startdate : str
+        Contains the start date of the model 'yyyy-mm-dd'    
+    Enddate : str
+        Contains the end date of the model 'yyyy-mm-dd' 
+    Product (optional): str
+        Defines the product that will be used (default is MOD17)    
+        
+    Returns
+    -------
+    Data_Path : str
+        Path from the Dir to the downloaded data
+
+    """     
+    if Product is 'MOD13':
+        from wa.Collect import MOD13
+        
+        # Define data path             
+        Data_Path = os.path.join('NDVI', 'MOD13')
+        
+        # Get start and enddates             
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, '16D') 																							
+
+        i = 1																
+        for Startdate_Download in Startdates:	
+
+            # Define enddate																
+            Enddate_download = Enddates[-i]
+            
+            # download data between startdate and enddate            
+            MOD13.NDVI_16daily(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
+            i += 1
+
+    return(Data_Path)	
+
 
 def GPP(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD17'):
     """
@@ -650,6 +697,9 @@ def Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, freq):
         if freq == '8D':
             import wa.Collect.MOD15.DataAccess as TimeStamps_8D
             Dates = TimeStamps_8D.Make_TimeStamps(Startdate, Enddate)
+        elif freq == '16D':
+            import wa.Collect.MOD13.DataAccess as TimeStamps_16D
+            Dates = TimeStamps_16D.Make_TimeStamps(Startdate, Enddate)
         else:
             Dates = pd.date_range(Startdate, Enddate, freq=freq)
 
@@ -678,6 +728,10 @@ def Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, freq):
             if freq == '8D':
                 files = glob.glob('*8-daily_%d.%02d.%02d.tif' % (year, month,
                                                                  day))
+            if freq == '16D':
+                files = glob.glob('*16-daily_%d.%02d.%02d.tif' % (year, month,
+                                                                 day))
+                
             # If file exits put a 1 in the array
             if len(files) == 1:
                 Date_Check[i] = 1

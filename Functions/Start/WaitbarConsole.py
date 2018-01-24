@@ -22,7 +22,12 @@ def printWaitBar(i, total, prefix = '', suffix = '', decimals = 1, length = 100,
     fill -- bar fill
     """
     import sys
-	
+    import os
+    
+    # Adjust when it is a linux computer
+    if (os.name=="posix" and total==0):
+        total = 0.0001
+
     percent = ("{0:." + str(decimals) + "f}").format(100 * (i / float(total)))
     filled = int(length * i // total)
     bar = fill * filled + '-' * (length - filled)

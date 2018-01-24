@@ -21,11 +21,16 @@ def Run_command_window(argument):
     Keyword Arguments:
     argument -- string, name of the adf file
     """  
-    startupinfo = subprocess.STARTUPINFO()
-    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW		
-    
-    process = subprocess.Popen(argument, startupinfo=startupinfo, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    process.wait()  
+    if os.name == 'posix':
+        argument = argument.replace(".exe","")
+        os.system(argument)
+        
+    else:
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW		
+        
+        process = subprocess.Popen(argument, startupinfo=startupinfo, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        process.wait()  
     
     return()
 
@@ -302,7 +307,12 @@ def reproject_dataset_example(dataset, dataset_example, method=1):
             g = dataset    
     except:
             g = dataset            
-    epsg_from = Get_epsg(g)	   
+    epsg_from = Get_epsg(g)	  
+    
+    #exceptions
+    if epsg_from == 9001:
+        epsg_from = 5070
+
 
     # open dataset that is used for transforming the dataset
     try:

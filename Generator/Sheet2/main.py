@@ -82,14 +82,16 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
     # Create Rainy Days based on daily CHIRPS
     Data_Path_RD = Two.Rainy_Days.Calc_Rainy_Days(Dir_Basin, Data_Path_P_Daily, Startdate, Enddate)
 
-    # Create monthly LAI and GPP
+    # Create monthly LAI
     Dir_path_LAI = os.path.join(Dir_Basin, Data_Path_LAI)
     Start.Eightdaily_to_monthly_state.Nearest_Interpolate(Dir_path_LAI, Startdate, Enddate)
-    Dir_path_GPP = os.path.join(Dir_Basin, Data_Path_GPP)
-    Start.Eightdaily_to_monthly_state.Nearest_Interpolate(Dir_path_GPP, StartdateNDM, EnddateNDM)
 
     # Create NDM based on MOD17
     if NDM_Product == 'MOD17':
+        
+        # Create monthly GPP        
+        Dir_path_GPP = os.path.join(Dir_Basin, Data_Path_GPP)
+        Start.Eightdaily_to_monthly_state.Nearest_Interpolate(Dir_path_GPP, StartdateNDM, EnddateNDM)
         Data_Path_NDM = Two.Calc_NDM.NPP_GPP_Based(Dir_Basin, Data_Path_GPP, Data_Path_NPP, Startdate, Enddate)
 
     ###################### Save Data as netCDF files ##############################

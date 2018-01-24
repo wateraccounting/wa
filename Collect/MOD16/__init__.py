@@ -19,7 +19,8 @@ MOD16.ET_monthly(Dir='C:/Temp3/', Startdate='2003-12-01', Enddate='2003-12-20',
 """
 
 from .ET_monthly import main as ET_monthly
+from .ET_8daily import main as ET_8daily
 
-__all__ = ['ET_monthly']
+__all__ = ['ET_monthly', 'ET_8daily']
 
 __version__ = '0.1'

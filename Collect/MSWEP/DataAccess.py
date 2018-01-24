@@ -164,7 +164,7 @@ def RetrieveData_daily(Date, args):
                 z.close()
 
                 # Open text file and remove header and footer																				
-                data_start = np.genfromtxt(pathtext,dtype = float,skip_header = 1,skip_footer = 6,delimiter=',')
+                data_start = np.genfromtxt(pathtext,dtype = float,skip_header = 1,delimiter=',')
                 data = data_start[1:,1:]
 								
                 # Set Nan value for values lower than -9999																								
