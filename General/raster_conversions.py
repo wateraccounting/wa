@@ -307,7 +307,12 @@ def reproject_dataset_example(dataset, dataset_example, method=1):
             g = dataset    
     except:
             g = dataset            
-    epsg_from = Get_epsg(g)	   
+    epsg_from = Get_epsg(g)	  
+    
+    #exceptions
+    if epsg_from == 9001:
+        epsg_from = 5070
+
 
     # open dataset that is used for transforming the dataset
     try:
