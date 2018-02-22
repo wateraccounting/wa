@@ -5,7 +5,7 @@ Created on Thu Jan 19 10:07:52 2017
 @author: tih
 """
 
-def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, WaterPIX_filename, Reservoirs_GEE_on_off, Supply_method, Startdate, Enddate, Simulation):
+def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, Inflow_Text_Files, WaterPIX_filename, Reservoirs_GEE_on_off, Supply_method, Startdate, Enddate, Simulation):
     '''
     This functions consists of the following sections:
     1. Set General Parameters
@@ -35,8 +35,11 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, WaterPIX_filename
     ######################### 1. Set General Parameters ##############################
 
     # Get environmental variable for the Home folder
-    WA_env_paths = os.environ["WA_HOME"].split(';')
-    Dir_Home = WA_env_paths[0]
+    if WA_HOME_folder == '':
+        WA_env_paths = os.environ["WA_HOME"].split(';')
+        Dir_Home = WA_env_paths[0]
+    else:
+        Dir_Home = WA_HOME_folder
 	
     # Create the Basin folder
     Dir_Basin = os.path.join(Dir_Home, Basin)
@@ -45,7 +48,7 @@ def Calculate(Basin, P_Product, ET_Product, Inflow_Text_Files, WaterPIX_filename
 
     # Get the boundaries of the basin based on the shapefile of the watershed
     # Boundaries, Shape_file_name_shp = Start.Boundaries.Determine(Basin)
-    Boundaries, LU_dataset = Start.Boundaries.Determine_LU_Based(Basin)
+    Boundaries, LU_dataset = Start.Boundaries.Determine_LU_Based(Basin, Dir_Home)
     LU_data = RC.Open_tiff_array(LU_dataset)
     geo_out_LU, proj_LU, size_X_LU, size_Y_LU = RC.Open_array_info(LU_dataset)
         

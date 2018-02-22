@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Authors: Tim Hessels
-         UNESCO-IHE 2017
-Contact: t.hessels@unesco-ihe.org
-Repository: https://github.com/wateraccounting/wa
-Module: Generator/Sheet3
-"""
-# import general modules
-import os
-import pandas as pd
-import numpy as np
-import csv
+Created on Thu Feb 01 13:15:06 2018
 
-def Create(wp_y_irrigated_dictionary, wp_y_rainfed_dictionary, wp_y_non_crop_dictionary, year, output_dir):
+@author: tih
+"""
+import os
+import csv
+import datetime
+               
+def Create(wp_y_irrigated_dictionary, wp_y_rainfed_dictionary, wp_y_non_crop_dictionary, Basin, Simulation, year, Dir_Basin):
     """
     Creates a csv file that can be used to create sheet3b.
     
@@ -64,12 +60,14 @@ def Create(wp_y_irrigated_dictionary, wp_y_rainfed_dictionary, wp_y_non_crop_dic
             'Fish (Aquaculture)': {'-':None},
             'Timber': {'-':None}}
     """
-    output_dir = os.path.join(output_dir, 'sheet3')
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    import wa.Functions.Three as Three
     
-    output_csv_fh_b = os.path.join(output_dir, 'sheet3b_{0}.csv'.format(year))
-    output_csv_fh_a = os.path.join(output_dir, 'sheet3a_{0}.csv'.format(year))
+    Data_Path_CSV = os.path.join(Dir_Basin, "Simulations", "Simulation_%d" %Simulation, "Sheet_3", "CSV")
+    if not os.path.exists(Data_Path_CSV):
+        os.makedirs(Data_Path_CSV)
+    
+    output_csv_fh_b = os.path.join(Data_Path_CSV, 'Sheet3b_Sim%d_%s_%d.csv' %(Simulation, Basin, year))
+    output_csv_fh_a = os.path.join(Data_Path_CSV, 'Sheet3a_Sim%d_%s_%d.csv' %(Simulation, Basin, year))
     
     first_row_b = ["USE","CLASS","SUBCLASS","TYPE","SUBTYPE","LAND_PRODUCTIVITY","WATER_PRODUCTIVITY"]
     first_row_a = ["USE","CLASS","SUBCLASS","TYPE","SUBTYPE","WATER_CONSUMPTION"]
@@ -91,7 +89,7 @@ def Create(wp_y_irrigated_dictionary, wp_y_rainfed_dictionary, wp_y_non_crop_dic
                 writer_a.writerow(["CROP","IRRIGATED","ET rainfall",TYPE,SUBTYPE,"nan"])
                 writer_a.writerow(["CROP","IRRIGATED","Incremental ET",TYPE,SUBTYPE,"nan"])
             else:                
-                start_dates, end_dates, Y, Yirr, Ypr, WP, WPblue, WPgreen, WC, WCblue, WCgreen = read_csv(wp_y_irrigated_dictionary[TYPE][SUBTYPE])
+                start_dates, end_dates, Y, Yirr, Ypr, WP, WPblue, WPgreen, WC, WCblue, WCgreen = Three.Calc_Y_WP.read_csv(wp_y_irrigated_dictionary[TYPE][SUBTYPE])
                 mask = start_dates == datetime.date(year,1,1)
                 writer_b.writerow(["CROP","IRRIGATED","Yield rainfall",TYPE,SUBTYPE,Ypr[mask][0],WPgreen[mask][0]])
                 writer_b.writerow(["CROP","IRRIGATED","Incremental yield",TYPE,SUBTYPE,Yirr[mask][0],WPblue[mask][0]])
@@ -105,7 +103,7 @@ def Create(wp_y_irrigated_dictionary, wp_y_rainfed_dictionary, wp_y_non_crop_dic
                 writer_b.writerow(["CROP","RAINFED","Yield",TYPE,SUBTYPE,"nan","nan"])
                 writer_a.writerow(["CROP","RAINFED","ET",TYPE,SUBTYPE,"nan"])
             else:
-                start_dates, end_dates, Y, Yirr, Ypr, WP, WPblue, WPgreen, WC, WCblue, WCgreen  = read_csv(wp_y_rainfed_dictionary[TYPE][SUBTYPE])
+                start_dates, end_dates, Y, Yirr, Ypr, WP, WPblue, WPgreen, WC, WCblue, WCgreen  = Three.Calc_Y_WP.read_csv(wp_y_rainfed_dictionary[TYPE][SUBTYPE])
                 mask = start_dates == datetime.date(year,1,1)
                 writer_b.writerow(["CROP","RAINFED","Yield",TYPE,SUBTYPE,Y[mask][0],WP[mask][0]])
                 writer_a.writerow(["CROP","RAINFED","ET",TYPE,SUBTYPE,WC[mask][0]])
@@ -124,7 +122,7 @@ def Create(wp_y_irrigated_dictionary, wp_y_rainfed_dictionary, wp_y_non_crop_dic
                 else:
                     continue
             else:
-                start_dates, end_dates, Y, Yirr, Ypr, WP, WPblue, WPgreen, WC, WCblue, WCgreen  = read_csv(wp_y_non_crop_dictionary[TYPE][SUBTYPE])
+                start_dates, end_dates, Y, Yirr, Ypr, WP, WPblue, WPgreen, WC, WCblue, WCgreen  = Three.Calc_Y_WP.read_csv(wp_y_non_crop_dictionary[TYPE][SUBTYPE])
                 mask = start_dates == datetime.date(year,1,1)
                 if TYPE is not 'Livestock':
                     writer_b.writerow(["NON-CROP","RAINFED","Yield",TYPE,SUBTYPE,Y[mask][0],WP[mask][0]])

@@ -12,7 +12,7 @@ import gdal
 import pandas as pd
 import numpy as np
 
-def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, NDVI_Product, Moving_Averaging_Length, Startdate, Enddate, Simulation):
+def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, LAI_Product, NDM_Product, NDVI_Product, dict_crops, dict_non_crops, Startdate, Enddate, Simulation):
     """
     This functions is the main framework for calculating sheet 3.
 
@@ -48,10 +48,25 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, NDVI_Produ
     
     ######################### Set General Parameters ##############################
 
+    # Check if there is a full year selected  between Startdate and Enddate, otherwise Sheet 3 cannot be produced      
+    try:
+        years_end = pd.date_range(Startdate,Enddate,freq="A").year
+        years_start = pd.date_range(Startdate,Enddate,freq="AS").year
+        if (len(years_start) == 0 or len(years_end) == 0):
+            print "Calculation period is less than a year, which is not possible for sheet 3"
+            quit
+        years = np.unique(np.append(years_end,years_start))
+    except:
+        print "Calculation period is less than a year, which is not possible for sheet 3"
+        quit
+
     # Get environmental variable for the Home folder
-    WA_env_paths = os.environ["WA_HOME"].split(';')
-    Dir_Home = WA_env_paths[0]
-	
+    if WA_HOME_folder == '':
+        WA_env_paths = os.environ["WA_HOME"].split(';')
+        Dir_Home = WA_env_paths[0]
+    else:
+        Dir_Home = WA_HOME_folder
+    	
     # Create the Basin folder
     Dir_Basin = os.path.join(Dir_Home, Basin)
     if not os.path.exists(Dir_Basin):
@@ -59,7 +74,7 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, NDVI_Produ
 
     # Get the boundaries of the basin based on the shapefile of the watershed
     # Boundaries, Shape_file_name_shp = Start.Boundaries.Determine(Basin)
-    Boundaries, Example_dataset = Start.Boundaries.Determine_LU_Based(Basin)
+    Boundaries, Example_dataset = Start.Boundaries.Determine_LU_Based(Basin, Dir_Home)
     
     ############################# Download Data ###################################
 
@@ -186,6 +201,9 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, NDVI_Produ
 
     ############################# Calculate Sheet 3 ###########################
 
+    # Define info for the nc files
+    info = ['monthly','mm', ''.join([Startdate_Moving_Average_String[5:7], Startdate_Moving_Average_String[0:4]]) , ''.join([Enddate_Moving_Average_String[5:7], Enddate_Moving_Average_String[0:4]])]
+
     #____________ Evapotranspiration data split in ETblue and ETgreen ____________
 
     Name_NC_ETgreen = DC.Create_NC_name('ETgreen', Simulation, Dir_Basin, 3, info)
@@ -202,50 +220,29 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, NDVI_Produ
 
         del DataCube_ETblue, DataCube_ETgreen
         
-    #___________________ Calculate Yield, Water Productivity for the seasons ______________
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-        
-        
-        
-        
-        
+    #____________________________ Create the empty dictionaries ____________________________
     
-    ############################ Create CSV 3 #################################    
+    # Create the dictionaries that are required for sheet 3    
+    wp_y_irrigated_dictionary, wp_y_rainfed_dictionary, wp_y_non_crop_dictionary = GD.get_sheet3_empties()
+    
+    #____________________________________ Fill in the dictionaries ________________________
 
-    Dir_Basin_CSV = Generate.CSV.Create(Dir_Basin, Simulation, Basin, Startdate, Enddate, Name_NC_LU, DataCube_I, DataCube_T, DataCube_E, Example_dataset)
+    # Fill in the crops dictionaries   
+    wp_y_irrigated_dictionary, wp_y_rainfed_dictionary = Three.Fill_Dicts.Crop_Dictionaries(wp_y_irrigated_dictionary, wp_y_rainfed_dictionary, dict_crops, Name_NC_LU, Name_NC_ETgreen, Name_NC_ETblue, Name_NC_NDM, Name_NC_P, Dir_Basin)
+
+    # Fill in the non crops dictionaries   
+    wp_y_non_crop_dictionary = Three.Fill_Dicts.Non_Crop_Dictionaries(wp_y_non_crop_dictionary, dict_non_crops)
+
+    for year in years:
+
+    ############################ Create CSV 3 ################################# 
+    
+        csv_fh_a, csv_fh_b = Generate.CSV.Create(wp_y_irrigated_dictionary, wp_y_rainfed_dictionary, wp_y_non_crop_dictionary, Basin, Simulation, year, Dir_Basin)
 
     ############################ Create Sheet 3 ############################### 
 
-    Generate.PDF.Create(Dir_Basin, Basin, Simulation, Dir_Basin_CSV)
-
+        Generate.PDF.Create(Dir_Basin, Basin, Simulation, csv_fh_a, csv_fh_b)
+ 
     return()
 
 

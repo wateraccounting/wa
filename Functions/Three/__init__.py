@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Authors: Tim Hessels
-         UNESCO-IHE 2017
+         UNESCO-IHE 2018
 Contact: t.hessels@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
 Module: wa/Functions/Three
@@ -14,8 +14,8 @@ This data is used within a water accounting framework.
 """
 
 
-from wa.Functions.Three import SplitET, Calc_Y_WP
+from wa.Functions.Three import SplitET, Calc_Y_WP, Fill_Dicts, SplitYield
 
-__all__ = ['SplitET', 'Calc_Y_WP']
+__all__ = ['SplitET', 'Calc_Y_WP', 'Fill_Dicts', 'SplitYield']
 
 __version__ = '0.1'

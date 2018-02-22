@@ -631,6 +631,38 @@ def ETreference(Dir, latlim, lonlim, Startdate, Enddate):
         i += 1
     return(Data_Path)
 
+def Soil_Properties(Dir, latlim, lonlim, Para = 'ThetaSat_TopSoil'):
+    """
+    This functions collect the soil properties layers from HiHydroSoil from the FTP server, by sending the request to the collect functions.
+
+    Parameters
+    ----------
+    Dir : str
+        Path to all the output data of the Basin
+    latlim : array
+        Array containing the latitude limits [latmin, latmax]
+    lonlim : array
+        Array containing the longitude limits [lonmin, lonmax]
+    Para : str
+        Soil property layer that must be downloaded    
+        
+    Returns
+    -------
+    Data_Path : str
+        Path from the Dir to the downloaded data
+
+    """     
+    from wa.Collect import HiHydroSoil
+    
+    if Para == 'ThetaSat_TopSoil':
+        # download data between startdate and enddate    
+        HiHydroSoil.ThetaSat_TopSoil(Dir, latlim, lonlim)
+        
+        # Define data path         
+        Data_Path = os.path.join('HiHydroSoil','ThetaSat')	
+    					
+    return(Data_Path)	
+
 def GWF(Dir, latlim, lonlim):
     """
     This functions check the Gray Water Footprint file from TWC that needs to be downloaded, and send the request to the collect functions.

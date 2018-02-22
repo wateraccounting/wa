@@ -8,6 +8,7 @@ Module: Collect/MOD10
 """
 
 # import general python modules
+import sys
 import os
 import numpy as np
 import pandas as pd
@@ -290,6 +291,10 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
 
     soup = BeautifulSoup(get_dataset, "lxml")
     
+    if len(str(soup)) < 300:
+        print 'Download was not succesfull, please check NASA account'
+        sys.exit(1)    
+        
     # Create the Lat and Long of the MODIS tile in meters
     for Vertical in range(int(TilesVertical[0]), int(TilesVertical[1])+1):
         Distance = 231.65635826395834*2 # resolution of a MODIS pixel in meter

@@ -417,7 +417,7 @@ def Get_epsg(g, extension = 'tiff'):
        #print 'Was not able to get the projection, so WGS84 is assumed'							
     return(epsg_to)			
 
-def gap_filling(dataset,NoDataValue):
+def gap_filling(dataset,NoDataValue, method = 1):
     """
     This function fills the no data gaps in a numpy array
 				
@@ -447,9 +447,15 @@ def gap_filling(dataset,NoDataValue):
     xx, yy = np.meshgrid(np.arange(data.shape[1]), np.arange(data.shape[0]))
     xym = np.vstack( (np.ravel(xx[mask]), np.ravel(yy[mask])) ).T
     data0 = np.ravel( data[:,:][mask] )
-    interp0 = scipy.interpolate.NearestNDInterpolator( xym, data0 )
-    data_end = interp0(np.ravel(xx), np.ravel(yy)).reshape( xx.shape )
-		
+    
+    if method == 1:	
+        interp0 = scipy.interpolate.NearestNDInterpolator( xym, data0 )
+        data_end = interp0(np.ravel(xx), np.ravel(yy)).reshape( xx.shape )
+
+    if method == 2:				
+        interp0 = scipy.interpolate.LinearNDInterpolator( xym, data0 )
+        data_end = interp0(np.ravel(xx), np.ravel(yy)).reshape( xx.shape )
+
     if Save_as_tiff == 1:
         EndProduct=dataset[:-4] + '_GF.tif'	
                       
