@@ -10,7 +10,7 @@ def Accounts(Type=None):
     User_Pass = {
      'NASA'                  :   ['',''],   
      'GLEAM'                 :   ['',''],  
-     'FTP_WA'                :	 ['',''], 
+     'FTP_WA'                :	 ['',''],
      'MSWEP'                :	 ['',''] }
     
     Selected_Path = User_Pass[Type]    

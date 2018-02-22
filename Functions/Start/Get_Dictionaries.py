@@ -296,7 +296,12 @@ def get_hi_and_ec():
     'Sugar cane': [0.69, 0.65],
     'Tapioca': [None, None],
     'Tea': [0.12, 0.50],
-    'Wheat': [0.37, 0.15]
+    'Wheat': [0.37, 0.15],
+    'Fodder': [0.45,0.6],
+    'Peanut':[0.03, 0.3],
+    'Almond':[0.03, 0.3],
+    'Pepper':[0.1, 0.5],
+    'Mellon':[0.8, 0.6]
         }
     
     return HIWC
