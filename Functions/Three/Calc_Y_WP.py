@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 18 17:34:54 2018
-
-@author: tih
+Authors: Bert Coerver, Tim Hessels
+         UNESCO-IHE 2018
+Contact: t.hessels@unesco-ihe.org
+Repository: https://github.com/wateraccounting/wa
+Module: Function/Three
 """
-
+import csv
 import numpy as np
 import calendar
 import datetime
-#import wa.Functions.Start.Get_Dictionaries as GD
+import os
+from dateutil.relativedelta import relativedelta
+import wa
 
-
-def Seasons():
+    
+def Seasons(start_dates, end_dates, Name_NC_LU, lu_class, croptype, Name_NC_ETgreen, Name_NC_ETblue, Name_NC_NDM, Name_NC_P, output_dir, ab):
     """
     Calculate Yields and WPs per season and save results in a csv-file.
     
@@ -54,23 +58,7 @@ def Seasons():
     -------
     csv_filename : str
         Path to newly created csv-file.        
-    """   
-    
-    Startdate = "2014-01-01"
-    Enddate = "2014-12-31"
-    
-    Name_NC_LU = r'J:\\Create_Sheets\\Hong\\Simulations\\Simulation_1\\Sheet_3\\LU_Simulation1_.nc'
-    Name_NC_ETref = r'J:\\Create_Sheets\\Hong\\Simulations\\Simulation_1\\Sheet_3\\ETref_Simulation1_monthly_mm_082013_122014.nc'
-    Name_NC_ET = r'J:\\Create_Sheets\\Hong\\Simulations\\Simulation_1\\Sheet_3\\ET_Simulation1_monthly_mm_012014_122014.nc'
-    Name_NC_P = r'J:\\Create_Sheets\\Hong\\Simulations\\Simulation_1\\Sheet_3\\Prec_Simulation1_monthly_mm_082013_122014.nc'
-    Name_NC_NDM = r"J:\Create_Sheets\Hong\Simulations\Simulation_1\Sheet_3\NDM_Simulation1_monthly_kg_ha-1_012014_122014.nc"
-
-    dict_crops = {'crops':   [r"J:\Create_Sheets\Hong\seasons_basin_crop35.csv", 'Rice - Rainfed', 'Cereals', '-', 35.0]}
-    
-    HIWC_dict = GD.get_hi_and_ec()
-    #croptype =  
- 
-    #lu_fh, lu_class, croptype, HIWC_dict, ab = (1.0,1.0)
+    """     
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)    
@@ -81,17 +69,16 @@ def Seasons():
     
     writer.writerow(["Startdate", "Enddate", "Yield [kg/ha]", "Yield_pr [kg/ha]", "Yield_irr [kg/ha]", "WP [kg/m3]", "WP_blue [kg/m3]", "WP_green [kg/m3]", "WC [km3]", "WC_blue [km3]", "WC_green [km3]"])
     for startdate, enddate in zip(start_dates, end_dates):
-        Yield, Yield_pr, Yield_irr, Wp, Wp_blue, Wp_green, Wc, Wc_blue, Wc_green = Season(startdate, enddate, lu_fh, lu_class, croptype, etgreen_fhs, etgreen_dates, etblue_fhs, etblue_dates, ndm_fhs, ndm_dates, p_fhs, p_dates, HIWC_dict, ab = ab, output_dir = output_dir)
+        Yield, Yield_pr, Yield_irr, Wp, Wp_blue, Wp_green, Wc, Wc_blue, Wc_green = Season(startdate, enddate, Name_NC_LU, lu_class, croptype, Name_NC_ETgreen, Name_NC_ETblue, Name_NC_NDM, Name_NC_P, ab)
         
         writer.writerow([startdate, enddate, Yield, Yield_pr, Yield_irr, Wp, Wp_blue, Wp_green, Wc, Wc_blue, Wc_green])
     
     csv_file.close()
     
     return csv_filename
-
-
    
-def Season(startdate, enddate, lu_fh, lu_class, croptype, etgreen_fhs, etgreen_dates, etblue_fhs, etblue_dates, ndm_fhs, ndm_dates, p_fhs, p_dates, HIWC_dict, ab = (1.0,1.0), output_dir = None):
+def Season(startdate, enddate, Name_NC_LU, lu_class, croptype, Name_NC_ETgreen, Name_NC_ETblue, Name_NC_NDM, Name_NC_P, ab = (1.0,0.9)):
+
     """
     Calculate Yields and WPs for one season.
     
@@ -101,61 +88,59 @@ def Season(startdate, enddate, lu_fh, lu_class, croptype, etgreen_fhs, etgreen_d
         datetime.date object specifying the startdate of the growing season.
     enddate : ndarray
         datetime.date object specifying the enddate of the growing season.
-    lu_fh : str
-        Landuse map.
+    Name_NC_LU : str
+        Path to LU map.
     lu_class : int
         Landuseclass for which to calculate Y and WP.
     croptype : str
         Name of croptype, should be present in HIWC_dict.keys().
-    etgreen_fhs : ndarray
-        Array with strings pointing to ETgreen maps.
-    etgreen_dates : ndarray
-        Array with datetime.date objects corresponding to etgreen_fhs.
-    etblue_fhs : ndarray
-        Array with strings pointing to ETblue maps.
-    etblue_dates : ndarray
-        Array with datetime.date objects corresponding to etblue_fhs.
-    ndm_fhs : ndarray
-        Array with strings pointing to Net-Dry-Matter maps.
-    ndm_dates : ndarray
-        Array with datetime.date objects corresponding to ndm_fhs.
-    p_fhs : ndarray
-        Array with strings pointing to P maps.
-    p_dates : ndarray
-        Array with datetime.date objects corresponding to p_fhs.
-    output_dir : str
-        Folder to save results
+    Name_NC_ETgreen : str
+        Path to ETgreen map.
+    Name_NC_ETblue : str
+        Path to ETblue map.
+    Name_NC_NDM : str
+        Path to NDM map.
+    Name_NC_P : str
+        Path to P map.
     HIWC_dict : dict
         Dictionary with Harvest indices and Water Contents, see get_dictionaries.get_hi_and_ec().
     ab : tuple, optional
         Two parameters used to split Yield into irrigation and precipitation yield, see split_Yield.
-        
+ 
     Returns
     -------
-    Yield : float
+    Yield_Ave_Value : float
         The yield for the croptype.
-    Yield_pr : float
+    Yield_pr_Ave_Value : float
         The yield_precip for the croptype.
-    Yield_irr : float
+    Yield_irr_Ave_Value : float
         The yield_irri for the croptype.
-    Wp : float
+    WP_Ave_Value : float
         The waterproductivity for the croptype.
-    Wp_blue : float
+    WPblue_Ave_Value : float
         The blue waterproductivity for the croptype.
-    Wp_green : float
+    WPgreen_Ave_Value : float
         The green waterproductivity for the croptype.
-    Wc : float
+    WC_Ave_Value : float
         The water consumption for the croptype.
-    Wc_blue : float
+    WCblue_Ave_Value : float
         The blue water consumption for the croptype.
-    Wc_green : float
+    WCgreen_Ave_Value : float
         The green water consumption for the croptype.
     """
-    common_dates = becgis.CommonDates([etblue_dates, etgreen_dates, p_dates, ndm_dates])
     
+    import wa.Functions.Three as Three
+    import wa.Functions.Start.Get_Dictionaries as GD
+    import wa.General.raster_conversions as RC
+    
+    # Open the HIWC dict
+    HIWC_dict = GD.get_hi_and_ec()
+
+    # Get Harvest Index and Moisture content for a specific crop
     harvest_index = HIWC_dict[croptype][0]  
     moisture_content = HIWC_dict[croptype][1]
     
+    # Get the start and enddate current season
     current = datetime.date(startdate.year, startdate.month, 1)
     end_month = datetime.date(enddate.year, enddate.month, 1)
     
@@ -163,53 +148,71 @@ def Season(startdate, enddate, lu_fh, lu_class, croptype, etgreen_fhs, etgreen_d
     while current < end_month:
         current = current + relativedelta(months = 1)
         req_dates = np.append(req_dates, current)
+       
+    # Check if the whole dataset is included within the netcdf file 
+    Checker_ETblue = Period_Checker(Name_NC_ETblue, startdate, enddate)
+    Checker_ETgreen = Period_Checker(Name_NC_ETgreen, startdate, enddate)    
+    Checker_NDM = Period_Checker(Name_NC_NDM, startdate, enddate)    
+    Checker_P = Period_Checker(Name_NC_P, startdate, enddate)    
+    Checker_all = np.all([Checker_ETblue, Checker_ETgreen, Checker_NDM, Checker_P])
     
-    season_complete = True
-    for date in req_dates:
-        season_complete = np.all([season_complete, date in common_dates])
-        if not season_complete:
-            print("{0} missing in input data, skipping this season".format(date))
-            
-    if season_complete:
-    
+    if Checker_all == False:
+        date = req_dates[0]
+        print("{0} missing in input data, skipping this season".format(date))
+        Yield_Ave_Value = Yield_pr_Ave_Value = Yield_irr_Ave_Value = WP_Ave_Value = WPblue_Ave_Value = WPgreen_Ave_Value = WC_Ave_Value = WCblue_Ave_Value = WCgreen_Ave_Value = np.nan
+        
+    else:      
+        
+        # Calculate the monthly fraction (if season is not whithin the whole month)
         fractions = np.ones(np.shape(req_dates))
         
+        # The get the start month and end month fraction and report those to fraction
         start_month_length = float(calendar.monthrange(startdate.year, startdate.month)[1])
         end_month_length = float(calendar.monthrange(enddate.year, enddate.month)[1])
         
         fractions[0] = (start_month_length - startdate.day + 1) / start_month_length
         fractions[-1] = (enddate.day -1) / end_month_length
         
-        NDMs = np.stack([becgis.OpenAsArray(ndm_fhs[ndm_dates == date][0], nan_values = True) * fraction for date, fraction in zip(req_dates, fractions)], axis=2)
-        NDM = np.nansum(NDMs, axis=2)
-        del NDMs
-        
-        ETGREENs = np.stack([becgis.OpenAsArray(etgreen_fhs[etgreen_dates == date][0], nan_values = True) * fraction for date, fraction in zip(req_dates, fractions)], axis=2)
-        ETGREEN = np.nansum(ETGREENs, axis=2)
-        del ETGREENs
-        
-        ETBLUEs = np.stack([becgis.OpenAsArray(etblue_fhs[etblue_dates == date][0], nan_values = True) * fraction for date, fraction in zip(req_dates, fractions)], axis=2)
-        ETBLUE = np.nansum(ETBLUEs, axis=2)
-        del ETBLUEs
-        
-        Ps = np.stack([becgis.OpenAsArray(p_fhs[p_dates == date][0], nan_values = True) * fraction for date, fraction in zip(req_dates, fractions)], axis=2)
-        P = np.nansum(Ps, axis=2)
-        del Ps
-        
-        LULC = becgis.OpenAsArray(lu_fh)
-        
-        NDM[NDM == 0] = np.nan
-        NDM[LULC != lu_class] = ETBLUE[LULC != lu_class] = ETGREEN[LULC != lu_class] =  np.nan
-        
-        Y = (harvest_index * NDM) / (1 - moisture_content)
-        
-        etbfraction = ETBLUE / (ETBLUE + ETGREEN)
-        pfraction = P / np.nanmax(P)
-        fraction = split_Yield(pfraction, etbfraction, ab[0], ab[1])
-        
-        Yirr = Y * fraction
-        Ypr = Y - Yirr
+        # Get total sum NDM over the growing season
+        NDM_array = RC.Open_nc_array(Name_NC_NDM, Var = None, Startdate = startdate.replace(day=1), Enddate = enddate)                
+        NDM = np.nansum(NDM_array * fractions[:,None,None], axis=0)
+        del NDM_array
 
+        # Get total sum ET blue over the growing season
+        ETgreen_array = RC.Open_nc_array(Name_NC_ETgreen, Var = None, Startdate = startdate.replace(day=1), Enddate = enddate)                
+        ETgreen = np.nansum(ETgreen_array * fractions[:,None,None], axis=0)
+        del ETgreen_array
+
+        # Get total sum ET green over the growing season
+        ETblue_array = RC.Open_nc_array(Name_NC_ETblue, Var = None, Startdate = startdate.replace(day=1), Enddate = enddate)                
+        ETblue = np.nansum(ETblue_array * fractions[:,None,None], axis=0)
+        del ETblue_array
+
+        # Get total sum Precipitation over the growing season
+        P_array = RC.Open_nc_array(Name_NC_P, Var = None, Startdate = startdate.replace(day=1), Enddate = enddate)                
+        P = np.nansum(P_array * fractions[:,None,None], axis=0)
+        del P_array
+        
+        # Open Landuse map
+        LULC = RC.Open_nc_array(Name_NC_LU)
+        
+        # only select the pixels for this Landuse class
+        NDM[NDM == 0] = np.nan
+        NDM[LULC != lu_class] = ETblue[LULC != lu_class] = ETgreen[LULC != lu_class] =  np.nan
+        
+        # Calculate Yield
+        Y_Array = (harvest_index * NDM) / (1 - moisture_content)
+        
+        # Calculate fractions of ETblue and green and blue Yield
+        ETblue_fraction = ETblue / (ETblue + ETgreen)
+        p_fraction = P / np.nanmax(P)
+        fraction = Three.SplitYield.P_ET_based(p_fraction, ETblue_fraction, ab[0], ab[1])
+        
+        # Calculate yield from irrigation and precipitation
+        Yirr_Array = Y_Array * fraction
+        Ypr_Array = Y_Array - Yirr_Array
+        
+        '''
         if output_dir:
             x = y = np.arange(0.0, 1.1, 0.1)
             XX, YY = np.meshgrid(x, y)
@@ -228,68 +231,178 @@ def Season(startdate, enddate, lu_fh, lu_class, croptype, etgreen_fhs, etgreen_d
             plt.xlim((0,1))
             plt.ylim((0,1))
             plt.savefig(os.path.join(output_dir, '{0}_{1}_{2}_cloud.png'.format(croptype, req_dates[0], req_dates[-1])))
+        '''
 
-        Yield = np.nanmean(Y)
-        Yield_pr = np.nanmean(Ypr)
-        Yield_irr = np.nanmean(Yirr)
+        # calculate average Yields
+        Yield_Ave_Value = np.nanmean(Y_Array)
+        Yield_pr_Ave_Value = np.nanmean(Ypr_Array)
+        Yield_irr_Ave_Value = np.nanmean(Yirr_Array)
         
-        Et_blue = np.nanmean(ETBLUE)
-        Et_green = np.nanmean(ETGREEN)
+        # calculate average blue and green ET
+        ETblue_Ave_Value = np.nanmean(ETblue)
+        ETgreen_Ave_Value = np.nanmean(ETgreen)
         
-        areas = becgis.MapPixelAreakm(lu_fh)
-        Wc_blue = np.nansum(ETBLUE / 1000**2 * areas)
-        Wc_green = np.nansum(ETGREEN / 1000**2 * areas)
-        Wc = Wc_blue + Wc_green
+        # Calculate Areas for one pixel
+        areas_m2 = wa.Functions.Start.Area_converter.Degrees_to_m2(Name_NC_LU)
+
+        # Calculate the total area in km2
+        areas_m2[LULC != lu_class] = np.nan
+        areas_km2 = areas_m2/1000**2
+        print('{0}: {1} km2'.format(croptype, np.nansum(areas_km2)))
         
-        areas[LULC != lu_class] = np.nan
-        print('{0}: {1} km2'.format(croptype, np.nansum(areas)))
+        # Calculate the Water consumpution in km3
+        WCblue_Ave_Value = np.nansum(ETblue_Ave_Value /1000**2 * areas_km2)
+        WCgreen_Ave_Value = np.nansum(ETgreen_Ave_Value /1000**2 * areas_km2)
+        WC_Ave_Value = WCblue_Ave_Value + WCgreen_Ave_Value
         
-        Wp = Yield / ((Et_blue + Et_green) * 10)
-        Wp_blue = np.where(Et_blue == 0, [np.nan], [Yield_irr / (Et_blue * 10)])[0]
-        Wp_green = np.where(Et_green == 0, [np.nan], [Yield_pr / (Et_green * 10)])[0]
-        
-    else:
-        
-        Yield = Yield_pr = Yield_irr = Wp = Wp_blue = Wp_green = Wc = Wc_blue = Wc_green = np.nan
-        
-    return Yield, Yield_pr, Yield_irr, Wp, Wp_blue, Wp_green, Wc, Wc_blue, Wc_green
+        # Calculate water productivity
+        WP_Ave_Value = Yield_Ave_Value / ((ETblue_Ave_Value + ETgreen_Ave_Value) * 10)
+        WPblue_Ave_Value = np.where(ETblue_Ave_Value == 0, [np.nan], [Yield_irr_Ave_Value / (ETblue_Ave_Value * 10)])[0]
+        WPgreen_Ave_Value = np.where(ETgreen_Ave_Value == 0, [np.nan], [Yield_pr_Ave_Value / (ETgreen_Ave_Value * 10)])[0]
+
+    return Yield_Ave_Value, Yield_pr_Ave_Value, Yield_irr_Ave_Value, WP_Ave_Value, WPblue_Ave_Value, WPgreen_Ave_Value, WC_Ave_Value, WCblue_Ave_Value, WCgreen_Ave_Value
 
 
-
-def import_growing_seasons(csv_fh):
+def Create_WP_Y_CSV(csv_fh, output_dir, croptype):
     """
-    Reads an csv file with dates, see example for format of the csv file.
+    Calculate yearly Yields and Water Productivities from seasonal values (created with calc_Y_WP_seasons) and store
+    results in a csv-file.
     
     Parameters
     ----------
     csv_fh : str
-        Filehandle pointing to csv-file
+        csv_file with seasonal values (see calc_Y_WP_seasons)
+    output_dir : str
+        Folder to store results.
+    croptype : str
+        Name of the crop for which the Y and WP have been calculated.
+        
+    Returns
+    -------
+    csv_filename : str
+        Path to the new csv-file.
+    """
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)  
+        
+    start_dates, end_dates, Y, Yirr, Ypr, WP, WPblue, WPgreen, WC, WC_blue, WC_green = read_csv(csv_fh)
+    
+    years = np.unique(np.array([date.year for date in np.append(start_dates, end_dates)]))
+    
+    csv_filename = os.path.join(output_dir, 'Yearly_Yields_WPs_{0}.csv'.format(croptype))
+    csv_file = open(csv_filename, 'wb')
+    writer = csv.writer(csv_file, delimiter=';')
+    writer.writerow(["Startdate", "Enddate", "Yield [kg/ha]", "Yield_pr [kg/ha]", "Yield_irr [kg/ha]", "WP [kg/m3]", "WP_blue [kg/m3]", "WP_green [kg/m3]", "WC [km3]", "WC_blue [km3]", "WC_green [km3]"])
+    
+    for year in years:
+        
+        starts, ends = (np.array([start_date for start_date, end_date in zip(start_dates, end_dates) if start_date.year == year or end_date.year == year]),
+                        np.array([end_date for start_date, end_date in zip(start_dates, end_dates) if start_date.year == year or end_date.year == year]))
+    
+        boundary = datetime.date(year, 1, 1)
+        
+        year_length = 366 if calendar.isleap(year) else 365
+        
+        lengths_total_season = [float(abs((end - start).days)) for start, end in zip(starts, ends)]
+        
+        lengths_within_year = np.array([min(year_length, abs((boundary - end).days)) - abs(min(0, (boundary - start).days)) for start, end in zip(starts, ends)])
+    
+        fractions = lengths_within_year / lengths_total_season
+        
+        y = np.sum(np.array([Y[start_dates == start][0] for start in starts]) * fractions)
+        yirr = np.sum(np.array([Yirr[start_dates == start][0] for start in starts]) * fractions)
+        ypr = np.sum(np.array([Ypr[start_dates == start][0] for start in starts]) * fractions)
+        
+        wc = np.sum(np.array([WC[start_dates == start][0] for start in starts]) * fractions)
+        wcblue = np.sum(np.array([WC_blue[start_dates == start][0] for start in starts]) * fractions)
+        wcgreen = np.sum(np.array([WC_green[start_dates == start][0] for start in starts]) * fractions)
+        
+        wp = np.average(np.array([WP[start_dates == start][0] for start in starts]), weights = fractions)
+        wpblue = np.average(np.array([WPblue[start_dates == start][0] for start in starts]), weights = fractions)
+        wpgreen = np.average(np.array([WPgreen[start_dates == start][0] for start in starts]), weights = fractions)
+        
+        writer.writerow([datetime.date(year,1,1), datetime.date(year,12,31), y, ypr, yirr, wp, wpblue, wpgreen, wc, wcblue, wcgreen])
+    
+    csv_file.close()
+    
+    return csv_filename
+
+def Period_Checker(nc_filename, startdate, enddate):
+
+    import wa.General.raster_conversions as RC
+    
+    # Open NC time variable
+    Time = RC.Open_nc_array(nc_filename,Var ="time")
+    
+    # Create ordinal startdate and enddate
+    Startdate_ETgreen_ord = startdate.toordinal()
+    Enddate_ETgreen_ord = startdate.toordinal()       
+
+    Checker = Startdate_ETgreen_ord >= Time[0] and Enddate_ETgreen_ord <= Time[-1]
+       
+    return(Checker)     
+       
+def read_csv(csv_fh):
+    """
+    Reads and csv file generated by the function calc_Y_WP_seasons and returns the 
+    values as np.arrays.
+    
+    Parameters
+    ----------
+    csv_fh : str
+        Filehandle pointing to a csv-file generated by calc_Y_WP_seasons.
         
     Returns
     -------
     start_dates : ndarray
-        List with datetime.date objects
+        Array containing datetime.date objects.
     end_dates : ndarray
-        List with datetime.date object
-    
-    Examples
-    --------
-    The csv file should be like:
-    >>> Start;End<new_line> 
-            04/11/2000;17/02/2001<new_line>
-            03/05/2001;02/07/2001<new_line>
-            29/11/2001;27/02/2002<new_line>
-            etc.
-    
+        Array containing datetime.date objects.      
+    Y : ndarray
+        Array containing Yield data.
+    Yirr : ndarray
+        Array containing Yield from irrigation data.
+    Ypr : ndarray
+        Array containing Yield from precipitation data.
+    WP : ndarray
+        Array containing Water Productivity data.
+    WPblue : ndarray
+        Array containing Blue WP data.
+    WPgreen : ndarray
+        Array containing Green WP data.
     """
     start_dates = np.array([])
     end_dates = np.array([])
-
+    Y = np.array([])
+    Yirr = np.array([])
+    Ypr = np.array([])
+    WP = np.array([])
+    WPblue = np.array([])
+    WPgreen = np.array([])
+    WC = np.array([])
+    WC_green = np.array([])
+    WC_blue = np.array([])
+    
     with open(csv_fh) as csvfile:
          reader = csv.reader(csvfile, delimiter=';')
          for row in reader:
-             if np.all([row[0] != 'Start', row[1] != 'End']):
-                 start_dates = np.append(start_dates, datetime.datetime.strptime(row[0], '%d/%m/%Y').date())
-                 end_dates = np.append(end_dates, datetime.datetime.strptime(row[1], '%d/%m/%Y').date())
-    
-    return start_dates, end_dates
+             if np.all([row[2] != 'nan', row[0] != 'Startdate']):
+                 try:
+                     start_dates = np.append(start_dates, datetime.datetime.strptime(row[0], '%Y-%m-%d').date())
+                     end_dates = np.append(end_dates, datetime.datetime.strptime(row[1], '%Y-%m-%d').date())
+                 except:
+                     start_dates = np.append(start_dates, datetime.datetime.strptime(row[0], '%d/%m/%Y').date())
+                     end_dates = np.append(end_dates, datetime.datetime.strptime(row[1], '%d/%m/%Y').date())                     
+                 Y = np.append(Y, float(row[2]))
+                 Ypr = np.append(Ypr, float(row[3]))
+                 Yirr = np.append(Yirr, float(row[4]))
+                 WP = np.append(WP, float(row[5]))
+                 WPblue = np.append(WPblue, float(row[6]))
+                 WPgreen = np.append(WPgreen, float(row[7]))
+                 WC = np.append(WC, float(row[8]))
+                 WC_blue = np.append(WC_blue, float(row[9]))
+                 WC_green = np.append(WC_green, float(row[10]))
+                 
+
+    return start_dates, end_dates, Y, Yirr, Ypr, WP, WPblue, WPgreen, WC, WC_blue, WC_green
+

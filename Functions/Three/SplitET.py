@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 18 09:59:52 2018
-
-@author: tih
+Authors: Tim Hessels
+         UNESCO-IHE 2018
+Contact: t.hessels@unesco-ihe.org
+Repository: https://github.com/wateraccounting/wa
+Module: Function/Three
 """
 def Blue_Green(Startdate, Enddate, Name_NC_LU, Name_NC_ETref, Name_NC_ET, Name_NC_P):
     '''

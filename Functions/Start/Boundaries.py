@@ -10,12 +10,8 @@ import shapefile
 import gdal
 import os
 
-def Determine(Basin=''):
-    
-    # Get environmental variable for the Home folder
-    SEBAL_env_paths = os.environ["WA_HOME"].split(';')
-    Home_folder = SEBAL_env_paths[0]
-    			
+def Determine(Basin, Home_folder):
+      			
     Shape_file_name_shp = os.path.join(Home_folder,'Basins', Basin + '.shp')
     if not os.path.exists(Shape_file_name_shp):
         print '%s is missing' %Shape_file_name_shp				
@@ -37,12 +33,9 @@ def Determine(Basin=''):
     Boundaries['Latmax'] = round((np.ceil(bbox[3] * 10.) + 1.))/10.				
     return(Boundaries, Shape_file_name_shp)
 
-def Determine_LU_Based(Basin=''):
+def Determine_LU_Based(Basin, Home_folder):
     
-    # Get environmental variable for the Home folder
-    SEBAL_env_paths = os.environ["WA_HOME"].split(';')
-    Home_folder = SEBAL_env_paths[0]
-    			
+
     LU_file_name = os.path.join(Home_folder,'LU', Basin + '.tif')
     if not os.path.exists(LU_file_name):
         print '%s is missing' %LU_file_name				

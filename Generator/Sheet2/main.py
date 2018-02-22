@@ -10,7 +10,7 @@ Module: Function/Two
 import os
 import gdal
 
-def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate, Enddate, Simulation):
+def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate, Enddate, Simulation):
     """
     This functions is the main framework for calculating sheet 2.
 
@@ -45,9 +45,12 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
     ######################### Set General Parameters ##############################
 
     # Get environmental variable for the Home folder
-    WA_env_paths = os.environ["WA_HOME"].split(';')
-    Dir_Home = WA_env_paths[0]
-	
+    if WA_HOME_folder == '':
+        WA_env_paths = os.environ["WA_HOME"].split(';')
+        Dir_Home = WA_env_paths[0]
+    else:
+        Dir_Home = WA_HOME_folder
+        
     # Create the Basin folder
     Dir_Basin = os.path.join(Dir_Home, Basin)
     if not os.path.exists(Dir_Basin):
@@ -55,7 +58,7 @@ def Calculate(Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate,
 
     # Get the boundaries of the basin based on the shapefile of the watershed
     # Boundaries, Shape_file_name_shp = Start.Boundaries.Determine(Basin)
-    Boundaries, Example_dataset = Start.Boundaries.Determine_LU_Based(Basin)
+    Boundaries, Example_dataset = Start.Boundaries.Determine_LU_Based(Basin, Dir_Home)
     
     ############################# Download Data ###################################
 

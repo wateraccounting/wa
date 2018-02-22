@@ -11,7 +11,7 @@ import os
 import gdal
 import pandas as pd
 
-def Calculate(Basin, P_Product, ET_Product, Moving_Averaging_Length, Startdate, Enddate, Simulation):
+def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, LAI_Product, Runoff_Product, Moving_Averaging_Length, Startdate, Enddate, Simulation):
     """
     This functions is the main framework for calculating sheet 4.
 
@@ -23,6 +23,10 @@ def Calculate(Basin, P_Product, ET_Product, Moving_Averaging_Length, Startdate, 
         Name of the rainfall product that will be used
     ET_Product : str
         Name of the evapotranspiration product that will be used 
+    LAI_Product : str
+        Name of the LAI product that will be used     
+    Runoff_Product : str   
+        Name of the Runoff product that will be used   
     Moving_Averiging_Length, int
         Defines the length of the moving average    
     Startdate : str
@@ -44,9 +48,12 @@ def Calculate(Basin, P_Product, ET_Product, Moving_Averaging_Length, Startdate, 
     ######################### Set General Parameters ##############################
 
     # Get environmental variable for the Home folder
-    WA_env_paths = os.environ["WA_HOME"].split(';')
-    Dir_Home = WA_env_paths[0]
-	
+    if WA_HOME_folder == '':
+        WA_env_paths = os.environ["WA_HOME"].split(';')
+        Dir_Home = WA_env_paths[0]
+    else:
+        Dir_Home = WA_HOME_folder
+        
     # Create the Basin folder
     Dir_Basin = os.path.join(Dir_Home, Basin)
     if not os.path.exists(Dir_Basin):
@@ -54,7 +61,7 @@ def Calculate(Basin, P_Product, ET_Product, Moving_Averaging_Length, Startdate, 
 
     # Get the boundaries of the basin based on the shapefile of the watershed
     # Boundaries, Shape_file_name_shp = Start.Boundaries.Determine(Basin)
-    Boundaries, Example_dataset = Start.Boundaries.Determine_LU_Based(Basin)
+    Boundaries, Example_dataset = Start.Boundaries.Determine_LU_Based(Basin, Dir_Home)
  
     #Set Startdate and Enddate for moving average
     Additional_Months = (Moving_Averaging_Length - 1)/2
@@ -70,7 +77,7 @@ def Calculate(Basin, P_Product, ET_Product, Moving_Averaging_Length, Startdate, 
     Data_Path_ET = Start.Download_Data.Evapotranspiration(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate, Enddate, ET_Product)
     Data_Path_ETref = Start.Download_Data.ETreference(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_Moving_Average_String, Enddate_Moving_Average_String)
     Data_Path_GWF = Start.Download_Data.GWF(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']])
-
+    Data_Path_ThetaSat_topsoil = Start.Download_Data.Soil_Properties(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Para = 'ThetaSat_TopSoil')
     Data_Path_P_Monthly = os.path.join(Data_Path_P, 'Monthly')
 
     ###################### Save Data as netCDF files ##############################
