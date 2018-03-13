@@ -10,6 +10,7 @@ import os
 import numpy as np
 import pandas as pd
 import xml.etree.ElementTree as ET
+import time
 import subprocess
 
 def create_sheet4(basin, period, units, data, output, template=False, tolerance = 0.01):
@@ -435,7 +436,8 @@ def create_sheet4(basin, period, units, data, output, template=False, tolerance 
         tempout_path = output[0].replace('.pdf', '_temporary.svg')
         tree1.write(tempout_path)
         fullCmd = (' ').join([Path_Inkscape, tempout_path,'--export-pdf='+output[0], '-d 300'])
-        RC.Run_command_window(fullCmd)    
+        RC.Run_command_window(fullCmd)  
+        time.sleep(10)
         os.remove(tempout_path)
         
     if data[1] is not None:
@@ -443,4 +445,5 @@ def create_sheet4(basin, period, units, data, output, template=False, tolerance 
         tree2.write(tempout_path)
         fullCmd = (' ').join([Path_Inkscape, tempout_path,'--export-pdf='+output[1], '-d 300'])
         RC.Run_command_window(fullCmd)   
+        time.sleep(10)
         os.remove(tempout_path)

@@ -218,19 +218,23 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, Inflow_Text_Files, W
             
             # Calculate runoff based on Budyko
             DataCube_Runoff_CR = Five.Budyko.Calc_runoff(Name_NC_ETref_CR, Name_NC_Prec_CR)
-            
+                              
+            # Save the runoff as netcdf
+            DC.Save_as_NC(Name_NC_Runoff_for_Routing_CR, DataCube_Runoff_CR, 'Runoff_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
+            del DataCube_Runoff_CR    
+                
     ###################### 5b. Get Runoff from WaterPIX ###########################
     if WaterPIX_filename != "": 
 
-        # Get WaterPIX data
-        WaterPIX_Var = 'TotalRunoff_M'
-        DataCube_Runoff_CR = Five.Read_WaterPIX.Get_Array(WaterPIX_filename, WaterPIX_Var, Example_dataset, Startdate, Enddate)
-                  
-              
-    # Save the runoff as netcdf
-    DC.Save_as_NC(Name_NC_Runoff_for_Routing_CR, DataCube_Runoff_CR, 'Runoff_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
-    del DataCube_Runoff_CR    
-     
+        if not os.path.exists(Name_NC_Runoff_CR):       
+            # Get WaterPIX data
+            WaterPIX_Var = 'TotalRunoff_M'
+            DataCube_Runoff_CR = Five.Read_WaterPIX.Get_Array(WaterPIX_filename, WaterPIX_Var, Example_dataset, Startdate, Enddate)
+                      
+            # Save the runoff as netcdf
+            DC.Save_as_NC(Name_NC_Runoff_for_Routing_CR, DataCube_Runoff_CR, 'Runoff_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
+            del DataCube_Runoff_CR    
+         
     '''  
     ###################### Calculate Runoff with P min ET ###########################
   
@@ -309,7 +313,7 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, Inflow_Text_Files, W
         # Define the 2% highest pixels as rivers
         Rivers = np.zeros([np.size(Routed_Discharge_Ave,0),np.size(Routed_Discharge_Ave,1)])
         Routed_Discharge_Ave[Raster_Basin != 1] = np.nan
-        Routed_Discharge_Ave_number = np.nanpercentile(Routed_Discharge_Ave,90)
+        Routed_Discharge_Ave_number = np.nanpercentile(Routed_Discharge_Ave,99)
         Rivers[Routed_Discharge_Ave > Routed_Discharge_Ave_number] = 1  # if yearly average is larger than 5000km3/month that it is a river
 
         # Save the river file as netcdf file
@@ -410,18 +414,17 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, Inflow_Text_Files, W
    
     Name_py_Discharge_dict_CR3 = os.path.join(Dir_Basin,'Simulations','Simulation_%d' %Simulation, 'Sheet_5','Discharge_dict_CR3_simulation%d.npy' %(Simulation))    
     Name_NC_Supply = DC.Create_NC_name('Supply', Simulation, Dir_Basin, 5, info)
-    Name_NC_ETblue =  DC.Create_NC_name('ETblue', Simulation, Dir_Basin, 5, info)
 
     if not os.path.exists(Name_py_Discharge_dict_CR3):
 
         if Supply_method == "Fraction":
+            Name_NC_ETblue =  DC.Create_NC_name('ETblue', Simulation, Dir_Basin, 5, info)
             DataCube_Supply_m3, DataCube_ETblue_m3 = Five.Irrigation.Calc_Supply_Budyko(Discharge_dict_CR2, Name_NC_Rivers_CR, Name_NC_ET_CR, Name_NC_ETref_CR, Name_NC_Prec_CR, Name_NC_Basin_CR, Name_NC_frac_sw_CR, Startdate, Enddate, Example_dataset)
             DC.Save_as_NC(Name_NC_Supply, DataCube_Supply_m3, 'Supply', Example_dataset, Startdate, Enddate, 'monthly')
             DC.Save_as_NC(Name_NC_ETblue, DataCube_ETblue_m3, 'ETblue', Example_dataset, Startdate, Enddate, 'monthly') 
             del DataCube_ETblue_m3, DataCube_Supply_m3
             Discharge_dict_CR3 = Five.Irrigation.Add_irrigation(Discharge_dict_CR2, River_dict_CR2, Name_NC_Rivers_CR,  Name_NC_Supply, Name_NC_ETblue, Name_NC_Basin_CR, Startdate, Enddate, Example_dataset)
-            np.save(Name_py_Discharge_dict_CR3, Discharge_dict_CR3)
-            
+            np.save(Name_py_Discharge_dict_CR3, Discharge_dict_CR3)           
 
         if Supply_method == "WaterPIX":
             WaterPIX_Var = 'Supply_M'
@@ -429,6 +432,13 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, Inflow_Text_Files, W
             area_in_m2 = Start.Area_converter.Degrees_to_m2(Example_dataset)
             DataCube_Supply_m3 = DataCube_Runoff_CR/1000 * area_in_m2
             DC.Save_as_NC(Name_NC_Supply, DataCube_Supply_m3, 'Supply', Example_dataset, Startdate, Enddate, 'monthly')
+            Discharge_dict_CR3 = Five.Irrigation.Add_irrigation(Discharge_dict_CR2, River_dict_CR2, Name_NC_Rivers_CR,  Name_NC_Supply, Name_NC_Supply, Name_NC_Basin_CR, Startdate, Enddate, Example_dataset)
+
+        if Supply_method == "UserInput":
+            
+            # Get the data of Supply defined by user and save as nc
+            DataCube_Supply_m3 = RC.Get3Darray_time_series_monthly(Dir_Basin, WaterPIX_filename, Startdate, Enddate, Example_data = Example_dataset)
+            DC.Save_as_NC(Name_NC_Supply, DataCube_Supply_m3, 'ETref_CR', Example_dataset, Startdate, Enddate, 'monthly', 0.01)
             Discharge_dict_CR3 = Five.Irrigation.Add_irrigation(Discharge_dict_CR2, River_dict_CR2, Name_NC_Rivers_CR,  Name_NC_Supply, Name_NC_Supply, Name_NC_Basin_CR, Startdate, Enddate, Example_dataset)
 
     else:
@@ -453,6 +463,34 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, Inflow_Text_Files, W
         DC.Save_as_NC(Name_NC_Discharge, DataCube_Discharge_CR, 'Discharge_End_CR', Example_dataset, Startdate, Enddate, 'monthly')
         del DataCube_Discharge_CR       
    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

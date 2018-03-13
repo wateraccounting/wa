@@ -35,10 +35,10 @@ def Calc_Supply_Budyko(Discharge_dict, Name_NC_Rivers, Name_NC_ET, Name_NC_ETref
     return(DataCube_surface_withdrawal_m3, DataCube_ETblue_m3)
     
 def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_Supply, Name_NC_ETblue, Name_NC_Basin, Startdate, Enddate, Example_dataset):
-    
+    #Discharge_dict_CR2, River_dict_CR2, Name_NC_Rivers_CR,  Name_NC_Supply, Name_NC_ETblue, Name_NC_Basin_CR, Startdate, Enddate, Example_dataset
     import copy
     import numpy as np
-    
+    import sys
     import wa.General.raster_conversions as RC
     
     # Copy dicts as starting adding reservoir 
@@ -63,20 +63,27 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_Supply, N
     # find IDs drainage for only the basin
     Basin = RC.Open_nc_array(Name_NC_Basin)
     ID_Rivers_flow = RC.gap_filling(ID_Rivers,NoDataValue = 0.) * Basin
-
-    for i in np.unique(ID_Rivers_flow):
+    Water_Error = 0 
+    
+    for i in np.unique(ID_Rivers_flow)[1:]:
         if np.nansum(DataCube_ETblue_m3[:,ID_Rivers_flow == i]) > 0:
+            sys.stdout.write("\r%s Procent of adding irrigation completed with %s x 10^9 m3 Water Error       " %(np.int((i-np.unique(ID_Rivers_flow)[1])/(np.unique(ID_Rivers_flow)[-1]-np.unique(ID_Rivers_flow)[1])*100),Water_Error/1e9))
+            sys.stdout.flush()
+            #print('%s Procent of adding irrigation completed' %np.int(i/np.unique(ID_Rivers_flow)[-1]*100))
             total_surface_withdrawal = np.nansum(DataCube_surface_withdrawal_m3[:,ID_Rivers_flow == i] ,1)
             
             # Find exact area in river directory
             for River_part in River_dict.iteritems():
                 if len(np.argwhere(River_part[1] == i)) > 0:
-                    
+                  
                     # Find the river part in the dictionery
                     row_discharge = np.argwhere(River_part[1]==i)[0][0]
                     
                     # Subtract the withdrawal from that specific riverpart
-                    Discharge_dict_new[River_part[0]][:,0:row_discharge] = Discharge_dict_new[River_part[0]][:,0:row_discharge] - total_surface_withdrawal[:,None] 
+                    Real_Surface_Withdrawal = np.minimum(Discharge_dict_new[River_part[0]][:,row_discharge].flatten(), total_surface_withdrawal[:,None].flatten())
+
+                    Water_Error += np.maximum(np.nansum(total_surface_withdrawal[:,None].flatten() - Real_Surface_Withdrawal),0)
+                    Discharge_dict_new[River_part[0]][:,0:row_discharge] = Discharge_dict_new[River_part[0]][:,0:row_discharge] - Real_Surface_Withdrawal[:,None] 
 
                     # Subtract the withdrawal from the part downstream of the riverpart within the same dictionary
                     Discharge_dict_new[River_part[0]][np.logical_and(Discharge_dict_new[River_part[0]]<=0,Discharge_dict[River_part[0]]>=0)] = 0
@@ -86,10 +93,12 @@ def Add_irrigation(Discharge_dict, River_dict, Name_NC_Rivers, Name_NC_Supply, N
                     # Subtract the withdrawal from all the other downstream dictionaries
                     while len(River_dict) > times:
                         for River_part_downstream in River_dict.iteritems():
-                            if River_dict[River_part[0]][-1] == End_river:  
-                                print River_part_downstream
-                                Discharge_dict_new[River_part_downstream[0]][:,1:] = Discharge_dict_new[River_part_downstream[0]][:,1:] - total_surface_withdrawal[:,None] 
-                                Discharge_dict_new[River_part[0]][np.logical_and(Discharge_dict_new[River_part[0]]<=0,Discharge_dict[River_part[0]]>=0)] = 0
+                            if River_part_downstream[1][-1] == End_river:  
+                                
+                                Discharge_dict_new[River_part_downstream[0]][:,:] = Discharge_dict_new[River_part_downstream[0]][:,:] - Real_Surface_Withdrawal[:,None] 
+                                #Discharge_dict_new[River_part_downstream[0]][:,1:] = Discharge_dict_new[River_part_downstream[0]][:,1:] - total_surface_withdrawal[:,None] 
+
+                                Discharge_dict_new[River_part_downstream[0]][np.logical_and(Discharge_dict_new[River_part_downstream[0]]<=0,Discharge_dict[River_part_downstream[0]]>=0)] = 0
                                 End_river = River_dict[River_part_downstream[0]][0]
                                 times = 0
                             times += 1
