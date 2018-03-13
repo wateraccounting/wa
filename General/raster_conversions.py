@@ -78,8 +78,8 @@ def Open_nc_info(NC_filename):
     lats = fh.variables['latitude'][:]
     lons = fh.variables['longitude'][:]
 
-    Geo6 = lats[1]-lats[0]
-    Geo2 = lons[1]-lons[0]
+    Geo6 = fh.variables['latitude'].pixel_size
+    Geo2 = fh.variables['longitude'].pixel_size
     Geo4 = np.max(lats) + Geo6/2	
     Geo1 = np.min(lons) - Geo2/2
     
@@ -301,7 +301,7 @@ def reproject_dataset_example(dataset, dataset_example, method=1):
 
     # open dataset that must be transformed 
     try:
-        if dataset.split('.')[-1] == 'tif':
+        if os.path.splitext(dataset)[-1] == '.tif':
             g = gdal.Open(dataset)               					
         else:
             g = dataset    
@@ -313,13 +313,13 @@ def reproject_dataset_example(dataset, dataset_example, method=1):
     if epsg_from == 9001:
         epsg_from = 5070
 
-
     # open dataset that is used for transforming the dataset
     try:
-        if dataset_example.split('.')[-1] == 'tif':
-            gland = gdal.Open(dataset_example)               					
+        if os.path.splitext(dataset_example)[-1] == '.tif':
+            gland = gdal.Open(dataset_example)   	
         else:
             gland = dataset_example      
+            
     except:
             gland = dataset_example              
     epsg_to = Get_epsg(gland)	
@@ -495,9 +495,29 @@ def Get3Darray_time_series_monthly(Dir_Basin, Data_Path, Startdate, Enddate, Exa
         file_name_path = os.path.join(Dir_Basin, Data_Path, file_name[0])								
         if Example_data is not None:
             if Date == Dates[0]:
+                if os.path.splitext(Example_data)[-1] == '.tif':
                     geo_out, proj, size_X, size_Y = Open_array_info(Example_data)													
                     dataTot=np.zeros([len(Dates),size_Y,size_X])														
-                      									
+                if os.path.splitext(Example_data)[-1] == '.nc':
+                    geo_out, projection, size_X, size_Y, size_Z, Time = Open_nc_info(Example_data)													
+                    dataTot=np.zeros([len(Dates),size_Y,size_X])	 
+              
+                    # Create memory file for reprojection
+                    data = Open_nc_array(Example_data)
+                    driver = gdal.GetDriverByName("MEM")
+                    gland = driver.Create('', size_Y, size_X, 1,
+                                           gdal.GDT_Float32, ['COMPRESS=LZW'])
+                    srse = osr.SpatialReference()
+                    if projection == '' or projection == 4326:
+                        srse.SetWellKnownGeogCS("WGS84")
+                    else:	
+                        srse.SetWellKnownGeogCS(projection)
+                    gland.SetProjection(srse.ExportToWkt())
+                    gland.GetRasterBand(1).SetNoDataValue(-9999)
+                    gland.SetGeoTransform(geo_out)
+                    gland.GetRasterBand(1).WriteArray(data)		
+                    Example_data = gland
+                    
             dest = reproject_dataset_example(file_name_path, Example_data, method=1)
             Array_one_date = dest.GetRasterBand(1).ReadAsArray() 								
         else: 								

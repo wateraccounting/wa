@@ -9,6 +9,7 @@ Module: Sheets/sheet1
 
 import os
 import pandas as pd
+import time
 import xml.etree.ElementTree as ET
 import subprocess
 
@@ -1531,6 +1532,7 @@ def create_sheet3(basin, period, units, data, output, template=False):
     tempout_path = output[1].replace('.pdf', '_temporary.svg')
     tree2.write(tempout_path)
     subprocess.call([Path_Inkscape,tempout_path,'--export-pdf='+output[1], '-d 300'])
+    time.sleep(10)
     os.remove(tempout_path)
     
 #    # Export svg to png

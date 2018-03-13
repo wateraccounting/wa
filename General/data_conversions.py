@@ -251,14 +251,16 @@ def Save_as_NC(namenc, DataCube, Var, Reference_filename,  Startdate = '', Endda
             timeo.standard_name = 'time'
 
         # Create the lon variable
-        lono = nco.createVariable('longitude', 'f4', ('longitude',))
+        lono = nco.createVariable('longitude', 'f8', ('longitude',))
         lono.standard_name = 'longitude'
         lono.units = 'degrees_east'
+        lono.pixel_size = geo_out[1]
 
         # Create the lat variable
-        lato = nco.createVariable('latitude', 'f4', ('latitude',))
+        lato = nco.createVariable('latitude', 'f8', ('latitude',))
         lato.standard_name = 'latitude'
         lato.units = 'degrees_north'
+        lato.pixel_size = geo_out[5]
  
         # Create container variable for CRS: lon/lat WGS84 datum
         crso = nco.createVariable('crs', 'i4')
