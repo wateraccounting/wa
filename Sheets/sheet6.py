@@ -10,6 +10,7 @@ import os
 import pandas as pd
 import xml.etree.ElementTree as ET
 import subprocess
+import time
 
 def create_sheet6(basin, period, unit, data, output, template=False):
     """
@@ -150,5 +151,5 @@ def create_sheet6(basin, period, unit, data, output, template=False):
     tree1.write(tempout_path)
     
     subprocess.call(['C:\Program Files\Inkscape\inkscape.exe',tempout_path,'--export-png='+output, '-d 300'])
-    
+    time.sleep(10)
     os.remove(tempout_path)
