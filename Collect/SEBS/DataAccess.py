@@ -133,7 +133,7 @@ def Download_SEBS_from_WA_FTP(local_filename, Filename_in):
     # Download data from FTP 													
     ftp=FTP(ftpserver)
     ftp.login(username,password)
-    directory="/WaterAccounting/Data_Satellite/Evaporation/SEBS/SEBS_08_10_2017/"
+    directory="/WaterAccounting_Guest/SEBS/SEBS_08_10_2017/"
     ftp.cwd(directory)
     lf = open(local_filename, "wb")
     ftp.retrbinary("RETR " + Filename_in, lf.write)

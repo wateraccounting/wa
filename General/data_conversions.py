@@ -313,12 +313,16 @@ def Create_NC_name(Var, Simulation, Dir_Basin, sheet_nmbr, info = ''):
 def Convert_dict_to_array(River_dict, Array_dict, Reference_data):
 
     import numpy as np
-    
+    import os
     import wa.General.raster_conversions as RC
     
-    # Get raster information 
-    geo_out, proj, size_X, size_Y = RC.Open_array_info(Reference_data)
-    
+    if os.path.splitext(Reference_data)[-1] == '.nc':
+        # Get raster information 
+        geo_out, proj, size_X, size_Y, size_Z, Time = RC.Open_nc_info(Reference_data)
+    else:       
+        # Get raster information 
+        geo_out, proj, size_X, size_Y = RC.Open_array_info(Reference_data)
+        
     # Create ID Matrix
     y,x = np.indices((size_Y, size_X))
     ID_Matrix = np.int32(np.ravel_multi_index(np.vstack((y.ravel(),x.ravel())),(size_Y,size_X),mode='clip').reshape(x.shape)) + 1
