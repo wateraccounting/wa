@@ -34,7 +34,10 @@ from .three_hourly import main as three_hourly
 from .daily import main as daily
 from .monthly import main as monthly
 from .DataAccess import VariablesInfo as VarInfo
+from .CLSM_DataAccess import VariablesInfo as CLSM_VarInfo
+from .CLSM_daily import main as CLSM_daily
+from .CLSM_monthly import main as CLSM_monthly
 
-__all__ = ['three_hourly', 'daily', 'monthly', 'VarInfo']
+__all__ = ['three_hourly', 'daily', 'monthly', 'VarInfo', 'CLSM_VarInfo', 'CLSM_daily', 'CLSM_monthly']
 
 __version__ = '0.1'
