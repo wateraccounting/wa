@@ -11,23 +11,33 @@ def Run(input_nc, output_nc):
 
     # Extract flow direction data from NetCDF file
     flow_directions = RC.Open_nc_array(input_nc, Var = 'demdir')
-      
-    # Get the raster shape	
-    size_Y, size_X = np.shape(flow_directions)
     
+    # Open River Array
+    Rivers = RC.Open_nc_array(output_nc, Var = 'rivers')
+
+    # Open Accumulated Pixel Array
+    Accumulated_Pixels = RC.Open_nc_array(output_nc, Var = 'accpix')
+    
+    # Open Routed discharge Array
+    Routed_Array = RC.Open_nc_array(output_nc, Var = 'discharge_natural')
+    
+    # Get the raster shape	
+    geo_out_example, epsg_example, size_X_example, size_Y_example, size_Z_example, Time_example = RC.Open_nc_info(input_nc)                      
+    geo_out_example = np.array(geo_out_example)
+        
     # Create a river array with a boundary of 1 pixel
-    Rivers_bounds = np.zeros([size_Y+2, size_X+2])
+    Rivers_bounds = np.zeros([size_Y_example+2, size_X_example+2])
     Rivers_bounds[1:-1,1:-1] = Rivers	
     
     # Create a flow direction array with a boundary of 1 pixel
     flow_directions[flow_directions==0]=-32768
-    flow_directions_bound = np.ones([size_Y+2, size_X+2]) * -32768
+    flow_directions_bound = np.ones([size_Y_example+2, size_X_example+2]) * -32768
     flow_directions_bound[1:-1,1:-1] = flow_directions
     
     # Create ID Matrix
-    y,x = np.indices((size_Y, size_X))
-    ID_Matrix = np.int32(np.ravel_multi_index(np.vstack((y.ravel(),x.ravel())),(size_Y,size_X),mode='clip').reshape(x.shape))
-    ID_Matrix_bound = np.ones([size_Y+2, size_X+2]) * -32768
+    y,x = np.indices((size_Y_example, size_X_example))
+    ID_Matrix = np.int32(np.ravel_multi_index(np.vstack((y.ravel(),x.ravel())),(size_Y_example,size_X_example),mode='clip').reshape(x.shape))
+    ID_Matrix_bound = np.ones([size_Y_example+2, size_X_example+2]) * -32768
     ID_Matrix_bound[1:-1,1:-1] = ID_Matrix + 1
     ID_Matrix_bound[flow_directions_bound==-32768]=-32768
     del  x, y
@@ -43,12 +53,12 @@ def Run(input_nc, output_nc):
     for Direction in Directions:
     
         # empty from and to arrays for 1 direction				
-        data_flow_to = np.zeros([size_Y + 2, size_X + 2])
-        data_flow_from = np.zeros([size_Y + 2, size_X + 2])
+        data_flow_to = np.zeros([size_Y_example + 2, size_X_example + 2])
+        data_flow_from = np.zeros([size_Y_example + 2, size_X_example + 2])
     				
         # Get the ID of only the rivers
-        data_flow_to_ID = np.zeros([size_Y + 2, size_X + 2])			
-        data_flow_in = np.ones([size_Y + 2, size_X + 2])	* Rivers_bounds	
+        data_flow_to_ID = np.zeros([size_Y_example + 2, size_X_example + 2])			
+        data_flow_in = np.ones([size_Y_example + 2, size_X_example + 2])	* Rivers_bounds	
     				
         # Mask only one direction				
         data_flow_from[flow_directions_bound == Direction] = data_flow_in[flow_directions_bound == Direction] * ID_Matrix_bound[flow_directions_bound == Direction]
@@ -154,7 +164,7 @@ def Run(input_nc, output_nc):
     diagonal = np.power((np.square(vertical) + np.square(horizontal)),0.5)
     
     # Create empty distance array
-    Distance = np.zeros([size_Y, size_X])
+    Distance = np.zeros([size_Y_example, size_X_example])
     
     # Fill in the distance array
     Distance[np.logical_or(flow_directions == 1,flow_directions == 16)] = horizontal[np.logical_or(flow_directions == 1,flow_directions == 16)]
@@ -251,3 +261,9 @@ def Run(input_nc, output_nc):
         # Write array in dictionary													
         Discharge_dict[River_number] = Discharge_river 
         print(River_number)
+        
+    return(DEM_dict, River_dict, Distance_dict, Discharge_dict)
+    
+    
+    
+    

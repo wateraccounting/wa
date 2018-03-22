@@ -8,12 +8,15 @@ Created on Mon Mar 12 15:11:17 2018
 
 input_nc = r"F:\Create_Sheets\Wainganga\Simulations\Simulation_1\test1.nc"
 output_nc = r"F:\Create_Sheets\Wainganga\Simulations\Simulation_1\test1_out.nc"
-
+include_reservoirs = 1  # 1 = on, 0 = off
 
 
 import time
 import sys
 import wa.General.raster_conversions as RC
+import wa.General.data_conversions as DC
+import numpy as np
+import netCDF4
 
 time1 = time.time()
 
@@ -21,7 +24,7 @@ time1 = time.time()
 ############################### Run Part 1 ####################################
 ###############################################################################
                 
-import SurfWAT.Part1_Channel_Routing as Part1_Channel_Routing
+import wa.Models.SurfWAT.Part1_Channel_Routing as Part1_Channel_Routing
 Routed_Array, Accumulated_Pixels, Rivers = Part1_Channel_Routing.Run(input_nc)
  
 ###############################################################################
@@ -46,7 +49,7 @@ lon_n = len(lon_ls)
 ################################ Save NetCDF ##################################
 
 # Create NetCDF file
-nc_file = netCDF4.Dataset(output_nc, 'w')
+nc_file = netCDF4.Dataset(output_nc, 'w', format = 'NETCDF4')
 nc_file.set_fill_on()
 
 # Create dimensions
@@ -111,70 +114,115 @@ accpix_var[:, :] = Accumulated_Pixels[:, :]
 for i in range(len(time_or)):
     discharge_nat_var[i,:,:] = Routed_Array[i,:,:]       
 
+time.sleep(1)
 nc_file.close()         
+del Routed_Array, Accumulated_Pixels, Rivers
 
 ###############################################################################
 ############################### Run Part 2 ####################################
 ###############################################################################
 
+import wa.Models.SurfWAT.Part2_Create_Dictionaries as Part2_Create_Dictionaries
+DEM_dict, River_dict, Distance_dict, Discharge_dict = Part2_Create_Dictionaries.Run(input_nc, output_nc)
+
 ###############################################################################
 ################## Create NetCDF Part 2 results ###############################
-##############################################################################
+###############################################################################
 
 # Create NetCDF file
-nc_file = netCDF4.Dataset(output_nc, 'r+')
+nc_file = netCDF4.Dataset(output_nc, 'r+', format = 'NETCDF4')
 nc_file.set_fill_on()
 
 ###################### Save Dictionaries in NetCDF ############################
 
-parms = nc_file.createGroup('demdict')
+parmsdem = nc_file.createGroup('demdict_static')
 for k,v in DEM_dict.items():
-    setattr(parms, str(k), str(v.tolist()))
+    setattr(parmsdem, str(k), str(v.tolist()))
 
-parms = nc_file.createGroup('riverdict')
+parmsriver = nc_file.createGroup('riverdict_static')
 for k,v in River_dict.items():
-    setattr(parms, str(k), str(v.tolist()))
+    setattr(parmsriver, str(k), str(v.tolist()))
 
-parms = nc_file.createGroup('distancedict')
+parmsdist = nc_file.createGroup('distancedict_static')
 for k,v in Distance_dict.items():
-    setattr(parms, str(k), str(v.tolist()))
+    setattr(parmsdist, str(k), str(v.tolist()))
     
-parms = nc_file.createGroup('dischargedict')
+parmsdis = nc_file.createGroup('dischargedict_dynamic')
 for k,v in Discharge_dict.items():
-    setattr(parms, str(k), str(v.tolist()))
+    setattr(parmsdis, str(k), str(v.tolist()))
     
 # Close file
+time.sleep(1)
 nc_file.close()
-    
+del DEM_dict, River_dict, Distance_dict, Discharge_dict
 
 ###############################################################################
 ############################### Run Part 3 ####################################
 ###############################################################################
+'''
+if include_reservoirs == 1:
+    import wa.Models.SurfWAT.Part2_Create_Dictionaries as Part2_Create_Dictionaries
+    Discharge_dict_reservoirs, River_dict_res, Distance_dict_res, DEM_dict_res = Part2_Create_Dictionaries.Run(input_nc, output_nc)   
 
 
 
 
-
-
+'''
 ###############################################################################
 ############################### Run Part 4 ####################################
 ###############################################################################
 
+import wa.Models.SurfWAT.Part4_Withdrawals as Part4_Withdrawals
+Discharge_dict_end = Part4_Withdrawals.Run(input_nc, output_nc)
 
+###############################################################################
+################## Create NetCDF Part 4 results ###############################
+###############################################################################
 
+# Create NetCDF file
+nc_file = netCDF4.Dataset(output_nc, 'r+', format = 'NETCDF4')
+nc_file.set_fill_on()
 
+###################### Save Dictionaries in NetCDF ############################
 
+parmsdisend = nc_file.createGroup('dischargedictend_dynamic')
+for k,v in Discharge_dict_end.items():
+    setattr(parmsdisend, str(k), str(v.tolist()))
 
+# Close file
+time.sleep(1)
+nc_file.close()
+del Discharge_dict_end
 
+###############################################################################
+############### Part 5 Convert dictionaries to rasters ########################
+###############################################################################
 
+River_dict = RC.Open_nc_dict(output_nc, 'riverdict_static')
 
+# End discharge dictionary to raster
+Discharge_dict_end = RC.Open_nc_dict(output_nc, 'dischargedictend_dynamic')
+DataCube_Discharge_end = DC.Convert_dict_to_array(River_dict, Discharge_dict_end, input_nc)
 
+###################### Save Dictionaries in NetCDF ############################
 
+# Create NetCDF file
+nc_file = netCDF4.Dataset(output_nc, 'r+', format = 'NETCDF4')
+nc_file.set_fill_on()
 
+discharge_end_var = nc_file.createVariable('discharge_end', 'f8',
+                               ('time', 'latitude', 'longitude'),
+                               fill_value=-9999)
+discharge_end_var.long_name = 'End Discharge'
+discharge_end_var.units = 'm3/month'
+discharge_end_var.grid_mapping = 'crs'
 
+for i in range(len(time_or)):
+    discharge_end_var[i,:,:] = DataCube_Discharge_end[i,:,:]      
 
-
-
+# Close file
+nc_file.close()
+del DataCube_Discharge_end
 
 
 
@@ -225,7 +273,7 @@ nc_file.close()
 
 
 
-
+import pandas as pd
 import numpy as np
 import ast
 import netCDF4
@@ -250,35 +298,13 @@ input2 = str(input1)
 
 
 
+input_netcdf = output_nc
+group_name = 'dischargedict'
+group_name = 'demdict_static'
 
 
 
 
-
-
-def Open_nc_dict(input_netcdf, group_name, startdate = '', enddate = '')
-
-    from netCDF4 import Dataset
-    test = Dataset('test2.nc')
-    data = test.groups['parameters']
-    string_dict = str(data)
-    split_dict = str(string_dict.split('\n')[2:-4])
-    split_dict = split_dict.replace("'","")
-    split_dict = split_dict[1:-1]
-    dictionary = dict()
-    import re
-    split_dict_split = re.split(':|,  ',split_dict)
-    
-    for i in range(0,len(split_dict_split)):
-        number_val = split_dict_split[i]
-        if i % 2 == 0:
-            Array_text = split_dict_split[i + 1].replace(",","")
-            Array_text = Array_text.replace("[","")
-            Array_text = Array_text.replace("]","")  
-            tot_length = len(np.fromstring(Array_text,sep = ' '))
-            dictionary[int(number_val)] = np.fromstring(Array_text,sep = ' ').reshape((Amount_months, tot_length/Amount_months))
-
-    return(dictionary)    
     
     
 

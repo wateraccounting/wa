@@ -35,7 +35,14 @@ def Run_command_window(argument):
     return()
 
 def Open_array_info(filename=''):
+    """
+    Opening a tiff info, for example size of array, projection and transform matrix.
+    
+    Keyword Arguments:
+    filename -- 'C:/file/to/path/file.tif' or a gdal file (gdal.Open(filename))
+        string that defines the input tiff file or gdal file
 
+    """  
     f = gdal.Open(r"%s" %filename)
     if f is None:
         print '%s does not exists' %filename
@@ -48,7 +55,15 @@ def Open_array_info(filename=''):
     return(geo_out, proj, size_X, size_Y)		
 				
 def Open_tiff_array(filename='', band=''):	
-
+    """
+    Opening a tiff array.
+    
+    Keyword Arguments:
+    filename -- 'C:/file/to/path/file.tif' or a gdal file (gdal.Open(filename))
+        string that defines the input tiff file or gdal file
+    band -- integer
+        Defines the band of the tiff that must be opened.
+    """  
     f = gdal.Open(filename)
     if f is None:
         print '%s does not exists' %filename
@@ -59,7 +74,14 @@ def Open_tiff_array(filename='', band=''):
     return(Data)
 
 def Open_nc_info(NC_filename):
-	
+    """
+    Opening a nc info, for example size of array, time (ordinal), projection and transform matrix.
+    
+    Keyword Arguments:
+    filename -- 'C:/file/to/path/file.nc'
+        string that defines the input nc file
+
+    """  	
     from netCDF4 import Dataset
 		
     fh = Dataset(NC_filename, mode='r')
@@ -87,12 +109,25 @@ def Open_nc_info(NC_filename):
     proj = crso.projection
     epsg = Get_epsg(proj, extension = 'GEOGCS')
     geo_out = tuple([Geo1, Geo2, 0, Geo4, 0, Geo6])
+    fh.close()
 			
     return(geo_out, epsg, size_X, size_Y, size_Z, Time)				
 				
 
 def Open_nc_array(NC_filename, Var = None, Startdate = '', Enddate = ''):
-	
+    """
+    Opening a nc array.
+    
+    Keyword Arguments:
+    filename -- 'C:/file/to/path/file.nc'
+        string that defines the input nc file
+    Var -- string
+        Defines the band name that must be opened.
+    Startdate -- "yyyy-mm-dd"
+        Defines the startdate (default is from beginning of array)
+    Enddate -- "yyyy-mm-dd"
+        Defines the enddate (default is from end of array)      
+    """  	
     from netCDF4 import Dataset
 				
     fh = Dataset(NC_filename, mode='r')
@@ -128,18 +163,117 @@ def Open_nc_array(NC_filename, Var = None, Startdate = '', Enddate = ''):
         
     else:
         Data = fh.variables[Var][:]	
-				
+    fh.close()			
     return(Data)	
-			
-def Clip_Dataset_GDAL(output1, output2, latlim, lonlim):
+
+def Open_nc_dict(input_netcdf, group_name, startdate = '', enddate = ''):
+    """
+    Opening a nc dictionary.
     
+    Keyword Arguments:
+    filename -- 'C:/file/to/path/file.nc'
+        string that defines the input nc file
+    group_name -- string
+        Defines the group name that must be opened.
+    Startdate -- "yyyy-mm-dd"
+        Defines the startdate (default is from beginning of array)
+    Enddate -- "yyyy-mm-dd"
+        Defines the enddate (default is from end of array)      
+    """  	
+    from netCDF4 import Dataset
+    import re
+    
+    # sort out if the dataset is static or dynamic (written in group_name)
+    kind_of_data = group_name.split('_')[-1]
+    
+    # if it is dynamic also collect the time parameter
+    if kind_of_data == 'dynamic':
+        time_dates = Open_nc_array(input_netcdf, Var = 'time')
+        Amount_months = len(time_dates)
+
+    # Open the input netcdf and the wanted group name
+    in_nc = Dataset(input_netcdf)
+    data = in_nc.groups[group_name]
+    
+    # Convert the string into a string that can be retransformed into a dictionary
+    string_dict = str(data)
+    split_dict = str(string_dict.split('\n')[2:-4])
+    split_dict = split_dict.replace("'","")
+    split_dict = split_dict[1:-1]
+    dictionary = dict()
+    split_dict_split = re.split(':|,  ',split_dict)
+    
+    # Loop over every attribute and add the array  
+    for i in range(0,len(split_dict_split)):
+        number_val = split_dict_split[i]
+        if i % 2 == 0:
+            Array_text = split_dict_split[i + 1].replace(",","")
+            Array_text = Array_text.replace("[","")
+            Array_text = Array_text.replace("]","") 
+            # If the array is dynamic add a 2D array
+            if kind_of_data == 'dynamic':
+                tot_length = len(np.fromstring(Array_text,sep = ' '))
+                dictionary[int(number_val)] = np.fromstring(Array_text,sep = ' ').reshape((Amount_months, tot_length/Amount_months))
+            # If the array is static add a 1D array
+            else:
+                dictionary[int(number_val)] = np.fromstring(Array_text,sep = ' ')
+
+    # Clip the dynamic dataset if a start and enddate is defined
+    if kind_of_data == 'dynamic':
+        
+        if startdate is not '':
+            Array_check_start = np.ones(np.shape(time_dates))
+            Date = pd.Timestamp(startdate)
+            Startdate_ord = Date.toordinal()
+            Array_check_start[time_dates >= Startdate_ord] = 0
+            Start = np.sum(Array_check_start)                           
+        else:
+            Start = 0
+    
+        if enddate is not '':
+            Array_check_end = np.zeros(np.shape(time_dates))
+            Date = pd.Timestamp(enddate)
+            Enddate_ord = Date.toordinal()
+            Array_check_end[Enddate_ord >= time_dates] = 1
+            End = np.sum(Array_check_end) 
+        else:
+            try:
+                time_dates = in_nc.variables['time'][:]
+                End = len(time_dates)   
+            except:
+                End = '' 
+    
+        if Start != 0 or (End != len(time_dates) or ''):
+            
+            if End == '':
+                End = len(time_dates)
+            
+            for key in dictionary.iterkeys():
+                
+                Array = dictionary[key][:,:]
+                Array_new = Array[int(Start):int(End),:]
+                dictionary[key] = Array_new
+    in_nc.close()
+    
+    return(dictionary)    
+			
+def Clip_Dataset_GDAL(input_name, output_name, latlim, lonlim):
+    """
+    Clip the data to the defined extend of the user (latlim, lonlim) by using the gdal_translate executable of gdal.
+
+    Keyword Arguments:
+    input_name -- input data, input directory and filename of the tiff file
+    output_name -- output data, output filename of the clipped file
+    latlim -- [ymin, ymax]
+    lonlim -- [xmin, xmax]
+    """    
     # Get environmental variable
     WA_env_paths = os.environ["WA_PATHS"].split(';')
     GDAL_env_path = WA_env_paths[0]
     GDALTRANSLATE_PATH = os.path.join(GDAL_env_path, 'gdal_translate.exe')
 
     # find path to the executable
-    fullCmd = ' '.join(["%s" %(GDALTRANSLATE_PATH), '-projwin %s %s %s %s -of GTiff %s %s'  %(lonlim[0], latlim[1], lonlim[1], latlim[0], output1, output2)]) 
+    fullCmd = ' '.join(["%s" %(GDALTRANSLATE_PATH), '-projwin %s %s %s %s -of GTiff %s %s'  %(lonlim[0], latlim[1], lonlim[1], latlim[0], input_name, output_name)]) 
     Run_command_window(fullCmd)
     
     return()
@@ -200,8 +334,18 @@ def reproject_dataset_epsg(dataset, pixel_spacing, epsg_to, method = 2):
     4. Calculate the number of pixels with the new projection & spacing
     5. Create an in-memory raster dataset
     6. Perform the projection
+    
+    Keywords arguments:
+    dataset -- 'C:/file/to/path/file.tif'
+        string that defines the input tiff file
+    pixel_spacing -- float
+        Defines the pixel size of the output file
+    epsg_to -- integer
+         The EPSG code of the output dataset       
+    method -- 1,2,3,4 default = 2
+        1 = Nearest Neighbour, 2 = Bilinear, 3 = lanzcos, 4 = average
     """
-
+    
     # 1) Open the dataset
     g = gdal.Open(dataset)
     if g is None:
@@ -278,10 +422,14 @@ def reproject_dataset_epsg(dataset, pixel_spacing, epsg_to, method = 2):
 
 def reproject_MODIS(input_name, epsg_to):       
     '''
-    Reproject the merged data file
+    Reproject the merged data file by using gdalwarp. The input projection must be the MODIS projection.
+    The output projection can be defined by the user.
 	
     Keywords arguments:
-    output_folder -- 'C:/file/to/path/'
+    input_name -- 'C:/file/to/path/file.tif'
+        string that defines the input tiff file
+    epsg_to -- integer
+        The EPSG code of the output dataset
     '''                    
     # Define the output name
     name_out = ''.join(input_name.split(".")[:-1]) + '_reprojected.tif'
@@ -298,7 +446,18 @@ def reproject_MODIS(input_name, epsg_to):
     return(name_out)  
 				
 def reproject_dataset_example(dataset, dataset_example, method=1):
+    """
+    A sample function to reproject and resample a GDAL dataset from within
+    Python. The user can define the wanted projection and shape by defining an example dataset.
 
+    Keywords arguments:
+    dataset -- 'C:/file/to/path/file.tif' or a gdal file (gdal.Open(filename))
+        string that defines the input tiff file or gdal file
+    dataset_example -- 'C:/file/to/path/file.tif' or a gdal file (gdal.Open(filename))
+        string that defines the input tiff file or gdal file
+    method -- 1,2,3,4 default = 1
+        1 = Nearest Neighbour, 2 = Bilinear, 3 = lanzcos, 4 = average
+    """
     # open dataset that must be transformed 
     try:
         if os.path.splitext(dataset)[-1] == '.tif':
@@ -403,7 +562,15 @@ def resize_array_example(Array_in, Array_example, method=1):
     return(Array_out)				
 				
 def Get_epsg(g, extension = 'tiff'):				
-  			
+    """
+    This function reads the projection of a GEOGCS file or tiff file
+				
+    Keyword arguments:
+    g -- string
+        Filename to the file that must be read
+    extension -- tiff or GEOGCS
+        Define the extension of the dataset (default is tiff)
+    """  			
     try:
         if extension == 'tiff':
             # Get info of the dataset that is used for transforming     
