@@ -14,13 +14,11 @@ import numpy as np
 
 import wa.General.raster_conversions as RC
 
-
-
 ########################### Start SurfWAT input file creator ##########################
 
 # Open arrays and data
 def main(files_DEM_dir, files_DEM, files_Basin, files_Runoff, files_Extraction, startdate, enddate, input_nc, resolution, Format_DEM_dir, Format_DEM, Format_Basin, Format_Runoff, Format_Extraction):
-
+#Name_NC_DEM_Dir_CR, Name_NC_DEM_CR, Name_Tiff_Basin, Name_NC_Runoff_CR, Name_NC_Supply, Startdate, Enddate, input_nc, Resolution, Format_DEM_dir, Format_DEM, Format_Basin, Format_Runoff, Format_Extraction
     # Open Array DEM dir
     if Format_DEM_dir == "NetCDF":
         DataCube_DEM_dir = RC.Open_nc_array(files_DEM_dir)

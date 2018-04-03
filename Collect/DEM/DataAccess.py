@@ -74,7 +74,9 @@ def DownloadData(output_folder, latlim, lonlim, parameter, resolution):
 								
     nameResults = []				
     # Create a temporary folder for processing				
-    output_folder_trash = tempfile.mkdtemp()
+    output_folder_trash = os.path.join(output_folder, "Temp")
+    if not os.path.exists(output_folder_trash):
+        os.makedirs(output_folder_trash)
 
     # Download, extract, and converts all the files to tiff files
     for nameFile in name:
@@ -410,13 +412,32 @@ def Download_Data(nameFile, output_folder_trash, parameter,para_name,resolution)
             file_name = url.split('/')[-1]
             output_file = os.path.join(output_folder_trash, file_name)
             urllib.urlretrieve(url, output_file)	
-												
-            if int(os.stat(output_file).st_size) > 10000:
-                break													
-							
+            size_data	= int(os.stat(output_file).st_size)		
+					
+            if  size_data > 10000:
+                break		
         except:
             continue
-    			
+
+    if int(os.stat(output_file).st_size) == 0: 
+        for continent in allcontinents:
+            try:	
+                continent2 = continent.upper()
+                para_name2 = para_name.lower()   
+                # info about the roots http://www.hydrosheds.org/download/getroot	
+                if resolution == '3s':							
+                    url="https://earlywarning.usgs.gov/hydrodata/sa_%s_%s_grid/%s/%s" %(para_name2,resolution,continent2,nameFile)
+                if resolution == '15s':							
+                    url="https://earlywarning.usgs.gov/hydrodata/sa_%s_zip_grid/%s" %(resolution,nameFile)
+                file_name = url.split('/')[-1]
+                output_file = os.path.join(output_folder_trash, file_name)
+                urllib.urlretrieve(url, output_file)	
+    												
+                if int(os.stat(output_file).st_size) > 10000:
+                    break	
+            except:
+                continue
+        			
     return(output_file, file_name)
 
 
