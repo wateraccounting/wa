@@ -11,26 +11,13 @@ import sys
 
 import wa.General.raster_conversions as RC
 
-def Run(input_nc):
+def Run(Runoff_in_m3_month, flow_directions, Basin):
 
     time1 = time.time()
-    
-    # Extract runoff data from NetCDF file
-    Runoff = RC.Open_nc_array(input_nc, Var = 'Runoff_M')
-    
-    # Extract flow direction data from NetCDF file
-    flow_directions = RC.Open_nc_array(input_nc, Var = 'demdir')
-    
-    # Extract basin data from NetCDF file	
-    Basin = RC.Open_nc_array(input_nc, Var = 'basin') 				
-    			
-    Areas_in_m2 = RC.Open_nc_array(input_nc, Var = 'area') 				
-    
-    Runoff_in_m3_month = ((Runoff/1000) * Areas_in_m2)
-    
+       
     # Get properties of the raster
-    size_X = np.size(Runoff,2)
-    size_Y = np.size(Runoff,1)	
+    size_X = np.size(Runoff_in_m3_month,2)
+    size_Y = np.size(Runoff_in_m3_month,1)	
     
     # input data test
     dataflow_in0 = np.ones([size_Y,size_X])

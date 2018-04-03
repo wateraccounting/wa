@@ -5,7 +5,7 @@ Created on Mon May 15 14:27:44 2017
 @author: tih
 """
 
-def Calc_Supply_Budyko(Discharge_dict, Name_NC_Rivers, Name_NC_ET, Name_NC_ETref, Name_NC_Prec, Name_NC_Basin, Name_NC_frac_sw, Startdate, Enddate, Example_dataset):
+def Calc_Supply_Budyko(Name_NC_ET, Name_NC_ETref, Name_NC_Prec, Name_NC_frac_sw, Startdate, Enddate, Example_dataset):
     
     import wa.Functions.Five as Five
     import wa.Functions.Start as Start
