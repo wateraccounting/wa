@@ -9,8 +9,6 @@ import numpy as np
 import time
 import sys
 
-import wa.General.raster_conversions as RC
-
 def Run(Runoff_in_m3_month, flow_directions, Basin):
 
     time1 = time.time()
