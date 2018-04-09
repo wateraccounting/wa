@@ -12,7 +12,6 @@ import numpy as np
 import os
 import urllib
 import shutil
-import tempfile
 import gdal
 import glob
 

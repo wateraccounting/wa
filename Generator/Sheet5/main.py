@@ -19,7 +19,6 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, Inflow_Text_Files, W
     import gdal
     import numpy as np
     import pandas as pd
-    import copy
 
     # import WA plus modules
     from wa.General import raster_conversions as RC
@@ -72,6 +71,9 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, Inflow_Text_Files, W
         Data_Path_ETref = Start.Download_Data.ETreference(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']], Startdate_2months, Enddate) 
     if Reservoirs_GEE_on_off == 1:
         Data_Path_JRC_occurrence = Start.Download_Data.JRC_occurrence(Dir_Basin, [Boundaries['Latmin'],Boundaries['Latmax']],[Boundaries['Lonmin'],Boundaries['Lonmax']]) 
+        input_JRC = os.path.join(Dir_Basin, Data_Path_JRC_occurrence, "JRC_Occurrence_percent.tif")
+    else:
+        input_JRC = None
     Data_Path_P_Monthly = os.path.join(Data_Path_P, 'Monthly')
     
     ###################### 3. Convert the RAW data to NETCDF files ##############################
@@ -238,9 +240,8 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, Inflow_Text_Files, W
     Format_Basin = "TIFF"    # or "TIFF"
     
     # Give path (for tiff) or file (netcdf)
-    input_JRC = os.path.join(Data_Path_JRC_occurrence, "JRC_Occurrence_percent.tif")
-    input_nc = os.path.join(Dir_Basin, "Simulation", "Simulation_%s"%Simulation,"Sheet_5","SurfWAT_in_simulation%d.nc" %Simulation)
-    output_nc = os.path.join(Dir_Basin, "Simulation", "Simulation_%s"%Simulation,"Sheet_5","SurfWAT_out_simulation%d.nc" %Simulation)
+    input_nc = os.path.join(Dir_Basin, "Simulations", "Simulation_%s"%Simulation,"Sheet_5","SurfWAT_in_simulation%d.nc" %Simulation)
+    output_nc = os.path.join(Dir_Basin, "Simulations", "Simulation_%s"%Simulation,"Sheet_5","SurfWAT_out_simulation%d.nc" %Simulation)
     
     # Create Input File for SurfWAT
     SurfWAT.Create_input_nc.main(Name_NC_DEM_Dir_CR, Name_NC_DEM_CR, Name_Tiff_Basin, Name_NC_Runoff_CR, Name_NC_Supply, Startdate, Enddate, input_nc, Resolution, Format_DEM_dir, Format_DEM, Format_Basin, Format_Runoff, Format_Extraction)

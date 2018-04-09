@@ -8,8 +8,9 @@ Module: SurfWAT
 """
 
 from wa.Models.SurfWAT import Create_input_nc
+from wa.Models.SurfWAT import Run_SurfWAT
 #from SurfWAT import Run_SurfWAT
 
-__all__ = ['Create_input_nc']
+__all__ = ['Create_input_nc', 'Run_SurfWAT']
 
 __version__ = '0.1'

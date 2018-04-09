@@ -212,23 +212,26 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
     '''
     
     # Make a new tile for the data
-    sizeX = int((TilesHorizontal[1] - TilesHorizontal[0] + 1) * 2400)
-    sizeY = int((TilesVertical[1] - TilesVertical[0] + 1) * 2400)
+    # NPP_SIZE = 2	
+    NPP_SIZE = 4
+    sizeX = int((TilesHorizontal[1] - TilesHorizontal[0] + 1) * 4800 / NPP_SIZE )
+    sizeY = int((TilesVertical[1] - TilesVertical[0] + 1) * 4800 / NPP_SIZE)
     DataTot = np.zeros((sizeY, sizeX))
-    
+     
     # Load accounts
     username, password = WebAccounts.Accounts(Type = 'NASA')
     
     # Create the Lat and Long of the MODIS tile in meters
     for Vertical in range(int(TilesVertical[0]), int(TilesVertical[1])+1):
-        Distance = 231.65635826395834 * 2 # resolution of a MODIS pixel in meter
+        Distance = 231.65635826395834 * NPP_SIZE # resolution of a MODIS pixel in meter
         countY=(TilesVertical[1] - TilesVertical[0] + 1) - (Vertical - TilesVertical[0]) 
                           
         for Horizontal in range(int(TilesHorizontal[0]), int(TilesHorizontal[1]) + 1):
             countX=Horizontal - TilesHorizontal[0] + 1
             
-            # Download the MODIS NPP data            
-            url = 'https://e4ftl01.cr.usgs.gov/MOLT/MOD17A3H.006/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
+            # Download the MODIS NPP data      
+            #url = 'https://e4ftl01.cr.usgs.gov/MOLT/MOD17A3H.006/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
+            url = 'https://e4ftl01.cr.usgs.gov/MOLT/MOD17A3.055/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
 
             # Get files on FTP server
             f = urllib2.urlopen(url)		
@@ -237,9 +240,12 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
             soup = BeautifulSoup(f, "lxml")
             for i in soup.findAll('a', attrs = {'href': re.compile('(?i)(hdf)$')}):
 													
-                # Find the file with the wanted tile number													
-                Vfile=str(i)[31:33]
-                Hfile=str(i)[28:30]
+                # Find the file with the wanted tile number		
+                #Vfile=str(i)[31:33]
+               # Hfile=str(i)[28:30]			
+                							
+                Vfile=str(i)[30:32]
+                Hfile=str(i)[27:29]
                 if int(Vfile) is int(Vertical) and int(Hfile) is int(Horizontal):
 																	
                     # Define the whole url name																	
@@ -289,12 +295,14 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                         # Open .hdf only band with NPP and collect all tiles to one array
                         dataset = gdal.Open(file_name)
                         sdsdict = dataset.GetMetadata('SUBDATASETS')
-                        sdslist = [sdsdict[k] for k in sdsdict.keys() if '_1_NAME' in k]
+                        #sdslist = [sdsdict[k] for k in sdsdict.keys() if '_2_NAME' in k]
+                        sdslist = [sdsdict[k] for k in sdsdict.keys() if '_2_NAME' in k]
                         sds = []
                        
                         for n in sdslist:
                             sds.append(gdal.Open(n))
-                            full_layer = [i for i in sdslist if 'Npp_500m' in i]
+                            #yfull_layer = [i for i in sdslist if 'Npp_500m' in i]
+                            full_layer = [i for i in sdslist if 'Npp_1km' in i]
                             idx = sdslist.index(full_layer[0])
                             if Horizontal == TilesHorizontal[0] and Vertical == TilesVertical[0]:
                                 geo_t = sds[idx].GetGeoTransform()  
@@ -304,21 +312,21 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
 
                             data = sds[idx].ReadAsArray() 
                             countYdata = (TilesVertical[1] - TilesVertical[0] + 2) - countY
-                            DataTot[int((countYdata - 1) * 2400):int(countYdata * 2400), int((countX - 1) * 2400):int(countX * 2400)]=data * 0.0001
+                            DataTot[int((countYdata - 1) * 4800 / NPP_SIZE):int(countYdata * 4800 / NPP_SIZE), int((countX - 1) * 4800 / NPP_SIZE):int(countX * 4800 / NPP_SIZE)]=data * 0.0001
                         del data
                         
                     # if the tile not exists or cannot be opened, create a nan array with the right projection                          
                     except:
                         if Horizontal==TilesHorizontal[0] and Vertical==TilesVertical[0]:
-                             x1 = (TilesHorizontal[0] - 19) * 2400 * Distance
-                             x4 = (TilesVertical[0] - 9) * 2400 * -1 * Distance
+                             x1 = (TilesHorizontal[0] - 19) * 4800 / NPP_SIZE * Distance
+                             x4 = (TilesVertical[0] - 9) * 4800 / NPP_SIZE * -1 * Distance
                              geo = 	[x1, Distance, 0.0, x4, 0.0, -Distance]															
                              geo_t=tuple(geo)
 
                         proj='PROJCS["unnamed",GEOGCS["Unknown datum based upon the custom spheroid",DATUM["Not specified (based on custom spheroid)",SPHEROID["Custom spheroid",6371007.181,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Sinusoidal"],PARAMETER["longitude_of_center",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1]]'																													 
-                        data=np.ones((2400, 2400)) * (0)
+                        data=np.ones((4800 / NPP_SIZE, 4800 / NPP_SIZE)) * (0)
                         countYdata=(TilesVertical[1] - TilesVertical[0] + 2) - countY
-                        DataTot[(countYdata - 1) * 2400:countYdata * 2400,(countX - 1) * 2400:countX * 2400] = data * 0.0001
+                        DataTot[(countYdata - 1) * 4800 / NPP_SIZE:countYdata * 4800 / NPP_SIZE,(countX - 1) * 4800 / NPP_SIZE:countX * 4800 / NPP_SIZE] = data * 0.0001
 
     # Make geotiff file  
     DataTot[DataTot>3.27]=-9999    
@@ -329,8 +337,8 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
          dst_ds.SetProjection(proj)
     except:
         proj='PROJCS["unnamed",GEOGCS["Unknown datum based upon the custom spheroid",DATUM["Not specified (based on custom spheroid)",SPHEROID["Custom spheroid",6371007.181,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Sinusoidal"],PARAMETER["longitude_of_center",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1]]'																													 
-        x1 = (TilesHorizontal[0] - 18) * 2400 * Distance
-        x4 = (TilesVertical[0] - 9) * 2400 * -1 * Distance
+        x1 = (TilesHorizontal[0] - 18) * 4800 / NPP_SIZE * Distance
+        x4 = (TilesVertical[0] - 9) * 4800 / NPP_SIZE * -1 * Distance
         geo = [x1, Distance, 0.0, x4, 0.0, -Distance]															
         geo_t = tuple(geo)        
         dst_ds.SetProjection(proj)		
