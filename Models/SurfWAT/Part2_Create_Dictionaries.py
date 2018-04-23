@@ -90,66 +90,94 @@ def Run(input_nc, output_nc):
     
     
     ######################## Define the starting point ############################
+
+    # Open Basin area
+    Basin = RC.Open_nc_array(input_nc, Var = 'basin')
+    Basin = -1 * (Basin - 1)
+    Basin_Buffer = RC.Create_Buffer(Basin, 1)
+    Possible_End_Points = np.zeros(Basin.shape)
+    Possible_End_Points[(Basin_Buffer + Rivers) == 2] = 1
+    End_Points = []
     
-    # Define starting point
-    Max_Acc_Pix = np.nanmax(Accumulated_Pixels[ID_Matrix_bound[1:-1,1:-1]>0])
-    ncol, nrow = np.argwhere(Accumulated_Pixels==Max_Acc_Pix)[0]  				
+    rows_col_possible_end_pixels = np.argwhere(Possible_End_Points == 1)
+    Accumulated_Pixels_possible = ID_Matrix * Possible_End_Points
     
-    # Add Bounds				
-    col = ncol + 1
-    row = nrow + 1
+    for PosPix in rows_col_possible_end_pixels:
+        Accumulated_Pixels_possible_Area = Accumulated_Pixels_possible[PosPix[0]-1:PosPix[0]+2, PosPix[1]-1:PosPix[1]+2]
+        Max_acc_possible_area = np.max(Accumulated_Pixels_possible_Area)
+        middle_pixel = Accumulated_Pixels_possible_Area[1,1]
+        if Max_acc_possible_area == middle_pixel:
+            if End_Points == []:
+                End_Points = PosPix
+            else:
+                End_Points = np.vstack([End_Points, PosPix])
     
-    ############################ Route the river ##################################
-    
-    # Get the ID of the starting point
-    ID_starts = [ID_Matrix_bound[col,row]]
     
     # Create an empty dictionary for the rivers
     River_dict = dict()
-    
+ 
     # Create empty array for the loop
     ID_starts_next = []	
     i = 0  
+        
+    for End_Point in End_Points:
     
-    # Keep going on till all the branches are looped
-    while len(ID_starts) > 0:
-        for ID_start in ID_starts:
-            ID_start = int(ID_start)
-    								
-            # Empty parameters for new starting point								
-            new = 0
-            IDs = []	
-    								
-            # Add starting point								
-            Arrays_from = np.argwhere(ID_from_total[:] == ID_start)             
-            ID_from = ID_to_total[int(Arrays_from[0])]							
-            IDs = np.array([ID_from, ID_start])
-            ID_start_now = ID_start	
+    # Define starting point
+    # Max_Acc_Pix = np.nanmax(Accumulated_Pixels[ID_Matrix_bound[1:-1,1:-1]>0])
+    # ncol, nrow = np.argwhere(Accumulated_Pixels==Max_Acc_Pix)[0]  				
     
-            # Keep going till the branch ends								
-            while new == 0:					
-     
-                Arrays_to = np.argwhere(ID_to_total[:] == ID_start)
-    
-                # Add IDs to the river dictionary
-                if len(Arrays_to)>1 or len(Arrays_to) == 0:
-                    River_dict[i] = IDs
-                    i += 1	
-                    new = 1
-     
-                    # Define the next loop for the new branches             											
-                    for j in range(0, len(Arrays_to)):													
-                        ID_starts_next = np.append(ID_starts_next,ID_from_total[int(Arrays_to[j])])												
-    
-                    # If it was the last one then empty ID_start_next                               																								
-                    if ID_start_now == ID_starts[-1]:
-                        ID_starts = ID_starts_next
-                        ID_starts_next = []	
-    
-                # Add pixel to tree for river dictionary						
-                else:
-                    ID_start = ID_from_total[Arrays_to[0]]						
-                    IDs = np.append(IDs, ID_start)									
+    # Add Bounds				
+    # col = ncol + 1
+    # row = nrow + 1
+        
+        col = End_Point[0] + 1
+        row = End_Point[1] + 1
+                       
+        ############################ Route the river ##################################
+        
+        # Get the ID of the starting point
+        ID_starts = [ID_Matrix_bound[col,row]]
+            
+
+        # Keep going on till all the branches are looped
+        while len(ID_starts) > 0:
+            for ID_start in ID_starts:
+                ID_start = int(ID_start)
+        								
+                # Empty parameters for new starting point								
+                new = 0
+                IDs = []	
+        								
+                # Add starting point								
+                Arrays_from = np.argwhere(ID_from_total[:] == ID_start)             
+                ID_from = ID_to_total[int(Arrays_from[0])]							
+                IDs = np.array([ID_from, ID_start])
+                ID_start_now = ID_start	
+        
+                # Keep going till the branch ends								
+                while new == 0:					
+         
+                    Arrays_to = np.argwhere(ID_to_total[:] == ID_start)
+        
+                    # Add IDs to the river dictionary
+                    if len(Arrays_to)>1 or len(Arrays_to) == 0:
+                        River_dict[i] = IDs
+                        i += 1	
+                        new = 1
+         
+                        # Define the next loop for the new branches             											
+                        for j in range(0, len(Arrays_to)):													
+                            ID_starts_next = np.append(ID_starts_next,ID_from_total[int(Arrays_to[j])])												
+        
+                        # If it was the last one then empty ID_start_next                               																								
+                        if ID_start_now == ID_starts[-1]:
+                            ID_starts = ID_starts_next
+                            ID_starts_next = []	
+        
+                    # Add pixel to tree for river dictionary						
+                    else:
+                        ID_start = ID_from_total[Arrays_to[0]]						
+                        IDs = np.append(IDs, ID_start)									
         		
     ######################## Create dict distance and dict dem ####################	
     
@@ -180,6 +208,7 @@ def Run(input_nc, output_nc):
     River_end = []
     River_ends = np.zeros([2,3])
     
+
     # Loop over the branches
     for River_number in range(0,len(River_dict)):
     	    
@@ -199,7 +228,7 @@ def Run(input_nc, output_nc):
             row, col = np.argwhere(ID_Matrix_bound == River[0])[0][:]
             DEM_river[0] = DEM[row - 1, col - 1] 
             Discharge_river[0] = -9999        
-    					
+
         else:
             Distances_river[0] = River_ends[row_start, 1]
             DEM_river[0] = River_ends[row_start, 2]
