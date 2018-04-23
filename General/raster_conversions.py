@@ -794,4 +794,38 @@ def Get_ordinal(Startdate, Enddate, freq = 'MS'):
         ordinal[i]=p
         i += 1 		
 
-    return(ordinal)						
+    return(ordinal)				
+
+def Create_Buffer(Data_In, Buffer_area):
+    
+   '''
+   This function creates a 3D array which is used to apply the moving window
+   '''
+   
+   # Buffer_area = 2 # A block of 2 times Buffer_area + 1 will be 1 if there is the pixel in the middle is 1
+   Data_Out=np.empty((len(Data_In),len(Data_In[1])))   
+   Data_Out[:,:] = Data_In
+   for ypixel in range(0,Buffer_area + 1):
+                   
+        for xpixel in range(1,Buffer_area + 1):
+
+           if ypixel==0:
+                for xpixel in range(1,Buffer_area + 1):
+                    Data_Out[:,0:-xpixel] += Data_In[:,xpixel:]
+                    Data_Out[:,xpixel:] += Data_In[:,:-xpixel]              
+                
+                for ypixel in range(1,Buffer_area + 1):
+                
+                    Data_Out[ypixel:,:] += Data_In[:-ypixel,:]
+                    Data_Out[0:-ypixel,:] += Data_In[ypixel:,:]
+
+           else:
+               Data_Out[0:-xpixel,ypixel:] += Data_In[xpixel:,:-ypixel]
+               Data_Out[xpixel:,ypixel:] += Data_In[:-xpixel,:-ypixel]
+               Data_Out[0:-xpixel,0:-ypixel] += Data_In[xpixel:,ypixel:]
+               Data_Out[xpixel:,0:-ypixel] += Data_In[:-xpixel,ypixel:]
+
+   Data_Out[Data_Out>0.1] = 1
+   Data_Out[Data_Out<=0.1] = 0  
+           
+   return(Data_Out)		

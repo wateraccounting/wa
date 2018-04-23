@@ -17,11 +17,11 @@ Format_DEM_dir = "NetCDF"    # or "TIFF"
 Format_Basin = "TIFF"    # or "TIFF"
 
 # Give path (for tiff) or file (netcdf)
-files_DEM_dir = r"F:\Create_Sheets\Wainganga\Simulations\Simulation_1\Sheet_5\DEM_Dir_CR_Simulation1_.nc"
-files_DEM = r"F:\Create_Sheets\Wainganga\Simulations\Simulation_1\Sheet_5\DEM_CR_Simulation1_.nc"
-files_Runoff = r"F:\Create_Sheets\Wainganga\Simulations\Simulation_1\Sheet_5\Runoff_CR_Simulation1_monthly_mm_032010_122013.nc"
-files_Extraction = r"F:\Create_Sheets\Wainganga\Simulations\Simulation_1\Sheet_5\Supply_Simulation1_monthly_m3_032010_122013.nc"
-files_Basin = r"F:\Create_Sheets\LU\Wainganga.tif"
+files_DEM_dir = r"G:\Create_Sheets\Wainganga\Simulations\Simulation_1\Sheet_5\DEM_Dir_CR_Simulation1_.nc"
+files_DEM = r"G:\Create_Sheets\Wainganga\Simulations\Simulation_1\Sheet_5\DEM_CR_Simulation1_.nc"
+files_Runoff = r"G:\Create_Sheets\Wainganga\Simulations\Simulation_1\Sheet_5\Runoff_CR_Simulation1_monthly_mm_032010_122013.nc"
+files_Extraction = r"G:\Create_Sheets\Wainganga\Simulations\Simulation_1\Sheet_5\Supply_Simulation1_monthly_m3_032010_122013.nc"
+files_Basin = r"G:\Create_Sheets\LU\Wainganga.tif"
 
 #files_DEM_dir = r"F:\Create_Sheets\Wainganga\HydroSHED\DIR"
 #files_DEM = r"F:\Create_Sheets\Wainganga\HydroSHED\DEM"
@@ -29,10 +29,10 @@ files_Basin = r"F:\Create_Sheets\LU\Wainganga.tif"
 #files_Extraction = r"F:\Create_Sheets\Wainganga\Precipitation\CHIRPS\Monthly"
 #files_Basin = r"F:\Create_Sheets\Wainganga\Simulations\Simulation_1\Sheet_5\Basin_CR_Simulation1_.nc"
 
-input_nc = r"F:\Create_Sheets\Wainganga\Simulations\Simulation_1\test1.nc"
-output_nc = r"F:\Create_Sheets\Wainganga\Simulations\Simulation_1\test1_out.nc"
+input_nc = r"G:\Create_Sheets\Wainganga\Simulations\Simulation_1\testnew2.nc"
+output_nc = r"G:\Create_Sheets\Wainganga\Simulations\Simulation_1\testnew_out2.nc"
 resolution = '15s'
-input_JRC = r"F:\Create_Sheets\Wainganga\JRC\Occurrence\JRC_Occurrence_percent.tif"
+input_JRC = r"G:\Create_Sheets\Wainganga\JRC\Occurrence\JRC_Occurrence_percent.tif"
 Inflow_Text_Files = []
 include_reservoirs = 1  # 1 = on, 0 = off
 
