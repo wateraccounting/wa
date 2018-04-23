@@ -89,6 +89,9 @@ def NPP_GPP_Based(Dir_Basin, Data_Path_GPP, Data_Path_NPP, Startdate, Enddate):
         
         # Get the projection information of the GPP inputs
         geo_out, proj, size_X, size_Y = RC.Open_array_info(monthly_GPP_Files[0])
+        geo_out_NPP, proj_NPP, size_X_NPP, size_Y_NPP = RC.Open_array_info(yearly_NPP_File)  
+                                          
+        
         if int(proj.split('"')[-2]) == 4326:
             proj = "WGS84" 
         
@@ -110,6 +113,10 @@ def NPP_GPP_Based(Dir_Basin, Data_Path_GPP, Data_Path_NPP, Startdate, Enddate):
               
             # Add data to yearly sum    
             Yearly_GPP += Data    
+
+        # Check if size is the same of NPP and GPP otherwise resize
+        if not size_X_NPP is size_X and size_Y_NPP is size_Y:
+            Yearly_NPP = RC.resize_array_example(Yearly_NPP, Yearly_GPP)  
             
         # Loop over the monthly dates   
         for Date in Dates:
@@ -127,7 +134,7 @@ def NPP_GPP_Based(Dir_Basin, Data_Path_GPP, Data_Path_NPP, Startdate, Enddate):
                 monthly_GPP_File = glob.glob('*monthly_%d.%02d.01.tif' %(int(year), int(month)))[0]
                 monthly_GPP = RC.Open_tiff_array(monthly_GPP_File) 
                 monthly_GPP[monthly_GPP == NDV] = np.nan
-                
+                                                                 
                 # Calculate the NDM based on the monthly and yearly NPP and GPP (fraction of GPP)
                 Monthly_NDM = Yearly_NPP * monthly_GPP / Yearly_GPP * (30./12.) *10000 # kg/ha
                 
