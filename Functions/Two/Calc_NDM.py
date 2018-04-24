@@ -89,7 +89,7 @@ def NPP_GPP_Based(Dir_Basin, Data_Path_GPP, Data_Path_NPP, Startdate, Enddate):
         
         # Get the projection information of the GPP inputs
         geo_out, proj, size_X, size_Y = RC.Open_array_info(monthly_GPP_Files[0])
-        geo_out_NPP, proj_NPP, size_X_NPP, size_Y_NPP = RC.Open_array_info(yearly_NPP_File)  
+        geo_out_NPP, proj_NPP, size_X_NPP, size_Y_NPP = RC.Open_array_info(os.path.join(NPP_folder,yearly_NPP_File)) 
                                           
         
         if int(proj.split('"')[-2]) == 4326:
@@ -115,7 +115,7 @@ def NPP_GPP_Based(Dir_Basin, Data_Path_GPP, Data_Path_NPP, Startdate, Enddate):
             Yearly_GPP += Data    
 
         # Check if size is the same of NPP and GPP otherwise resize
-        if not size_X_NPP is size_X and size_Y_NPP is size_Y:
+        if not (size_X_NPP is size_X or size_Y_NPP is size_Y):
             Yearly_NPP = RC.resize_array_example(Yearly_NPP, Yearly_GPP)  
             
         # Loop over the monthly dates   
