@@ -28,7 +28,7 @@ import wa.General.raster_conversions as RC
 import wa.General.data_conversions as DC
 from wa import WebAccounts
 
-def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
+def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, TimeStep, Waitbar, cores):
     """
     This function downloads MOD13 16-daily data
 
@@ -49,9 +49,14 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
     if not Enddate: 
         Enddate = pd.Timestamp('Now')
     
-    # Make an array of the days of which the NDVI is taken
-    Dates = Make_TimeStamps(Startdate,Enddate)    
-
+    # Make an array of the days of which the LST is taken
+    if TimeStep == 8:
+        Dates = Make_TimeStamps(Startdate,Enddate)   
+        TimeStepName = '8_Daily'
+    if TimeStep == 1:
+        Dates = pd.date_range(Startdate,Enddate,freq = 'D')
+        TimeStepName = 'Daily'
+      
     # Create Waitbar
     if Waitbar == 1:
         import wa.Functions.Start.WaitbarConsole as WaitbarConsole
@@ -71,7 +76,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
         
     # Make directory for the MODIS NDVI data
     Dir = Dir.replace("/", os.sep)						
-    output_folder = os.path.join(Dir, 'LST', 'MODIS')
+    output_folder = os.path.join(Dir, 'LST', 'MODIS', '%s' %TimeStepName)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
@@ -100,7 +105,7 @@ def DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, cores):
     TilesVertical, TilesHorizontal = Tiles_to_download(tiletext2=tiletext2,lonlim1=lonlim,latlim1=latlim)
             
     # Pass variables to parallel function and run
-    args = [output_folder, TilesVertical, TilesHorizontal,lonlim, latlim]
+    args = [output_folder, TilesVertical, TilesHorizontal,lonlim, latlim, TimeStep]
     if not cores:
         for Date in Dates:
             RetrieveData(Date, args)
@@ -136,11 +141,11 @@ def RetrieveData(Date, args):
     args -- A list of parameters defined in the DownloadData function.
     """
     # Argument
-    [output_folder, TilesVertical, TilesHorizontal,lonlim, latlim] = args
+    [output_folder, TilesVertical, TilesHorizontal,lonlim, latlim, TimeStep] = args
 
     # Collect the data from the MODIS webpage and returns the data and lat and long in meters of those tiles
     try:
-        Collect_data(TilesHorizontal, TilesVertical, Date, output_folder)
+        Collect_data(TilesHorizontal, TilesVertical, Date, output_folder, TimeStep)
     except:
         print "Was not able to download the file"  
  
@@ -155,7 +160,11 @@ def RetrieveData(Date, args):
     data, geo = RC.clip_data(name_reprojected, latlim, lonlim)
                                 
     # Save results as Gtiff
-    LSTfileName = os.path.join(output_folder, 'LST_MOD11A1_K_8-daily_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
+    if TimeStep == 8:
+        LSTfileName = os.path.join(output_folder, 'LST_MOD11A2_K_8-daily_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
+    if TimeStep == 1:
+        LSTfileName = os.path.join(output_folder, 'LST_MOD11A1_K_daily_' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '.tif')
+  
     DC.Save_as_tiff(name=LSTfileName, data=data, geo=geo, projection='WGS84')
  
     # remove the side products       
@@ -166,8 +175,8 @@ def RetrieveData(Date, args):
 
 def Make_TimeStamps(Startdate,Enddate):
     '''
-    This function determines all time steps of which the NDVI must be downloaded   
-    The time stamps are 16 daily.
+    This function determines all time steps of which the LST must be downloaded   
+    The time stamps are 8 daily.
 	
     Keywords arguments:
     Startdate -- 'yyyy-mm-dd'
@@ -255,7 +264,7 @@ def Tiles_to_download(tiletext2,lonlim1,latlim1):
     TilesHorizontal = [TotalTiles[:,1].min(), TotalTiles[:,1].max()]
     return(TilesVertical, TilesHorizontal)
     
-def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
+def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, TimeStep):
     '''
     This function downloads all the needed MODIS tiles from http://e4ftl01.cr.usgs.gov/MOLT/MOD13Q1.006/ as a hdf file.
 
@@ -282,8 +291,11 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
         for Horizontal in range(int(TilesHorizontal[0]), int(TilesHorizontal[1]) + 1):
             countX=Horizontal - TilesHorizontal[0] + 1
             
-            # Download the MODIS NDVI data            
-            url = 'https://e4ftl01.cr.usgs.gov/MOLT/MOD11A1.006/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
+            # Download the MODIS NDVI data  
+            if TimeStep == 8:
+                url = 'https://e4ftl01.cr.usgs.gov/MOLT/MOD11A2.006/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
+            if TimeStep == 1:
+                url = 'https://e4ftl01.cr.usgs.gov/MOLT/MOD11A1.006/' + Date.strftime('%Y') + '.' + Date.strftime('%m') + '.' + Date.strftime('%d') + '/' 
 
             # Get files on FTP server
             f = urllib2.urlopen(url)		
