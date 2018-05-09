@@ -28,7 +28,7 @@ def Run(Runoff_in_m3_month, flow_directions, Basin):
     
     # Route the data      								
     dataflow_next = dataflow_in[0,:,:]
-    data_flow_tot = np.zeros([int(np.size(Runoff_in_m3_month,0)+1),size_Y, size_X])
+    data_flow_tot = np.copy(dataflow_in)
     dataflow_previous = np.zeros([size_Y, size_X])
     while np.sum(dataflow_next) != np.sum(dataflow_previous):
         data_flow_round = np.zeros([int(np.size(Runoff_in_m3_month,0)+1),size_Y, size_X])	
