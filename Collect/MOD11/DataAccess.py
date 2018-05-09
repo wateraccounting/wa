@@ -386,7 +386,8 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder, TimeStep):
                         data=np.ones((1200,1200)) * (-9999/0.02)
                         countYdata=(TilesVertical[1] - TilesVertical[0] + 2) - countY
                         DataTot[(countYdata - 1) * 1200:countYdata * 1200,(countX - 1) * 1200:countX * 4800] = data * 0.02
-
+                        DataTot[DataTot < 1] = -9999
+                        
     # Make geotiff file      
     name2 = os.path.join(output_folder, 'Merged.tif')
     driver = gdal.GetDriverByName("GTiff")

@@ -12,7 +12,7 @@ import datetime as dt
 from warnings import filterwarnings
 import pandas as pd
 import netCDF4
-from waterpix.functions import (calculate_first_round, calculate_second_round,
+from wa.Models.waterpix.functions import (calculate_first_round, calculate_second_round,
                                 return_empty_df_columns, get_neighbors,
                                 percolation_fit_error,
                                 replace_with_closest, budyko,
