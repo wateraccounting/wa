@@ -107,11 +107,7 @@ def Run(input_nc, output_nc):
         Max_acc_possible_area = np.max(Accumulated_Pixels_possible_Area)
         middle_pixel = Accumulated_Pixels_possible_Area[1,1]
         if Max_acc_possible_area == middle_pixel:
-            if End_Points == []:
-                End_Points = PosPix
-            else:
-                End_Points = np.vstack([End_Points, PosPix])
-    
+            End_Points.append((PosPix[0],PosPix[1]))
     
     # Create an empty dictionary for the rivers
     River_dict = dict()
