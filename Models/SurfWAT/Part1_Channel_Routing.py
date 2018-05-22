@@ -18,6 +18,7 @@ def Run(Runoff_in_m3_month, flow_directions, Basin):
     size_Y = np.size(Runoff_in_m3_month,1)	
     
     # input data test
+    Runoff_in_m3_month[np.isnan(Runoff_in_m3_month)] = 0 
     dataflow_in0 = np.ones([size_Y,size_X])
     dataflow_in = np.zeros([int(np.size(Runoff_in_m3_month,0)+1),size_Y, size_X])
     dataflow_in[0,:,:] = dataflow_in0 * Basin
@@ -26,7 +27,7 @@ def Run(Runoff_in_m3_month, flow_directions, Basin):
     # The flow directions parameters of HydroSHED
     Directions = [1, 2, 4, 8, 16, 32, 64, 128]
     
-    # Route the data      								
+    # Route the data     								
     dataflow_next = dataflow_in[0,:,:]
     data_flow_tot = np.copy(dataflow_in)
     dataflow_previous = np.zeros([size_Y, size_X])
