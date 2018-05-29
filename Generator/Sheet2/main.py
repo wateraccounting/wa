@@ -6,9 +6,6 @@ Contact: t.hessels@unesco-ihe.org
 Repository: https://github.com/wateraccounting/wa
 Module: Function/Two
 """
-# import general python modules
-import os
-import gdal
 
 def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, LAI_Product, NDM_Product, Startdate, Enddate, Simulation):
     """
@@ -35,6 +32,10 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, LAI_Product, NDM_Pro
         
     """ 
     ######################### Import WA modules ###################################
+    
+    # import general python modules
+    import os
+    import gdal
     
     from wa.General import raster_conversions as RC
     from wa.General import data_conversions as DC
@@ -81,21 +82,37 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, LAI_Product, NDM_Pro
     Data_Path_P_Monthly = os.path.join(Data_Path_P, 'Monthly')
     
     ########################### Create input data #################################
-
-    # Create Rainy Days based on daily CHIRPS
-    Data_Path_RD = Two.Rainy_Days.Calc_Rainy_Days(Dir_Basin, Data_Path_P_Daily, Startdate, Enddate)
+    
+    # Define info for the nc files
+    info = ['monthly','days', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
+    Name_NC_RD = DC.Create_NC_name('RD', Simulation, Dir_Basin, 2, info)
+    
+    if not os.path.exists(Name_NC_RD):
+        
+        # Create Rainy Days based on daily CHIRPS
+        Data_Path_RD = Two.Rainy_Days.Calc_Rainy_Days(Dir_Basin, Data_Path_P_Daily, Startdate, Enddate)
 
     # Create monthly LAI
     Dir_path_LAI = os.path.join(Dir_Basin, Data_Path_LAI)
     Start.Eightdaily_to_monthly_state.Nearest_Interpolate(Dir_path_LAI, Startdate, Enddate)
 
-    # Create NDM based on MOD17
-    if NDM_Product == 'MOD17':
-        
-        # Create monthly GPP        
-        Dir_path_GPP = os.path.join(Dir_Basin, Data_Path_GPP)
-        Start.Eightdaily_to_monthly_state.Nearest_Interpolate(Dir_path_GPP, StartdateNDM, EnddateNDM)
-        Data_Path_NDM = Two.Calc_NDM.NPP_GPP_Based(Dir_Basin, Data_Path_GPP, Data_Path_NPP, Startdate, Enddate)
+    # Define info for the nc files
+    info = ['monthly','kg_ha-1', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
+    Name_NC_NDM = DC.Create_NC_name('NDM', Simulation, Dir_Basin, 2, info)
+    
+    if not os.path.exists(Name_NC_NDM):
+
+        # Create NDM based on MOD17
+        if NDM_Product == 'MOD17':
+            
+            # Create monthly GPP        
+            Dir_path_GPP = os.path.join(Dir_Basin, Data_Path_GPP)
+            Start.Eightdaily_to_monthly_state.Nearest_Interpolate(Dir_path_GPP, StartdateNDM, EnddateNDM)
+            Data_Path_NDM = Two.Calc_NDM.NPP_GPP_Based(Dir_Basin, Data_Path_GPP, Data_Path_NPP, Startdate, Enddate)
+            
+            
+            
+            
 
     ###################### Save Data as netCDF files ##############################
     
@@ -139,10 +156,6 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, LAI_Product, NDM_Pro
 
     #___________________________Normalized Dry Matter__________________________
 
-    # Define info for the nc files
-    info = ['monthly','kg_ha-1', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
-
-    Name_NC_NDM = DC.Create_NC_name('NDM', Simulation, Dir_Basin, 2, info)
     if not os.path.exists(Name_NC_NDM):
 
         # Get the data of Evaporation and save as nc
@@ -152,10 +165,6 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, LAI_Product, NDM_Pro
 
     #_______________________________Rainy Days_________________________________
 
-    # Define info for the nc files
-    info = ['monthly','days', ''.join([Startdate[5:7], Startdate[0:4]]) , ''.join([Enddate[5:7], Enddate[0:4]])]
-
-    Name_NC_RD = DC.Create_NC_name('RD', Simulation, Dir_Basin, 2, info)
     if not os.path.exists(Name_NC_RD):
 
         # Get the data of Evaporation and save as nc
@@ -176,13 +185,32 @@ def Calculate(WA_HOME_folder, Basin, P_Product, ET_Product, LAI_Product, NDM_Pro
         DC.Save_as_NC(Name_NC_LAI, DataCube_LAI, 'LAI', Example_dataset, Startdate, Enddate, 'monthly', 1)
         del DataCube_LAI
 
-    ####################### Calculations Sheet 2 ##############################
+    ############## Cut dates into pieces if it is needed ######################
     
-    DataCube_I, DataCube_T, DataCube_E = Two.SplitET.ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, Name_NC_LU, Startdate, Enddate, Simulation)
+    years = range(int(Startdate.split('-')[0]),int(Enddate.split('-')[0]) + 1)
     
-    ############################ Create CSV 2 #################################    
+    for year in years:
+        
+        if len(years) > 1.0:
+        
+            if year is years[0]:
+                Startdate_part = Startdate
+                Enddate_part = '%s-12-31' %year
+            if year is years[-1]:
+                Startdate_part = '%s-01-01' %year
+                Enddate_part = Enddate               
+                       
+        else:
+            Startdate_part = Startdate
+            Enddate_part = Enddate
 
-    Dir_Basin_CSV = Generate.CSV.Create(Dir_Basin, Simulation, Basin, Startdate, Enddate, Name_NC_LU, DataCube_I, DataCube_T, DataCube_E, Example_dataset)
+        ####################### Calculations Sheet 2 ##########################
+    
+        DataCube_I, DataCube_T, DataCube_E = Two.SplitET.ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, Name_NC_LU, Startdate_part, Enddate_part, Simulation)
+    
+        ######################### Create CSV 2 ################################  
+
+        Dir_Basin_CSV = Generate.CSV.Create(Dir_Basin, Simulation, Basin, Startdate, Enddate, Name_NC_LU, DataCube_I, DataCube_T, DataCube_E, Example_dataset)
 
     ############################ Create Sheet 2 ############################### 
 
