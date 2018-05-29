@@ -283,12 +283,12 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                         # Open .hdf only band with NDVI and collect all tiles to one array
                         dataset = gdal.Open(file_name)
                         sdsdict = dataset.GetMetadata('SUBDATASETS')
-                        sdslist = [sdsdict[k] for k in sdsdict.keys() if '_19_NAME' in k]
+                        sdslist = [sdsdict[k] for k in sdsdict.keys() if '_20_NAME' in k]
                         sds = []
 
                         for n in sdslist:
                             sds.append(gdal.Open(n))
-                            full_layer = [i for i in sdslist if 'Albedo_BSA_nir' in i]
+                            full_layer = [i for i in sdslist if 'Albedo_BSA_shortwave' in i]
                             idx = sdslist.index(full_layer[0])
                             if Horizontal == TilesHorizontal[0] and Vertical == TilesVertical[0]:
                                 geo_t = sds[idx].GetGeoTransform()
@@ -303,12 +303,12 @@ def Collect_data(TilesHorizontal,TilesVertical,Date,output_folder):
                         # Open .hdf only band with NDVI and collect all tiles to one array
                         dataset = gdal.Open(file_name)
                         sdsdict = dataset.GetMetadata('SUBDATASETS')
-                        sdslist = [sdsdict[k] for k in sdsdict.keys() if '_29_NAME' in k]
+                        sdslist = [sdsdict[k] for k in sdsdict.keys() if '_30_NAME' in k]
                         sds = []
 
                         for n in sdslist:
                             sds.append(gdal.Open(n))
-                            full_layer = [i for i in sdslist if 'Albedo_WSA_nir' in i]
+                            full_layer = [i for i in sdslist if 'Albedo_WSA_shortwave' in i]
                             idx = sdslist.index(full_layer[0])
                             if Horizontal == TilesHorizontal[0] and Vertical == TilesVertical[0]:
                                 geo_t = sds[idx].GetGeoTransform()
