@@ -2,7 +2,7 @@ import sys
 from DataAccess import DownloadData
 
 
-def main(Dir, Startdate, Enddate, latlim, lonlim, LC_Types = [1], cores=False, Waitbar = 1):
+def main(Dir, Startdate, Enddate, latlim, lonlim, LC_Types = [1], cores=False, Waitbar = 1, hdf_library = None, remove_hdf = 1):
     """
     This function downloads MOD12 yearly LC data for the specified time
     interval, and spatial extent.
@@ -16,10 +16,10 @@ def main(Dir, Startdate, Enddate, latlim, lonlim, LC_Types = [1], cores=False, W
     cores -- amount of cores used
     Waitbar -- 1 (Default) will print a waitbar
     """
-  
+
     for LC_Type in LC_Types:
-        print '\nDownload yearly MODIS LC%d data for period %s till %s' %(LC_Type, Startdate, Enddate)  
-        DownloadData(Dir, Startdate, Enddate, latlim, lonlim, LC_Type, Waitbar, cores)
+        print '\nDownload yearly MODIS LC%d data for period %s till %s' %(LC_Type, Startdate, Enddate)
+        DownloadData(Dir, Startdate, Enddate, latlim, lonlim, LC_Type, Waitbar, cores, hdf_library, remove_hdf)
 
 if __name__ == '__main__':
     main(sys.argv)
