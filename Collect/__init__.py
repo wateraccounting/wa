@@ -17,8 +17,8 @@ help(Collect)
 dir(Collect)
 """
 
-from wa.Collect import TRMM, GLDAS, ALEXI, CHIRPS, DEM, CFSR, MOD9, MOD10, MOD11, MOD12, MOD13, MOD15, MOD16, MOD17, MCD43, GLEAM, HiHydroSoil, ECMWF, RFE, JRC, TWC, ETmonitor, SEBS, SSEBop, CMRSET, MSWEP, ASCAT
+from wa.Collect import TRMM, GLDAS, ALEXI, CHIRPS, DEM, CFSR, MOD9, MOD10, MOD11, MOD12, MOD13, MOD15, MOD16, MOD17, MCD43, MYD13, GLEAM, HiHydroSoil, ECMWF, RFE, JRC, TWC, ETmonitor, SEBS, SSEBop, CMRSET, MSWEP, ASCAT
 
-__all__ = ['TRMM', 'GLDAS', 'ALEXI', 'CHIRPS', 'DEM', 'CFSR', 'MOD9', 'MOD10', 'MOD11', 'MOD12', 'MOD13', 'MOD15', 'MOD16', 'MOD17', 'MCD43', 'GLEAM', 'HiHydroSoil', 'ECMWF', 'RFE', 'JRC', 'TWC', 'ETmonitor', 'SEBS', 'SSEBop', 'CMRSET', 'MSWEP', 'ASCAT']
+__all__ = ['TRMM', 'GLDAS', 'ALEXI', 'CHIRPS', 'DEM', 'CFSR', 'MOD9', 'MOD10', 'MOD11', 'MOD12', 'MOD13', 'MOD15', 'MOD16', 'MOD17', 'MCD43', 'MYD13', 'GLEAM', 'HiHydroSoil', 'ECMWF', 'RFE', 'JRC', 'TWC', 'ETmonitor', 'SEBS', 'SSEBop', 'CMRSET', 'MSWEP', 'ASCAT']
 
 __version__ = '0.1'
