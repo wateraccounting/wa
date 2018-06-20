@@ -8,7 +8,7 @@ import os
 import sys
 from DataAccess import DownloadData
 
-def main(Dir, Startdate='', Enddate='', latlim=[-59.17, 80], lonlim=[-180, 180], Waitbar = 1):
+def main(Dir, Startdate='', Enddate='', latlim=[-59.17, 80], lonlim=[-180, 180], version = "V4", Waitbar = 1):
     """
     This function downloads monthly SSEBop data
 
@@ -20,9 +20,9 @@ def main(Dir, Startdate='', Enddate='', latlim=[-59.17, 80], lonlim=[-180, 180],
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
     """
     print '\nDownload monthly SSEBop evapotranspiration data for the period %s till %s' %(Startdate, Enddate)
-    
+
     # Download data
-    DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar)
-    
+    DownloadData(Dir, Startdate, Enddate, latlim, lonlim, Waitbar, version)
+
 if __name__ == '__main__':
     main(sys.argv)

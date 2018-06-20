@@ -5,7 +5,7 @@ from DataAccess import DownloadData
 
 def main(Dir, Startdate='', Enddate='', latlim=[-60, 70], lonlim=[-180, 180], Waitbar = 1):
     """
-    This function downloads weekly ALEXI data
+    This function downloads daily ALEXI data
 
     Keyword arguments:
     Dir -- 'C:/file/to/path/'
@@ -16,7 +16,7 @@ def main(Dir, Startdate='', Enddate='', latlim=[-60, 70], lonlim=[-180, 180], Wa
     """
     print '\nDownload weekly ALEXI evapotranspiration data for the period %s till %s' %(Startdate, Enddate)
 
-    TimeStep = 'weekly'
+    TimeStep = 'daily'
 
     # Download data
     DownloadData(Dir, Startdate, Enddate, latlim, lonlim, TimeStep, Waitbar)

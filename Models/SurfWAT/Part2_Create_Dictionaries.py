@@ -94,7 +94,7 @@ def Run(input_nc, output_nc):
     # Open Basin area
     Basin = RC.Open_nc_array(input_nc, Var = 'basin')
     Basin = -1 * (Basin - 1)
-    Basin_Buffer = RC.Create_Buffer(Basin, 1)
+    Basin_Buffer = RC.Create_Buffer(Basin, 8)
     Possible_End_Points = np.zeros(Basin.shape)
     Possible_End_Points[(Basin_Buffer + Rivers) == 2] = 1
     End_Points = []
