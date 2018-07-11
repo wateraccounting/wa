@@ -97,27 +97,27 @@ def Run(input_nc, output_nc):
     Basin_Buffer = RC.Create_Buffer(Basin, 8)
     Possible_End_Points = np.zeros(Basin.shape)
     Possible_End_Points[(Basin_Buffer + Rivers) == 2] = 1
-    End_Points = []
+    End_Points = [[0,0]]
 
     rows_col_possible_end_pixels = np.argwhere(Possible_End_Points == 1)
     #  Accumulated_Pixels_possible = ID_Matrix * Possible_End_Points
 
     for PosPix in rows_col_possible_end_pixels:
-            Accumulated_Pixels_possible_Area = Accumulated_Pixels[PosPix[0]-1:PosPix[0]+2, PosPix[1]-1:PosPix[1]+2]
-            Max_acc_possible_area = np.max(Accumulated_Pixels_possible_Area)
-            middle_pixel = Accumulated_Pixels_possible_Area[1,1]
-            if Max_acc_possible_area == middle_pixel:
-                if flow_directions.data[PosPix[0],PosPix[1]] == -32768:
-                    acc_aux = np.copy(Accumulated_Pixels_possible_Area)
-                    acc_aux[1,1] = 0
-                    off_y = np.where(acc_aux == np.max(acc_aux))[1][0] - 1
-                    off_x = np.where(acc_aux == np.max(acc_aux))[0][0] - 1
-                    PosPix[0] = PosPix[0] + off_x
-                    PosPix[1] = PosPix[1] + off_y
-                if End_Points == []:
-                    End_Points = PosPix
-                else:
-                    End_Points = np.vstack([End_Points, PosPix])
+        Accumulated_Pixels_possible_Area = Accumulated_Pixels[PosPix[0]-1:PosPix[0]+2, PosPix[1]-1:PosPix[1]+2]
+        Max_acc_possible_area = np.max(Accumulated_Pixels_possible_Area)
+        middle_pixel = Accumulated_Pixels_possible_Area[1,1]
+        if Max_acc_possible_area == middle_pixel:
+            if flow_directions[PosPix[0],PosPix[1]] == -32768:
+                acc_aux = np.copy(Accumulated_Pixels_possible_Area)
+                acc_aux[1,1] = 0
+                off_y = np.where(acc_aux == np.max(acc_aux))[1][0] - 1
+                off_x = np.where(acc_aux == np.max(acc_aux))[0][0] - 1
+                PosPix[0] = PosPix[0] + off_x
+                PosPix[1] = PosPix[1] + off_y
+            if End_Points == []:
+                End_Points = PosPix
+            else:
+                End_Points = np.vstack([End_Points, PosPix])
 
     # Create an empty dictionary for the rivers
     River_dict = dict()
@@ -126,7 +126,7 @@ def Run(input_nc, output_nc):
     ID_starts_next = []
     i = 0
 
-    for End_Point in End_Points:
+    for End_Point in End_Points[1:]:
 
     # Define starting point
     # Max_Acc_Pix = np.nanmax(Accumulated_Pixels[ID_Matrix_bound[1:-1,1:-1]>0])

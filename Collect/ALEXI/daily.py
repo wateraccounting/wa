@@ -14,7 +14,7 @@ def main(Dir, Startdate='', Enddate='', latlim=[-60, 70], lonlim=[-180, 180], Wa
     latlim -- [ymin, ymax] (values must be between -60 and 70)
     lonlim -- [xmin, xmax] (values must be between -180 and 180)
     """
-    print '\nDownload weekly ALEXI evapotranspiration data for the period %s till %s' %(Startdate, Enddate)
+    print '\nDownload daily ALEXI evapotranspiration data for the period %s till %s' %(Startdate, Enddate)
 
     TimeStep = 'daily'
 

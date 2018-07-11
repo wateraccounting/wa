@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 import calendar
 
-def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS', Daily = 'n'):
+def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
     """
     This functions check the precipitation files that needs to be downloaded, and send the request to the collect functions.
 
@@ -27,129 +27,171 @@ def Precipitation(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS', D
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
     Startdate : str
-        Contains the start date of the model 'yyyy-mm-dd'    
+        Contains the start date of the model 'yyyy-mm-dd'
     Enddate : str
-        Contains the end date of the model 'yyyy-mm-dd' 
+        Contains the end date of the model 'yyyy-mm-dd'
     Product (optional): str
-        Defines the product that will be used (default is CHIRPS)    
-        
+        Defines the product that will be used (default is CHIRPS)
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """ 
-	
+    """
+
     if Product is 'CHIRPS':
 
         # monthly
         from wa.Collect import CHIRPS
-        
-        # Define data path 
-        Data_Path = os.path.join('Precipitation','CHIRPS')
-        Data_Path_Monthly = os.path.join('Precipitation','CHIRPS', 'Monthly')
-        
-        # Get start and enddates     
-        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Monthly, 'MS') 																								
-        
+
+        # Define data path
+        Data_Path = os.path.join(Dir, 'Precipitation','CHIRPS', 'Monthly')
+
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Data_Path, 'MS')
+
         i = 1
-        # Loop over the startdates																
-        for Startdate_Download in Startdates:	
+        # Loop over the startdates
+        for Startdate_Download in Startdates:
 
-            # Define enddate															
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
+
             # download data between startdate and enddate
-            CHIRPS.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
-            i += 1												
+            CHIRPS.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1
 
-        if Daily is 'y':
-            # daily
-            Data_Path_Daily = os.path.join('Precipitation','CHIRPS', 'Daily')
-            Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
-    
-            i = 1																
-            for Startdate_Download in Startdates:	
-    
-                # Define enddate																	
-                Enddate_download = Enddates[-i]
-                
-                # Download the daily data
-                CHIRPS.daily(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
-                i += 1	
-						
-    if Product is 'TRMM':
+    elif Product is 'TRMM':
         from wa.Collect import TRMM
-        
-        # Define data path        
-        Data_Path = os.path.join('Precipitation','TRMM')	
-        Data_Path_Monthly = os.path.join('Precipitation','TRMM', 'Monthly')	
-        
-        # Get start and enddates        
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path_Monthly, 'MS') 																
 
-        i = 1																
-        for Startdate_Download in Startdates:	
+        # Define data path
+        Data_Path = os.path.join(Dir, 'Precipitation','TRMM', 'Monthly')
 
-            # Define enddate																	
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, 'MS')
+
+        i = 1
+        for Startdate_Download in Startdates:
+
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # Download the daily data            
+
+            # Download the daily data
             TRMM.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
-            i += 1	
+            i += 1
 
-        if Daily is 'y':
-            # daily
-            Data_Path_Daily = os.path.join('Precipitation','TRMM', 'Daily')	        
-            Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
-    
-            i = 1																
-            for Startdate_Download in Startdates:
-    
-                # Define enddate																	
-                Enddate_download = Enddates[-i]
-                
-                # Download the daily data            
-                TRMM.daily(Dir, Startdate_Download, Enddate_download, latlim, lonlim)	
-                i += 1	
 
-    if Product is 'RFE':
+    elif Product is 'RFE':
         from wa.Collect import RFE
-        
-        # Define data path        
-        Data_Path = os.path.join('Precipitation','RFE')	
-        Data_Path_Monthly = os.path.join('Precipitation','RFE', 'Monthly')	
-        
-        # Get start and enddates        
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path_Monthly, 'MS') 																
 
-        i = 1																
-        for Startdate_Download in Startdates:	
+        # Define data path
+        Data_Path = os.path.join(Dir, 'Precipitation','RFE', 'Monthly')
 
-            # Define enddate																	
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, 'MS')
+
+        i = 1
+        for Startdate_Download in Startdates:
+
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # Download the daily data            
-            RFE.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
-            i += 1	
 
-        if Daily is 'y':
-            # daily
-            Data_Path_Daily = os.path.join('Precipitation','RFE', 'Daily')	        
-            Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Dir, Data_Path_Daily, 'D') 																								
-    
-            i = 1																
-            for Startdate_Download in Startdates:
-    
-                # Define enddate																	
-                Enddate_download = Enddates[-i]
-                
-                # Download the daily data            
-                RFE.daily(Dir, Startdate_Download, Enddate_download, latlim, lonlim)	
-                i += 1	
-							
-    return(Data_Path)	
-							
+            # Download the daily data
+            RFE.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1
+
+    else:
+        Data_Path = Product
+
+    return(Data_Path)
+
+
+def Precipitation_Daily(Dir, latlim, lonlim, Startdate, Enddate, Product = 'CHIRPS'):
+    """
+    This functions check the precipitation files that needs to be downloaded, and send the request to the collect functions.
+
+    Parameters
+    ----------
+    Dir : str
+        Path to all the output data of the Basin
+    latlim : array
+        Array containing the latitude limits [latmin, latmax]
+    lonlim : array
+        Array containing the longitude limits [lonmin, lonmax]
+    Startdate : str
+        Contains the start date of the model 'yyyy-mm-dd'
+    Enddate : str
+        Contains the end date of the model 'yyyy-mm-dd'
+    Product (optional): str
+        Defines the product that will be used (default is CHIRPS)
+
+    Returns
+    -------
+    Data_Path : str
+        Path from the Dir to the downloaded data
+
+    """
+
+    if Product is 'CHIRPS':
+
+        # monthly
+        from wa.Collect import CHIRPS
+
+        # daily
+        Data_Path = os.path.join(Dir, 'Precipitation','CHIRPS', 'Daily')
+        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Data_Path, 'D')
+
+        i = 1
+        for Startdate_Download in Startdates:
+
+            # Define enddate
+            Enddate_download = Enddates[-i]
+
+            # Download the daily data
+            CHIRPS.daily(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1
+
+    elif Product is 'TRMM':
+        from wa.Collect import TRMM
+
+        # daily
+        Data_Path = os.path.join(Dir, 'Precipitation','TRMM', 'Daily')
+        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Data_Path, 'D')
+
+        i = 1
+        for Startdate_Download in Startdates:
+
+            # Define enddate
+            Enddate_download = Enddates[-i]
+
+            # Download the daily data
+            TRMM.daily(Dir, Startdate_Download, Enddate_download, latlim, lonlim)
+            i += 1
+
+    elif Product is 'RFE':
+        from wa.Collect import RFE
+
+        # daily
+        Data_Path = os.path.join(Dir, 'Precipitation','RFE', 'Daily')
+        Startdates, Enddates = Set_Start_End_Dates(Startdate,Enddate, Data_Path, 'D')
+
+        i = 1
+        for Startdate_Download in Startdates:
+
+            # Define enddate
+            Enddate_download = Enddates[-i]
+
+            # Download the daily data
+            RFE.daily(Dir, Startdate_Download, Enddate_download, latlim, lonlim)
+            i += 1
+
+    else:
+        Data_Path = Product
+
+    return(Data_Path)
+
+
 def Evapotranspiration(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD16'):
     """
     This functions check the evapotranspiration files that needs to be downloaded, and send the request to the collect functions.
@@ -163,157 +205,159 @@ def Evapotranspiration(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD16
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
     Startdate : str
-        Contains the start date of the model 'yyyy-mm-dd'    
+        Contains the start date of the model 'yyyy-mm-dd'
     Enddate : str
-        Contains the end date of the model 'yyyy-mm-dd' 
+        Contains the end date of the model 'yyyy-mm-dd'
     Product (optional): str
-        Defines the product that will be used (default is MOD16)    
-        
+        Defines the product that will be used (default is MOD16)
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """ 
+    """
     if Product is 'ETensV1_0':
-        
+
         from wa.Products import ETens
-        
-        # Define data path             
-        Data_Path = os.path.join('Evaporation','ETensV1_0')
-        
-        # Get start and enddates             
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																  								
 
-        i = 1																
+        # Define data path
+        Data_Path = os.path.join(Dir, 'Evaporation','ETensV1_0')
+
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, 'MS')
+
+        i = 1
         for Startdate_Download in Startdates:
 
-            # Define enddate																	
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # download data between startdate and enddate            
-            ETens.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
-            i += 1												
-								
-    if Product is 'MOD16':
+
+            # download data between startdate and enddate
+            ETens.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1
+
+    elif Product is 'MOD16':
         from wa.Collect import MOD16
-        
-        # Define data path             
-        Data_Path = os.path.join('Evaporation','MOD16','Monthly')	
-        
-        # Get start and enddates             
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																							
 
-        i = 1																
+        # Define data path
+        Data_Path = os.path.join(Dir, 'Evaporation','MOD16','Monthly')
+
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, 'MS')
+
+        i = 1
         for Startdate_Download in Startdates:
 
-            # Define enddate																	
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # download data between startdate and enddate            
-            MOD16.ET_monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
+
+            # download data between startdate and enddate
+            MOD16.ET_monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
             i += 1
 
-    if Product is 'GLEAM':
+    elif Product is 'GLEAM':
         from wa.Collect import GLEAM
-        
-        # Define data path             
-        Data_Path = os.path.join('Evaporation','GLEAM','Monthly')	
-        
-        # Get start and enddates             
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																							
 
-        i = 1																
+        # Define data path
+        Data_Path = os.path.join(Dir, 'Evaporation','GLEAM','Monthly')
+
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, 'MS')
+
+        i = 1
         for Startdate_Download in Startdates:
 
-            # Define enddate																	
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # download data between startdate and enddate            
-            GLEAM.ET_monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
+
+            # download data between startdate and enddate
+            GLEAM.ET_monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
             i += 1
-            
-    if Product is 'ALEXI':
-        
+
+    elif Product is 'ALEXI':
+
         from wa.Collect import ALEXI
-        
-        # Define data path             
-        Data_Path = os.path.join('Evaporation', 'ALEXI', 'Monthly')
-        
-        # Get start and enddates             
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																  								
 
-        i = 1																
+        # Define data path
+        Data_Path = os.path.join(Dir, 'Evaporation', 'ALEXI', 'Monthly')
+
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, 'MS')
+
+        i = 1
         for Startdate_Download in Startdates:
 
-            # Define enddate																	
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # download data between startdate and enddate            
-            ALEXI.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
-            i += 1		       
 
-    if Product is 'ETmonitor':
-        
+            # download data between startdate and enddate
+            ALEXI.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1
+
+    elif Product is 'ETmonitor':
+
         from wa.Collect import ETmonitor
-        
-        # Define data path             
-        Data_Path = os.path.join('Evaporation', 'ETmonitor', 'Monthly')
-        
-        # Get start and enddates             
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																  								
 
-        i = 1																
+        # Define data path
+        Data_Path = os.path.join(Dir, 'Evaporation', 'ETmonitor', 'Monthly')
+
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, 'MS')
+
+        i = 1
         for Startdate_Download in Startdates:
 
-            # Define enddate																	
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # download data between startdate and enddate            
-            ETmonitor.ET_monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
-            i += 1		            
 
-    if Product is 'SSEBop':
-        
+            # download data between startdate and enddate
+            ETmonitor.ET_monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1
+
+    elif Product is 'SSEBop':
+
         from wa.Collect import SSEBop
-        
-        # Define data path             
-        Data_Path = os.path.join('Evaporation', 'SSEBop', 'Monthly')
-        
-        # Get start and enddates             
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																  								
 
-        i = 1																
+        # Define data path
+        Data_Path = os.path.join(Dir, 'Evaporation', 'SSEBop', 'Monthly')
+
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, 'MS')
+
+        i = 1
         for Startdate_Download in Startdates:
 
-            # Define enddate																	
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # download data between startdate and enddate            
-            SSEBop.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
-            i += 1		  	 
 
-    if Product is 'CMRSET':
-        
+            # download data between startdate and enddate
+            SSEBop.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1
+
+    elif Product is 'CMRSET':
+
         from wa.Collect import CMRSET
-        
-        # Define data path             
-        Data_Path = os.path.join('Evaporation', 'CMRSET', 'Monthly')
-        
-        # Get start and enddates             
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																  								
 
-        i = 1																
+        # Define data path
+        Data_Path = os.path.join(Dir, 'Evaporation', 'CMRSET', 'Monthly')
+
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, 'MS')
+
+        i = 1
         for Startdate_Download in Startdates:
 
-            # Define enddate																	
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # download data between startdate and enddate            
-            CMRSET.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
-            i += 1		  	 
-  							
-    return(Data_Path)		
+
+            # download data between startdate and enddate
+            CMRSET.monthly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1
+    else:
+        Data_Path = Product
+
+    return(Data_Path)
 
 def LAI(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD15'):
     """
@@ -328,38 +372,40 @@ def LAI(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD15'):
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
     Startdate : str
-        Contains the start date of the model 'yyyy-mm-dd'    
+        Contains the start date of the model 'yyyy-mm-dd'
     Enddate : str
-        Contains the end date of the model 'yyyy-mm-dd' 
+        Contains the end date of the model 'yyyy-mm-dd'
     Product (optional): str
-        Defines the product that will be used (default is MOD15)    
-        
+        Defines the product that will be used (default is MOD15)
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """ 
+    """
     if Product is 'MOD15':
         from wa.Collect import MOD15
-        
-        # Define data path             
-        Data_Path = os.path.join('LAI','MOD15')
-        
-        # Get start and enddates             
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, '8D') 																							
 
-        i = 1																
+        # Define data path
+        Data_Path = os.path.join(Dir, 'LAI','MOD15')
+
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, '8D')
+
+        i = 1
         for Startdate_Download in Startdates:
 
-            # Define enddate																	
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # download data between startdate and enddate            
-            MOD15.LAI_8daily(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
-            i += 1
 
-    return(Data_Path)	
+            # download data between startdate and enddate
+            MOD15.LAI_8daily(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1
+    else:
+        Data_Path = Product
+
+    return(Data_Path)
 
 def NPP(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD17'):
     """
@@ -374,38 +420,41 @@ def NPP(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD17'):
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
     Startdate : str
-        Contains the start date of the model 'yyyy-mm-dd'    
+        Contains the start date of the model 'yyyy-mm-dd'
     Enddate : str
-        Contains the end date of the model 'yyyy-mm-dd' 
+        Contains the end date of the model 'yyyy-mm-dd'
     Product (optional): str
-        Defines the product that will be used (default is MOD17)    
-        
+        Defines the product that will be used (default is MOD17)
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """ 
+    """
     if Product is 'MOD17':
         from wa.Collect import MOD17
-        
-        # Define data path             
-        Data_Path = os.path.join('NPP','MOD17')	
-        
-        # Get start and enddates             
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'AS') 																							
 
-        i = 1																
-        for Startdate_Download in Startdates:	
+        # Define data path
+        Data_Path = os.path.join(Dir, 'NPP','MOD17')
 
-            # Define enddate																
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, 'AS')
+
+        i = 1
+        for Startdate_Download in Startdates:
+
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # download data between startdate and enddate            
-            MOD17.NPP_yearly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
+
+            # download data between startdate and enddate
+            MOD17.NPP_yearly(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
             i += 1
 
-    return(Data_Path)	
+    else:
+        Data_Path = Product
+
+    return(Data_Path)
 
 def NDVI(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD13'):
     """
@@ -420,38 +469,40 @@ def NDVI(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD13'):
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
     Startdate : str
-        Contains the start date of the model 'yyyy-mm-dd'    
+        Contains the start date of the model 'yyyy-mm-dd'
     Enddate : str
-        Contains the end date of the model 'yyyy-mm-dd' 
+        Contains the end date of the model 'yyyy-mm-dd'
     Product (optional): str
-        Defines the product that will be used (default is MOD17)    
-        
+        Defines the product that will be used (default is MOD17)
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """     
+    """
     if Product is 'MOD13':
         from wa.Collect import MOD13
-        
-        # Define data path             
-        Data_Path = os.path.join('NDVI', 'MOD13')
-        
-        # Get start and enddates             
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, '16D') 																							
 
-        i = 1																
-        for Startdate_Download in Startdates:	
+        # Define data path
+        Data_Path = os.path.join(Dir, 'NDVI', 'MOD13')
 
-            # Define enddate																
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, '16D')
+
+        i = 1
+        for Startdate_Download in Startdates:
+
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # download data between startdate and enddate            
-            MOD13.NDVI_16daily(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
-            i += 1
 
-    return(Data_Path)	
+            # download data between startdate and enddate
+            MOD13.NDVI_16daily(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1
+    else:
+        Data_Path = Product
+
+    return(Data_Path)
 
 
 def GPP(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD17'):
@@ -467,40 +518,42 @@ def GPP(Dir, latlim, lonlim, Startdate, Enddate, Product = 'MOD17'):
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
     Startdate : str
-        Contains the start date of the model 'yyyy-mm-dd'    
+        Contains the start date of the model 'yyyy-mm-dd'
     Enddate : str
-        Contains the end date of the model 'yyyy-mm-dd' 
+        Contains the end date of the model 'yyyy-mm-dd'
     Product (optional): str
-        Defines the product that will be used (default is MOD17)    
-        
+        Defines the product that will be used (default is MOD17)
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """     
+    """
     if Product is 'MOD17':
         from wa.Collect import MOD17
-        
-        # Define data path             
-        Data_Path = os.path.join('GPP','MOD17')
-        
-        # Get start and enddates             
-        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, '8D') 																							
 
-        i = 1																
-        for Startdate_Download in Startdates:	
+        # Define data path
+        Data_Path = os.path.join(Dir,'GPP','MOD17')
 
-            # Define enddate																
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, '8D')
+
+        i = 1
+        for Startdate_Download in Startdates:
+
+            # Define enddate
             Enddate_download = Enddates[-i]
-            
-            # download data between startdate and enddate            
-            MOD17.GPP_8daily(Dir, Startdate_Download, Enddate_download,latlim, lonlim)	
-            i += 1
 
-    return(Data_Path)	
-    
-def DEM(Dir, latlim, lonlim, Resolution):
+            # download data between startdate and enddate
+            MOD17.GPP_8daily(Dir, Startdate_Download, Enddate_download,latlim, lonlim)
+            i += 1
+    else:
+        Data_Path = Product
+
+    return(Data_Path)
+
+def DEM(Dir, latlim, lonlim, Resolution, Product = 'HydroSHED'):
     """
     This functions check the DEM file from SRTM that needs to be downloaded, and send the request to the collect functions.
 
@@ -513,25 +566,31 @@ def DEM(Dir, latlim, lonlim, Resolution):
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
     resolution (optional): 3s or 15s
-        Defines the resolution of the product 
-        
+        Defines the resolution of the product
+    Product (optional): str
+        Defines the product that will be used
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """     
-    from wa.Collect import DEM
-    
-    # download data between startdate and enddate    
-    DEM.HydroSHED(Dir, latlim, lonlim, '%s' % Resolution)
-    
-    # Define data path         
-    Data_Path = os.path.join('HydroSHED','DEM')	
-					
-    return(Data_Path)		
+    """
 
-def DEM_Dir(Dir, latlim, lonlim, Resolution):
+    if Product is 'HydroSHED':
+        from wa.Collect import DEM
+
+        # download data between startdate and enddate
+        DEM.HydroSHED(Dir, latlim, lonlim, '%s' % Resolution)
+
+        # Define data path
+        Data_Path = os.path.join(Dir,'HydroSHED','DEM')
+    else:
+        Data_Path = Product
+
+    return(Data_Path)
+
+def DEM_Dir(Dir, latlim, lonlim, Resolution, Product = 'HydroSHED'):
     """
     This functions check the DEM direction file from SRTM that needs to be downloaded, and send the request to the collect functions.
 
@@ -544,25 +603,31 @@ def DEM_Dir(Dir, latlim, lonlim, Resolution):
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
     resolution (optional): 3s or 15s
-        Defines the resolution of the product 
-        
+        Defines the resolution of the product
+    Product (optional): str
+        Defines the product that will be used
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """      
-    from wa.Collect import DEM
-    
-    # download data between startdate and enddate    
-    DEM.HydroSHED_Dir(Dir, latlim, lonlim, '%s' % Resolution)
-    
-    # Define data path      
-    Data_Path = os.path.join('HydroSHED','DIR')		
-				
-    return(Data_Path)		
-    
-def JRC_occurrence(Dir, latlim, lonlim):
+    """
+    if Product is 'HydroSHED':
+        from wa.Collect import DEM
+
+        # download data between startdate and enddate
+        DEM.HydroSHED_Dir(Dir, latlim, lonlim, '%s' % Resolution)
+
+        # Define data path
+        Data_Path = os.path.join(Dir,'HydroSHED','DIR')
+
+    else:
+        Data_Path = Product
+
+    return(Data_Path)
+
+def JRC_occurrence(Dir, latlim, lonlim, Product):
     """
     This functions check the water occurrence file from JRC that needs to be downloaded, and send the request to the collect functions.
 
@@ -574,24 +639,29 @@ def JRC_occurrence(Dir, latlim, lonlim):
         Array containing the latitude limits [latmin, latmax]
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
-        
+    Product (optional): str
+        Defines the product that will be used
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """     
-    from wa.Collect import JRC
-    
-    # download data between startdate and enddate    
-    JRC.Occurrence(Dir, latlim, lonlim)
-    
-    # Define data path         
-    Data_Path = os.path.join('JRC','Occurrence')	
-					
-    return(Data_Path)			
-			
-def ETreference(Dir, latlim, lonlim, Startdate, Enddate):
+    """
+    if Product is 'JRC':
+        from wa.Collect import JRC
+
+        # download data between startdate and enddate
+        JRC.Occurrence(Dir, latlim, lonlim)
+
+        # Define data path
+        Data_Path = os.path.join(Dir,'JRC','Occurrence')
+    else:
+        Data_Path = Product
+
+    return(Data_Path)
+
+def ETreference(Dir, latlim, lonlim, Startdate, Enddate, Product):
     """
     This functions check the ET reference files that needs to be downloaded, and send the request to the product functions.
 
@@ -604,31 +674,36 @@ def ETreference(Dir, latlim, lonlim, Startdate, Enddate):
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
     Startdate : str
-        Contains the start date of the model 'yyyy-mm-dd'    
+        Contains the start date of the model 'yyyy-mm-dd'
     Enddate : str
-        Contains the end date of the model 'yyyy-mm-dd'  
-        
+        Contains the end date of the model 'yyyy-mm-dd'
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """     	
-    from wa.Products import ETref
-    
-    # Define data path         
-    Data_Path = os.path.join('ETref','Monthly')	
-    
-    # Get start and enddates         
-    Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, 'MS') 																
-   					
-    i = 1																
-    for Startdate_Download in Startdates:																
-        Enddate_download = Enddates[-i]
-        
-        # download data between startdate and enddate        
-        ETref.monthly(Dir, Startdate_Download, Enddate_download, latlim, lonlim, pixel_size = 0.025)
-        i += 1
+    """
+    if Product is 'WA_ETref':
+
+        from wa.Products import ETref
+
+        # Define data path
+        Data_Path = os.path.join(Dir,'ETref','Monthly')
+
+        # Get start and enddates
+        Startdates, Enddates = Set_Start_End_Dates(Startdate, Enddate, Data_Path, 'MS')
+
+        i = 1
+        for Startdate_Download in Startdates:
+            Enddate_download = Enddates[-i]
+
+            # download data between startdate and enddate
+            ETref.monthly(Dir, Startdate_Download, Enddate_download, latlim, lonlim, pixel_size = 0.025)
+            i += 1
+    else:
+        Data_Path = Product
+
     return(Data_Path)
 
 def Soil_Properties(Dir, latlim, lonlim, Para = 'ThetaSat_TopSoil'):
@@ -644,24 +719,24 @@ def Soil_Properties(Dir, latlim, lonlim, Para = 'ThetaSat_TopSoil'):
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
     Para : str
-        Soil property layer that must be downloaded    
-        
+        Soil property layer that must be downloaded
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """     
+    """
     from wa.Collect import HiHydroSoil
-    
+
     if Para == 'ThetaSat_TopSoil':
-        # download data between startdate and enddate    
+        # download data between startdate and enddate
         HiHydroSoil.ThetaSat_TopSoil(Dir, latlim, lonlim)
-        
-        # Define data path         
-        Data_Path = os.path.join('HiHydroSoil','ThetaSat')	
-    					
-    return(Data_Path)	
+
+        # Define data path
+        Data_Path = os.path.join(Dir,'HiHydroSoil','ThetaSat')
+
+    return(Data_Path)
 
 def GWF(Dir, latlim, lonlim):
     """
@@ -675,25 +750,25 @@ def GWF(Dir, latlim, lonlim):
         Array containing the latitude limits [latmin, latmax]
     lonlim : array
         Array containing the longitude limits [lonmin, lonmax]
-        
+
     Returns
     -------
     Data_Path : str
         Path from the Dir to the downloaded data
 
-    """     
+    """
     from wa.Collect import TWC
-    
-    # download data between startdate and enddate    
+
+    # download data between startdate and enddate
     TWC.Gray_Water_Footprint(Dir, latlim, lonlim)
-    
-    # Define data path         
-    Data_Path = os.path.join('TWC','GWF')	
-					
-    return(Data_Path)	
+
+    # Define data path
+    Data_Path = os.path.join(Dir,'TWC','GWF')
+
+    return(Data_Path)
 
 
-def Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, freq):
+def Set_Start_End_Dates(Startdate, Enddate, Data_Path, freq):
     """
     This functions check all the files if they are already downloaded, or needs
     to be downloaded.
@@ -704,10 +779,8 @@ def Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, freq):
         Contains the start date of the model 'yyyy-mm-dd'
     Enddate : str
         Contains the end date of the model 'yyyy-mm-dd'
-    Dir : str
-        Path to all the output data of the Basin
     Data_Path : str
-        Path from the Dir to the downloaded data
+        Path to the downloaded data
     freq : 'D','8D','MS', or 'AS'
         Defines the frequenct of the dataset that must be downloaded
 
@@ -718,12 +791,10 @@ def Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, freq):
     Enddates : str
         Contains all the end dates of data that needs to be downloaded
     """
-    # Defines the total data path
-    Data_Dir = os.path.join(Dir, Data_Path)
 
     # Check if folder already exists
-    if os.path.exists(Data_Dir):
-        os.chdir(Data_Dir)
+    if os.path.exists(Data_Path):
+        os.chdir(Data_Path)
 
         # Defines the dates of the 8 daily periods
         if freq == '8D':
@@ -763,7 +834,7 @@ def Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, freq):
             if freq == '16D':
                 files = glob.glob('*16-daily_%d.%02d.%02d.tif' % (year, month,
                                                                  day))
-                
+
             # If file exits put a 1 in the array
             if len(files) == 1:
                 Date_Check[i] = 1
@@ -790,7 +861,7 @@ def Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, freq):
             Enddates = []
 
         for Startdate_number in Startdates_place:
-            Date = Dates[Startdate_number]
+            Date = Dates[int(Startdate_number)]
             month = Date.month
             year = Date.year
             day = Date.day
@@ -807,7 +878,7 @@ def Set_Start_End_Dates(Startdate, Enddate, Dir, Data_Path, freq):
             Startdates = np.append(Startdates, Startdate_one)
 
         for Enddate_number in np.flipud(Enddates_place):
-            Date = Dates[Enddate_number]
+            Date = Dates[int(Enddate_number)]
             month = Date.month
             year = Date.year
             if np.any([isinstance(month, pd.core.index.Int64Index),
