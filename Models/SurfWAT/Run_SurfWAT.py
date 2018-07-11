@@ -256,7 +256,6 @@ def main(input_nc, output_nc, input_JRC, Inflow_Text_Files, include_reservoirs =
     # End discharge dictionary to raster
     Discharge_dict_end = RC.Open_nc_dict(output_nc, 'dischargedictend_dynamic')
     DataCube_Discharge_end = DC.Convert_dict_to_array(River_dict, Discharge_dict_end, input_nc)
-    DataCube_Discharge_end[DataCube_Discharge_end==0.]=np.nan
 
     ###################### Save Dictionaries in NetCDF ############################
 

@@ -243,14 +243,7 @@ If you get no command everything is fine, if not you will see:
 
 >ImportError: No module named ... module name ...
 
-To solve this issue, there are two methods that can be applied based on the applied method in step 1. If the Anaconda installation file from the FTP server is used (Method 2 in step 1) for installing Anaconda, the same Anaconda version as the WA+ team is on the system. Therefore, the same modules used by the WA+ team can be copied and pasted into the Anaconda directory. In this case the following steps can be done to include all the modules needed for the WA+ toolbox:
-
-*	**Step 1:** Go to the WA+ guest FTP server (ftp://ftp.wateraccounting.unesco-ihe.org/WaterAccounting_Guest/Programs/Python_modules/)
-*	**Step 2:** Download the Lib and Script folder (Easy downloading from FTP servers can be done by using software like FileZilla)
-*	**Step 3:** Go to the $HOME/Anaconda2 folder and delete the Lib and Script folder
-*	**Step 4:** Add the downloaded Lib and Script folder from the WA+ FTP server to the $HOME/Anaconda2 folder.
-
-If the latest version of Anaconda is installed from the developers webpage (Method 1 in step 1), the missing modules needs to be added manually. The missing module name (that is showing in the ImportError message of python) can be copied (the only exception is "shapefile", this module is called "pyshp") and installed by using one of the following 4 methods, the easiest methods are method 1 and 2 which must also be sufficient to install all the python modules of the WA+ toolbox. After installing one module, close and re-open an Ipython console and check if "import wa" can be imported or to see which new module is missing.
+The missing modules needs to be added manually. The missing module name (that is showing in the ImportError message of python) can be copied (the only exception is "shapefile", this module is called "pyshp") and installed by using one of the following 4 methods, the easiest methods are method 1 and 2 which must also be sufficient to install all the python modules of the WA+ toolbox. After installing one module, close and re-open an Ipython console and check if "import wa" can be imported or to see which new module is missing.
 
 #### <a name="chapter3_4_1"></a>Method 1: conda
 

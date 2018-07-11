@@ -195,7 +195,7 @@ def ALEXI_daily(Dates, output_folder, latlim, lonlim, Waitbar, total_amount, Tim
     for Date in Dates:
 
         # Date as printed in filename
-        DirFile= os.path.join(output_folder,'ETa_ALEXI_CSFR_mm-day-1_daily_%s.%02s.%02s.tif' %(Date.year, Date.month, Date.day))
+        DirFile= os.path.join(output_folder,'ETa_ALEXI_CSFR_mm-day-1_daily_%d.%02d.%02d.tif' %(Date.year, Date.month, Date.day))
         DOY = Date.timetuple().tm_yday
 
         # Define end filename

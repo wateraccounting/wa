@@ -13,8 +13,8 @@ import numpy as np
 import datetime
 import os
 import matplotlib.pyplot as plt
-   
-def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, Name_NC_LU, Startdate, Enddate, Simulation):
+
+def ITE(Dir_Basin, nc_outname, Startdate, Enddate, Simulation):
     """
     This functions split the evapotranspiration into interception, transpiration, and evaporation.
 
@@ -22,25 +22,15 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
     ----------
     Dir_Basin : str
         Path to all the output data of the Basin
-    Name_NC_ET : str
-        Path to the .nc file containing ET data
-    Name_NC_LAI : str
-        Path to the .nc file containing LAI data
-    Name_NC_P : str
-        Path to the .nc file containing P data
-    Name_NC_RD : str
-        Path to the .nc file containing Rainy Days data
-    Name_NC_NDM : str
-        Path to the .nc file containing Normalized Dry Matter data
-    Name_NC_LU : str
-        Path to the .nc file containing Landuse data
+    nc_outname : str
+        Path to the .nc file containing all data
     Startdate : str
-        Contains the start date of the model 'yyyy-mm-dd'    
+        Contains the start date of the model 'yyyy-mm-dd'
     Enddate : str
-        Contains the end date of the model 'yyyy-mm-dd' 
+        Contains the end date of the model 'yyyy-mm-dd'
     Simulation : int
-        Defines the simulation    
-        
+        Defines the simulation
+
     Returns
     -------
     I : array
@@ -51,35 +41,35 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
         Array[time, lat, lon] contains the evaporation data
 
     """
-    
+
     # import WA modules
     import wa.General.raster_conversions as RC
     import wa.Functions.Start.Get_Dictionaries as GD
 
     # Define monthly dates
     Dates = pd.date_range(Startdate, Enddate, freq = "MS")
-    
+
     # Extract LU data from NetCDF file
-    LU = RC.Open_nc_array(Name_NC_LU, Var = 'LU')
-    
+    LU = RC.Open_nc_array(nc_outname, Var = 'Landuse')
+
     # Create a mask to ignore non relevant pixels.
     lulc_dict = GD.get_lulcs().keys()
-    mask=np.logical_or.reduce([LU == value for value in lulc_dict[:-1]])    
+    mask=np.logical_or.reduce([LU == value for value in lulc_dict[:-1]])
     mask3d = mask * np.ones(len(Dates))[:,None,None]
-    mask3d_neg = (mask3d-1) * 9999          
-    
+    mask3d_neg = (mask3d-1) * 9999
+
     # Extract Evapotranspiration data from NetCDF file
-    ET = RC.Open_nc_array(Name_NC_ET, Var = 'ET')[-len(Dates):,:,:]
+    ET = RC.Open_nc_array(nc_outname, 'Actual_Evapotranspiration', Startdate, Enddate)
     # Extract Leaf Area Index data from NetCDF file
-    LAI = RC.Open_nc_array(Name_NC_LAI, Var = 'LAI')[-len(Dates):,:,:]
+    LAI = RC.Open_nc_array(nc_outname, 'LAI', Startdate, Enddate)
     # Extract Precipitation data from NetCDF file
-    P = RC.Open_nc_array(Name_NC_P, Var = 'Prec')[-len(Dates):,:,:]
+    P = RC.Open_nc_array(nc_outname, 'Precipitation', Startdate, Enddate)
     # Extract Rainy Days data from NetCDF file
-    RD = RC.Open_nc_array(Name_NC_RD, Var = 'RD')[-len(Dates):,:,:]
+    RD = RC.Open_nc_array(nc_outname, 'Rainy_Days', Startdate, Enddate)
     # Extract Normalized Dry Matter data and time from NetCDF file
-    NDM = RC.Open_nc_array(Name_NC_NDM, Var = 'NDM')[-len(Dates):,:,:]
-    timeNDM = RC.Open_nc_array(Name_NC_NDM, Var = 'time')
-    
+    NDM = RC.Open_nc_array(nc_outname, 'Normalized_Dry_Matter', Startdate, Enddate)
+    timeNDM = RC.Open_nc_array(nc_outname, 'time')
+
     # Create dictory to get every month and year for each timestep
     datesNDMmonth = dict()
     datesNDMyear = dict()
@@ -87,11 +77,11 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
     for i in range(0,len(timeNDM)):
         # change toordinal to month and year
         datesNDMmonth[i] = datetime.date.fromordinal(timeNDM[i]).month
-        datesNDMyear[i] = datetime.date.fromordinal(timeNDM[i]).year   
-    
+        datesNDMyear[i] = datetime.date.fromordinal(timeNDM[i]).year
+
     # Calculate the max monthly NDM over the whole period
     NDMmax = dict()
-   
+
     # loop over the months
     for month in range(1,13):
         dimensions = []
@@ -101,7 +91,7 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
                 dimensions = np.append(dimensions,dimension)
         # Open those time dimension
         NDMmonth = np.zeros([np.size(dimensions), int(np.shape(NDM)[1]), int(np.shape(NDM)[2])])
-        dimensions = np.int_(dimensions)        
+        dimensions = np.int_(dimensions)
         NDMmonth[:,:,:] = NDM[dimensions, :,:]
         # Calculate the maximum over the month
         NDMmax[month] = np.nanmax(NDMmonth,0)
@@ -121,32 +111,32 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
     RD[RD==0] = 0.001
     LAI[LAI==0] = 0.001
     LAI[np.isnan(LAI)] = 0.1
-       
+
     # Calculate I
-    I = LAI * (1 - np.power(1 + (P/RD) * (1 - np.exp(-0.5 * LAI)) * (1/LAI),-1)) * RD      
-          
+    I = LAI * (1 - np.power(1 + (P/RD) * (1 - np.exp(-0.5 * LAI)) * (1/LAI),-1)) * RD
+
     # Set boundary
     I[np.isnan(LAI)] = np.nan
-     
+
     # Calculate T
     T = np.minimum((NDM/NDMmax_months),np.ones(np.shape(NDM))) * 0.95 * (ET - I)
-     
+
     # Mask Data
     ET = ET * mask3d
     T = T * mask3d
     I = I * mask3d
     ET[mask3d_neg<-1] = np.nan
-    T[mask3d_neg<-1] = np.nan    
+    T[mask3d_neg<-1] = np.nan
     I[mask3d_neg<-1] = np.nan
-      
+
     # Calculate E
     E = ET - T - I
-    
+
     # Calculate monthly averages
     et = np.nanmean(ET.reshape(ET.shape[0], -1),1)
     i = np.nanmean(I.reshape(I.shape[0], -1),1)
-    t = np.nanmean(T.reshape(T.shape[0], -1),1)    
- 
+    t = np.nanmean(T.reshape(T.shape[0], -1),1)
+
     # Plot graph of ET and E, T and I fractions.
     fig = plt.figure(figsize = (10,10))
     plt.grid(b=True, which='Major', color='0.65',linestyle='--', zorder = 0)
@@ -166,10 +156,10 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
     ax.set_ylim([0, max(et) * 1.2])
     ax.set_xlabel('Time')
     [r.set_zorder(10) for r in ax.spines.itervalues()]
-    
+
     # Define output folder and name for image
     NamePic = "Sim%s_Mean_ET_E_T_I.jpg" %Simulation
-    Dir_Basin_Image = os.path.join(Dir_Basin, "Simulations", "Images")
+    Dir_Basin_Image = os.path.join(Dir_Basin, "Simulations", "Simulation_%d" % Simulation, "Images")
     if not os.path.exists(Dir_Basin_Image):
         os.mkdir(Dir_Basin_Image)
 
@@ -180,4 +170,3 @@ def ITE(Dir_Basin, Name_NC_ET, Name_NC_LAI, Name_NC_P, Name_NC_RD, Name_NC_NDM, 
 
 
 
-      
