@@ -14,8 +14,8 @@ This data is used within a water accounting framework.
 """
 
 
-from wa.Functions.Three import SplitET, Calc_Y_WP, Fill_Dicts, SplitYield
+from wa.Functions.Three import Calc_Y_WP, Fill_Dicts, SplitYield
 
-__all__ = ['SplitET', 'Calc_Y_WP', 'Fill_Dicts', 'SplitYield']
+__all__ = ['Calc_Y_WP', 'Fill_Dicts', 'SplitYield']
 
 __version__ = '0.1'

@@ -78,5 +78,6 @@ def Run(Runoff_in_m3_month, flow_directions, Basin):
     Routed_Array_mean[Basin != 1] = np.nan
     Routed_Discharge_Ave_number = np.nanpercentile(Routed_Array_mean,98)
     Rivers[Routed_Array_mean > Routed_Discharge_Ave_number] = 1  # if yearly average is larger than the 99 percentile than it is defined as a river
+    Routed_Array[:, Basin != 1] = -9999
 
     return(Routed_Array, Accumulated_Pixels, Rivers)
