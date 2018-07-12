@@ -15,7 +15,8 @@ Description:
 This module downloads SSEBop data from
 ftp.wateraccounting.unesco-ihe.org. Use the SSEBop.monthly function to
 download and create monthly SSEBop images in Gtiff format.
-The data is available between 2003-01-01 till 2014-10-31.
+Data is available between 2003-01-01 till 2014-10-31. If the FTP version is used
+The data goes till present if the V4 version is used (Default)
 
 Examples:
 from wa.Collect import SSEBop
